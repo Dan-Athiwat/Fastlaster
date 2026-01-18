@@ -2,407 +2,396 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NextGen Video Call</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SuperConnect Video Call</title>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.18.2.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* --- CSS UI Design --- */
+        /* --- CSS RESET & VARIABLES --- */
         :root {
-            --primary: #6C63FF;
-            --secondary: #2A2A35;
-            --bg: #121212;
-            --surface: #1E1E24;
+            --primary: #007AFF; /* สีฟ้าสดใสสไตล์โมเดิร์น */
+            --primary-dark: #0056b3;
+            --secondary: #1c1c1e;
+            --bg: #000000;
+            --surface: #2c2c2e;
             --text: #ffffff;
-            --danger: #ff4757;
-            --success: #2ed573;
+            --danger: #FF3B30;
+            --success: #34C759;
+            --gray: #8e8e93;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
         
         body {
             background-color: var(--bg);
             color: var(--text);
             height: 100vh;
+            width: 100vw;
             overflow: hidden;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column;
         }
 
-        /* Common Styles */
+        /* --- BUTTONS & INPUTS --- */
         .btn {
-            padding: 12px 24px;
+            padding: 12px 20px;
             border-radius: 12px;
             border: none;
             cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
+            font-weight: 600;
             font-size: 1rem;
+            transition: 0.2s;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(108, 99, 255, 0.6); }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3); }
+        .btn-primary:active { transform: scale(0.98); }
         .btn-danger { background: var(--danger); color: white; }
-        .input-group { margin-bottom: 20px; width: 100%; }
+        .btn-secondary { background: var(--surface); color: white; border: 1px solid #444; }
+
         input {
             width: 100%;
-            padding: 14px;
-            background: var(--secondary);
-            border: 1px solid #333;
-            border-radius: 10px;
+            padding: 15px;
+            background: #1c1c1e;
+            border: 1px solid #3a3a3c;
+            border-radius: 12px;
             color: white;
+            font-size: 1rem;
             outline: none;
-            transition: 0.3s;
+            margin-bottom: 15px;
         }
         input:focus { border-color: var(--primary); }
 
-        /* Screens */
-        .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        /* --- SCREENS MANAGEMENT --- */
+        .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: var(--bg); z-index: 1; }
         .active { display: flex; }
 
-        /* AUTH SCREEN */
-        .auth-container {
-            width: 100%;
-            max-width: 400px;
-            background: var(--surface);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            text-align: center;
-            margin: auto;
-        }
-        .auth-toggle { margin-top: 20px; color: #aaa; font-size: 0.9rem; cursor: pointer; }
-        .auth-toggle:hover { color: var(--primary); text-decoration: underline; }
-
-        /* DASHBOARD SCREEN */
-        #dashboard-screen { flex-direction: row; }
-        .sidebar {
-            width: 300px;
-            background: var(--surface);
+        /* --- 1. AUTH SCREEN (LOGIN/REGISTER) --- */
+        .auth-wrapper {
+            width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #333;
         }
-        .main-content {
-            flex: 1;
+        .auth-box {
+            width: 100%; max-width: 400px;
+            background: rgba(44, 44, 46, 0.8);
+            backdrop-filter: blur(20px);
             padding: 30px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .app-logo { font-size: 3rem; margin-bottom: 10px; color: var(--primary); }
+        .auth-toggle { margin-top: 20px; color: var(--gray); font-size: 0.9rem; cursor: pointer; }
+        .auth-toggle span { color: var(--primary); font-weight: bold; }
+
+        /* --- 2. DASHBOARD --- */
+        #dashboard-screen { flex-direction: row; }
+        
+        /* Sidebar (Profile & List) */
+        .sidebar {
+            width: 320px;
+            background: var(--surface);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle at top right, #1f1f2e, var(--bg));
+            border-right: 1px solid #3a3a3c;
+            padding: 20px;
+            overflow-y: auto;
         }
 
-        /* Profile Section */
-        .profile-card {
-            background: var(--secondary);
-            padding: 20px;
-            border-radius: 15px;
+        /* Profile Area */
+        .profile-section {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #3a3a3c;
         }
-        .profile-img-wrapper {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 15px;
+        .profile-pic-container {
+            width: 100px; height: 100px;
+            margin: 0 auto 10px;
             border-radius: 50%;
             overflow: hidden;
             border: 3px solid var(--primary);
             position: relative;
         }
-        .profile-img { width: 100%; height: 100%; object-fit: cover; }
-        .file-upload { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); font-size: 10px; padding: 2px; cursor: pointer; }
-
-        /* Room Controls */
-        .room-create-btn {
-            width: 100%;
-            background: linear-gradient(45deg, var(--primary), #8e44ad);
-            margin-bottom: 20px;
+        .profile-pic { width: 100%; height: 100%; object-fit: cover; }
+        .edit-overlay {
+            position: absolute; bottom: 0; width: 100%;
+            background: rgba(0,0,0,0.6); color: white;
+            font-size: 0.7rem; padding: 4px; cursor: pointer;
         }
-        .room-list { flex: 1; overflow-y: auto; }
+        .profile-actions { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+
+        /* Main Content (Join Room) */
+        .main-dashboard {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #121212;
+            padding: 20px;
+            text-align: center;
+        }
+        .room-input-container {
+            display: flex; gap: 10px;
+            max-width: 400px; width: 100%;
+            margin-top: 20px;
+        }
+
+        /* Room List */
         .room-item {
-            background: var(--secondary);
+            background: #1c1c1e;
             padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .room-item:hover { background: #333; }
-        
-        .join-bar {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-            background: var(--surface);
-            padding: 10px;
             border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        /* VIDEO CALL SCREEN */
-        #video-screen { flex-direction: column; background: #000; }
-        .video-header {
-            height: 60px;
-            width: 100%;
-            background: rgba(0,0,0,0.8);
+            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+        .room-item h4 { color: var(--primary); }
+
+        /* --- 3. VIDEO CALL UI --- */
+        #video-screen { background: #000; flex-direction: column; }
+        
+        /* Header */
+        .call-header {
+            position: absolute; top: 0; left: 0; width: 100%;
+            height: 60px;
             padding: 0 20px;
-            position: absolute;
-            top: 0;
+            display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
             z-index: 10;
         }
-        .video-grid {
+        .room-badge { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; backdrop-filter: blur(5px); }
+
+        /* Video Grid (Dynamic) */
+        .video-container {
             flex: 1;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 10px;
-            padding: 70px 20px 90px; /* Space for header and footer */
             width: 100%;
-            max-width: 1600px;
+            height: 100%;
+            display: grid;
+            gap: 10px;
+            padding: 60px 10px 100px; /* เว้นที่ให้ Header บน และ Controls ล่าง */
+            /* Auto Fit Grid: ปรับขนาดตามจำนวนคน */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            align-content: center;
         }
         
-        .video-user {
+        .user-video-card {
             background: #222;
-            border-radius: 15px;
+            border-radius: 16px;
             overflow: hidden;
             position: relative;
-            min-height: 250px;
+            aspect-ratio: 16/9; /* อัตราส่วนวิดีโอ */
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
         }
-        .video-player { width: 100%; height: 100%; object-fit: cover; }
-        .user-label {
-            position: absolute;
-            bottom: 15px;
-            left: 15px;
-            background: rgba(0,0,0,0.6);
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            backdrop-filter: blur(4px);
+        /* Mobile: ถ้าจอตั้ง ให้การ์ดสูงขึ้น */
+        @media (max-width: 600px) {
+            .video-container { grid-template-columns: 1fr; grid-auto-rows: minmax(200px, 1fr); }
+            .user-video-card { aspect-ratio: auto; }
         }
 
-        .controls-bar {
-            height: 80px;
-            width: 100%;
-            background: #1E1E24;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            position: absolute;
-            bottom: 0;
-            border-top: 1px solid #333;
+        .video-player { width: 100%; height: 100%; object-fit: cover; }
+        .user-name-tag {
+            position: absolute; bottom: 10px; left: 10px;
+            background: rgba(0,0,0,0.6); padding: 4px 10px;
+            border-radius: 8px; font-size: 0.8rem; backdrop-filter: blur(4px);
         }
+
+        /* Controls Bar (Footer) */
+        .controls-wrapper {
+            position: fixed; bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; gap: 15px;
+            background: rgba(44, 44, 46, 0.9);
+            padding: 12px 25px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 20;
+            width: 90%; max-width: 500px;
+            justify-content: space-around;
+        }
+        
         .control-btn {
-            width: 50px;
-            height: 50px;
+            width: 50px; height: 50px;
             border-radius: 50%;
             border: none;
-            background: #333;
+            background: #3a3a3c;
             color: white;
             font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
             cursor: pointer;
             transition: 0.2s;
-            display: flex; align-items: center; justify-content: center;
         }
-        .control-btn:hover { background: #444; }
-        .control-btn.active { background: var(--primary); color: white; }
-        .control-btn.danger { background: var(--danger); }
+        .control-btn:active { transform: scale(0.9); }
+        .control-btn.active { background: white; color: black; } /* สถานะเปิด */
+        .control-btn.muted { background: rgba(255,255,255,0.1); color: var(--danger); position: relative; } /* สถานะปิด */
+        .control-btn.muted::after { content: '\f714'; font-family: "Font Awesome 6 Free"; position: absolute; font-size:0.8rem; } /* slash icon overlay */
+        .control-btn.hangup { background: var(--danger); color: white; width: 60px; height: 60px; }
 
-        /* Responsive */
+        /* --- RESPONSIVE MOBILE --- */
         @media (max-width: 768px) {
             #dashboard-screen { flex-direction: column; }
-            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid #333; }
-            .main-content { display: none; } /* On mobile, simplify */
-            .join-bar { position: relative; top: 0; right: 0; width: 100%; margin-top: 20px; }
-            .video-grid { grid-template-columns: 1fr; }
+            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid #333; padding: 15px; }
+            .main-dashboard { padding: 30px 15px; }
+            .room-input-container { flex-direction: column; }
+            .room-input-container button { width: 100%; }
+            .video-container { padding: 60px 10px 100px; }
         }
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="screen auth-container active">
-        <h2><i class="fas fa-cube"></i> เข้าสู่ระบบ</h2>
-        <p style="color:#888; margin-bottom:20px;">ยินดีต้อนรับกลับมา</p>
-        <div class="input-group">
+    <div id="login-screen" class="screen auth-wrapper active">
+        <div class="auth-box">
+            <i class="fas fa-video app-logo"></i>
+            <h2>ยินดีต้อนรับ</h2>
+            <p style="color:var(--gray); margin-bottom:20px;">เข้าสู่ระบบเพื่อเริ่มการโทร</p>
+            
             <input type="text" id="login-name" placeholder="ชื่อผู้ใช้">
-        </div>
-        <div class="input-group">
             <input type="tel" id="login-phone" placeholder="เบอร์โทรศัพท์">
+            
+            <button class="btn btn-primary" style="width:100%" onclick="authLogin()">เข้าสู่ระบบ</button>
+            <div class="auth-toggle" onclick="showScreen('register')">ยังไม่มีบัญชี? <span>สร้างบัญชีใหม่</span></div>
         </div>
-        <button class="btn btn-primary" style="width:100%" onclick="handleLogin()">ตกลง</button>
-        <div class="auth-toggle" onclick="switchAuth('register')">ยังไม่มีบัญชี? สร้างผู้ใช้ใหม่</div>
     </div>
 
-    <div id="register-screen" class="screen auth-container">
-        <h2><i class="fas fa-user-plus"></i> สร้างผู้ใช้ใหม่</h2>
-        <p style="color:#888; margin-bottom:20px;">กรอกข้อมูลเพื่อเริ่มใช้งาน</p>
-        <div class="input-group">
-            <input type="text" id="reg-name" placeholder="ชื่อ (ห้ามซ้ำ)">
-        </div>
-        <div class="input-group">
+    <div id="register-screen" class="screen auth-wrapper">
+        <div class="auth-box">
+            <i class="fas fa-user-plus app-logo"></i>
+            <h2>สร้างบัญชี</h2>
+            <p style="color:var(--gray); margin-bottom:20px;">กรอกข้อมูลของคุณ (สาธารณะ)</p>
+            
+            <input type="text" id="reg-name" placeholder="ชื่อที่ต้องการ (ห้ามซ้ำ)">
             <input type="tel" id="reg-phone" placeholder="เบอร์โทรศัพท์">
+            
+            <button class="btn btn-primary" style="width:100%" onclick="authRegister()">สมัครสมาชิก</button>
+            <div class="auth-toggle" onclick="showScreen('login')">มีบัญชีแล้ว? <span>เข้าสู่ระบบ</span></div>
         </div>
-        <button class="btn btn-primary" style="width:100%" onclick="handleRegister()">สร้างบัญชี</button>
-        <div class="auth-toggle" onclick="switchAuth('login')">มีบัญชีแล้ว? เข้าสู่ระบบ</div>
     </div>
 
     <div id="dashboard-screen" class="screen">
         <div class="sidebar">
-            <div class="profile-card">
-                <div class="profile-img-wrapper">
-                    <img id="profile-display" src="https://via.placeholder.com/80" class="profile-img">
-                    <label for="img-upload" class="file-upload">เปลี่ยนรูป</label>
-                    <input type="file" id="img-upload" style="display:none" accept="image/*" onchange="updateProfilePic(this)">
+            <div class="profile-section">
+                <div class="profile-pic-container">
+                    <img id="display-pic" src="https://via.placeholder.com/100" class="profile-pic">
+                    <label for="upload-pic" class="edit-overlay"><i class="fas fa-camera"></i> เปลี่ยนรูป</label>
+                    <input type="file" id="upload-pic" hidden accept="image/*" onchange="updateProfilePic(this)">
                 </div>
-                <h3 id="user-display-name">Guest</h3>
-                <p id="user-display-phone" style="font-size:0.8rem; color:#aaa;">0XX-XXX-XXXX</p>
-                <div style="margin-top:10px;">
-                    <button class="btn" style="font-size:0.8rem; padding:5px 10px; background:#444; color:white;" onclick="editProfile()">แก้ไขชื่อ</button>
-                    <button class="btn" style="font-size:0.8rem; padding:5px 10px; background:var(--danger); color:white;" onclick="logout()">ออก</button>
+                <h3 id="display-name">Loading...</h3>
+                <p id="display-phone" style="font-size:0.8rem; color:var(--gray);">...</p>
+                <div class="profile-actions">
+                    <button class="btn btn-secondary" style="padding: 5px 15px; font-size:0.8rem;" onclick="editName()"><i class="fas fa-pen"></i> แก้ชื่อ</button>
+                    <button class="btn btn-danger" style="padding: 5px 15px; font-size:0.8rem;" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
             </div>
 
-            <h4 style="margin-bottom:15px; color:#aaa;">เมนูห้องโทร</h4>
-            <button class="btn btn-primary room-create-btn" onclick="createRoomUI()"><i class="fas fa-plus"></i> สร้างห้องโทรใหม่</button>
-            
-            <div class="join-bar-mobile" style="margin-bottom:15px;">
-                <input type="text" id="sidebar-join-id" placeholder="ใส่ ID ห้องที่นี่..." style="margin-bottom:5px;">
-                <button class="btn btn-primary" style="width:100%;" onclick="joinRoomFromSidebar()">เข้าร่วมเลย</button>
-            </div>
+            <h4 style="color:var(--gray); margin-bottom:10px;">จัดการห้อง</h4>
+            <button class="btn btn-primary" style="width:100%; margin-bottom:20px;" onclick="createRoom()"><i class="fas fa-plus-circle"></i> สร้างห้องใหม่</button>
 
-            <div style="border-top:1px solid #444; margin:10px 0;"></div>
-            <h4 style="margin-bottom:10px;">ห้องของคุณ</h4>
-            <div id="my-room-list" class="room-list">
-                </div>
+            <h4 style="color:var(--gray); margin-bottom:10px;">ประวัติห้องของคุณ</h4>
+            <div id="my-rooms"></div>
         </div>
 
-        <div class="main-content">
-            <div class="join-bar">
-                <input type="text" id="top-join-id" placeholder="ระบุ ID ห้อง (เช่น 1234)" style="width:200px;">
-                <button class="btn btn-primary" onclick="joinRoomFromTop()"><i class="fas fa-sign-in-alt"></i> เข้าร่วม</button>
-            </div>
+        <div class="main-dashboard">
+            <div style="opacity:0.3; margin-bottom:20px;"><i class="fas fa-broadcast-tower" style="font-size:5rem;"></i></div>
+            <h2>เข้าร่วมการสนทนา</h2>
+            <p style="color:var(--gray);">ใส่ ID ห้องที่เพื่อนส่งให้ หรือสร้างห้องใหม่</p>
             
-            <div style="text-align:center; opacity:0.5;">
-                <i class="fas fa-video" style="font-size: 5rem; margin-bottom:20px;"></i>
-                <h2>เลือกห้อง หรือ สร้างห้องใหม่</h2>
-                <p>เพื่อเริ่มการสนทนากับเพื่อนของคุณ</p>
+            <div class="room-input-container">
+                <input type="text" id="join-room-id" placeholder="กรอก Room ID (เช่น 1234)" style="margin-bottom:0;">
+                <button class="btn btn-primary" onclick="joinRoomCheck()">เข้าร่วม</button>
             </div>
         </div>
     </div>
 
     <div id="video-screen" class="screen">
-        <div class="video-header">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <i class="fas fa-hashtag" style="color:var(--primary)"></i>
-                <span id="current-room-id" style="font-weight:bold; font-size:1.2rem;">ROOM-ID</span>
-            </div>
-            <div class="timer" id="call-timer">00:00</div>
+        <div class="call-header">
+            <div class="room-badge"><i class="fas fa-hashtag"></i> <span id="room-id-display">...</span></div>
+            <div style="color:white; font-weight:bold;" id="timer">00:00</div>
         </div>
 
-        <div id="video-grid" class="video-grid">
+        <div id="video-grid" class="video-container">
             </div>
 
-        <div class="controls-bar">
-            <button class="control-btn" id="btn-mic" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
-            <button class="control-btn" id="btn-cam" onclick="toggleCam()"><i class="fas fa-video"></i></button>
+        <div class="controls-wrapper">
+            <button class="control-btn active" id="btn-mic" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
+            <button class="control-btn active" id="btn-cam" onclick="toggleCam()"><i class="fas fa-video"></i></button>
+            <button class="control-btn" id="btn-speaker" onclick="toggleSpeaker()"><i class="fas fa-volume-up"></i></button>
             <button class="control-btn" id="btn-screen" onclick="toggleScreen()"><i class="fas fa-desktop"></i></button>
-            <button class="control-btn danger" onclick="leaveRoom()"><i class="fas fa-phone-slash"></i></button>
+            <button class="control-btn hangup" onclick="leaveRoom()"><i class="fas fa-phone-slash"></i></button>
         </div>
     </div>
 
     <script>
-        /* ===========================================================
-         CONFIGURATION PART (ส่วนตั้งค่า)
-         ===========================================================
-         เพื่อให้ใช้งานได้จริง คุณต้องไปที่ https://console.agora.io/ 
-         สมัครฟรี แล้วสร้าง Project เลือก "Testing Mode" แล้วเอา App ID มาใส่ตรงนี้
-        */
-        const AGORA_APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; // <--- ใส่ KEY ตรงนี้ !!! 
-        // ตัวอย่าง: const AGORA_APP_ID = "a1b2c3d4e5f6...";
+        // ==========================================
+        // ⚙️ CONFIGURATION (ใส่ APP ID ตรงนี้)
+        // ==========================================
+        const AGORA_APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; 
+        // ตัวอย่าง: const AGORA_APP_ID = ""; 
 
-        
-        /* --- STATE MANAGEMENT --- */
+        // --- STATE ---
         let currentUser = null;
-        let createdRooms = [];
-        
-        // Agora Client
         let client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-        let localTracks = {
-            videoTrack: null,
-            audioTrack: null,
-            screenTrack: null
-        };
+        let localTracks = { video: null, audio: null, screen: null };
+        let remoteUsers = {}; // Store remote users
         let isScreenSharing = false;
-        let callTimerInterval;
+        let isSpeakerOn = true; // For toggling remote audio
+        let timerInterval;
 
-        /* --- INITIALIZATION --- */
+        // --- INIT ---
         window.onload = () => {
-            // Check Login Persistence
-            const storedUser = localStorage.getItem('currentUser');
-            if (storedUser) {
-                currentUser = JSON.parse(storedUser);
+            const savedUser = localStorage.getItem('currentUser');
+            if(savedUser) {
+                currentUser = JSON.parse(savedUser);
                 loadDashboard();
             } else {
-                switchAuth('login');
+                showScreen('login');
             }
-
-            // Load saved rooms
-            const savedRooms = localStorage.getItem('createdRooms');
-            if(savedRooms) createdRooms = JSON.parse(savedRooms);
-
-            if (AGORA_APP_ID === "ใส่_AGORA_APP_ID_ของคุณที่นี่") {
-                alert("⚠️ คำเตือน: คุณยังไม่ได้ใส่ Agora App ID ในโค้ด! \nกรุณาแก้โค้ดบรรทัดที่ 260 เพื่อให้โทรได้จริง");
-            }
+            if(AGORA_APP_ID.length < 10) alert("⚠️ อย่าลืมใส่ Agora App ID ในโค้ดบรรทัดที่ 355");
         };
 
-        /* --- AUTH SYSTEM (Mock LocalStorage) --- */
-        function switchAuth(screen) {
+        function showScreen(name) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            if(screen === 'login') document.getElementById('login-screen').classList.add('active');
-            else document.getElementById('register-screen').classList.add('active');
+            if(name === 'login') document.getElementById('login-screen').classList.add('active');
+            else if(name === 'register') document.getElementById('register-screen').classList.add('active');
+            else if(name === 'dashboard') document.getElementById('dashboard-screen').classList.add('active');
+            else if(name === 'video') document.getElementById('video-screen').classList.add('active');
         }
 
-        function handleRegister() {
+        // --- AUTH & PROFILE ---
+        function authRegister() {
             const name = document.getElementById('reg-name').value.trim();
             const phone = document.getElementById('reg-phone').value.trim();
-            
-            if(!name || !phone) return alert("กรุณากรอกข้อมูลให้ครบ");
-            
-            // Check duplicates (Mock "Public System")
-            let allUsers = JSON.parse(localStorage.getItem('allUsers') || "[]");
-            if(allUsers.find(u => u.name === name)) {
-                return alert("ชื่อนี้มีผู้ใช้แล้ว (Mock Public Check)");
-            }
+            if(!name || !phone) return alert("กรอกข้อมูลให้ครบ");
+
+            let db = JSON.parse(localStorage.getItem('usersDB') || "[]");
+            if(db.find(u => u.name === name)) return alert("ชื่อนี้ถูกใช้แล้ว");
 
             const newUser = { name, phone, pic: null };
-            allUsers.push(newUser);
-            localStorage.setItem('allUsers', JSON.stringify(allUsers));
-            alert("ลงทะเบียนสำเร็จ! ข้อมูลถูกบันทึกในระบบสาธารณะ(จำลอง)");
-            switchAuth('login');
+            db.push(newUser);
+            localStorage.setItem('usersDB', JSON.stringify(db));
+            alert("สร้างบัญชีสำเร็จ!");
+            showScreen('login');
         }
 
-        function handleLogin() {
+        function authLogin() {
             const name = document.getElementById('login-name').value.trim();
             const phone = document.getElementById('login-phone').value.trim();
-            
-            let allUsers = JSON.parse(localStorage.getItem('allUsers') || "[]");
-            const user = allUsers.find(u => u.name === name && u.phone === phone);
+            let db = JSON.parse(localStorage.getItem('usersDB') || "[]");
+            const user = db.find(u => u.name === name && u.phone === phone);
 
             if(user) {
                 currentUser = user;
                 localStorage.setItem('currentUser', JSON.stringify(user));
                 loadDashboard();
             } else {
-                alert("ไม่พบผู้ใช้ หรือ เบอร์โทรผิด กรุณาสร้างบัญชีใหม่");
+                alert("ข้อมูลไม่ถูกต้อง");
             }
         }
 
@@ -411,41 +400,34 @@
             location.reload();
         }
 
-        /* --- DASHBOARD LOGIC --- */
         function loadDashboard() {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('dashboard-screen').classList.add('active');
-            
-            // Update UI
-            document.getElementById('user-display-name').innerText = currentUser.name;
-            document.getElementById('user-display-phone').innerText = currentUser.phone;
-            if(currentUser.pic) document.getElementById('profile-display').src = currentUser.pic;
-
-            renderRoomList();
+            showScreen('dashboard');
+            document.getElementById('display-name').innerText = currentUser.name;
+            document.getElementById('display-phone').innerText = currentUser.phone;
+            if(currentUser.pic) document.getElementById('display-pic').src = currentUser.pic;
+            renderRooms();
         }
 
         function updateProfilePic(input) {
-            if (input.files && input.files[0]) {
+            if(input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = (e) => {
                     currentUser.pic = e.target.result;
-                    document.getElementById('profile-display').src = e.target.result;
-                    // Update storage
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    // Update in "All Users" DB too
-                    let allUsers = JSON.parse(localStorage.getItem('allUsers') || "[]");
-                    const idx = allUsers.findIndex(u => u.name === currentUser.name);
-                    if(idx !== -1) {
-                        allUsers[idx] = currentUser;
-                        localStorage.setItem('allUsers', JSON.stringify(allUsers));
-                    }
-                }
+                    
+                    // Update DB
+                    let db = JSON.parse(localStorage.getItem('usersDB'));
+                    const idx = db.findIndex(u => u.name === currentUser.name);
+                    if(idx > -1) { db[idx] = currentUser; localStorage.setItem('usersDB', JSON.stringify(db)); }
+                    
+                    loadDashboard();
+                };
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
-        function editProfile() {
-            const newName = prompt("ใส่ชื่อใหม่ของคุณ:", currentUser.name);
+        function editName() {
+            const newName = prompt("ชื่อใหม่:", currentUser.name);
             if(newName && newName !== currentUser.name) {
                 currentUser.name = newName;
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -453,207 +435,213 @@
             }
         }
 
-        /* --- ROOM LOGIC --- */
-        function createRoomUI() {
-            const roomId = Math.floor(1000 + Math.random() * 9000).toString(); // Generate 4 digit ID
-            const room = { id: roomId, owner: currentUser.name, createdAt: new Date().toLocaleTimeString() };
-            
-            createdRooms.push(room);
-            localStorage.setItem('createdRooms', JSON.stringify(createdRooms));
-            renderRoomList();
-            
-            // Auto join
-            joinRoom(roomId);
+        // --- ROOMS ---
+        function createRoom() {
+            const id = Math.floor(1000 + Math.random() * 9000).toString();
+            let rooms = JSON.parse(localStorage.getItem('myRooms') || "[]");
+            rooms.push({ id, date: new Date().toLocaleDateString() });
+            localStorage.setItem('myRooms', JSON.stringify(rooms));
+            renderRooms();
+            joinRoom(id);
         }
 
-        function renderRoomList() {
-            const list = document.getElementById('my-room-list');
-            list.innerHTML = '';
-            createdRooms.forEach(room => {
-                const item = document.createElement('div');
-                item.className = 'room-item';
-                item.innerHTML = `
-                    <div>
-                        <div style="font-weight:bold; color:var(--primary)">ID: ${room.id}</div>
-                        <div style="font-size:0.8rem; color:#888;">สร้างโดย: คุณ</div>
-                    </div>
-                    <button class="btn btn-primary" style="padding:5px 10px; font-size:0.8rem;" onclick="joinRoom('${room.id}')">เข้าร่วม</button>
-                `;
-                list.appendChild(item);
+        function renderRooms() {
+            const list = document.getElementById('my-rooms');
+            list.innerHTML = "";
+            let rooms = JSON.parse(localStorage.getItem('myRooms') || "[]");
+            rooms.forEach(r => {
+                list.innerHTML += `
+                    <div class="room-item">
+                        <div>
+                            <h4>ID: ${r.id}</h4>
+                            <small style="color:#666">${r.date}</small>
+                        </div>
+                        <button class="btn btn-primary" style="padding:5px 10px" onclick="joinRoom('${r.id}')">Join</button>
+                    </div>`;
             });
         }
 
-        function joinRoomFromSidebar() {
-            const id = document.getElementById('sidebar-join-id').value;
+        function joinRoomCheck() {
+            const id = document.getElementById('join-room-id').value;
             if(id) joinRoom(id);
         }
 
-        function joinRoomFromTop() {
-            const id = document.getElementById('top-join-id').value;
-            if(id) joinRoom(id);
-        }
-
-        /* --- REAL VIDEO CALL LOGIC (AGORA) --- */
+        // --- VIDEO CALL CORE (AGORA) ---
         async function joinRoom(roomId) {
-            if(!roomId) return alert("กรุณาใส่ Room ID");
-            if (AGORA_APP_ID.length < 10) return alert("กรุณาใส่ App ID ในโค้ดก่อนครับ");
+            if(AGORA_APP_ID.length < 10) return alert("กรุณาใส่ App ID ในโค้ด");
+            
+            showScreen('video');
+            document.getElementById('room-id-display').innerText = roomId;
+            startTimer();
 
-            // Switch UI
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('video-screen').classList.add('active');
-            document.getElementById('current-room-id').innerText = "ID: " + roomId;
-
-            // Start Timer
-            let seconds = 0;
-            callTimerInterval = setInterval(() => {
-                seconds++;
-                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-                const secs = (seconds % 60).toString().padStart(2, '0');
-                document.getElementById('call-timer').innerText = `${mins}:${secs}`;
-            }, 1000);
-
-            // AGORA JOIN
             try {
-                // Join channel
+                // 1. Join Channel
                 const uid = await client.join(AGORA_APP_ID, roomId, null, null);
 
-                // Create local tracks
-                [localTracks.audioTrack, localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
-
-                // Display local video
-                const localPlayer = `
-                    <div class="video-user" id="user-container-${uid}">
-                        <div id="user-${uid}" class="video-player"></div>
-                        <div class="user-label">คุณ (Me)</div>
-                    </div>
-                `;
-                document.getElementById('video-grid').insertAdjacentHTML('beforeend', localPlayer);
-                localTracks.videoTrack.play(`user-${uid}`);
-
-                // Publish tracks
-                await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
-
-                console.log("Join success!");
+                // 2. Create & Publish Local Tracks
+                [localTracks.audio, localTracks.video] = await AgoraRTC.createMicrophoneAndCameraTracks();
+                
+                // Add Local Video to Grid
+                addVideoUser(uid, localTracks.video, true);
+                
+                await client.publish([localTracks.audio, localTracks.video]);
 
             } catch (error) {
                 console.error(error);
-                alert("เกิดข้อผิดพลาดในการเชื่อมต่อ: " + error.message);
+                alert("Error: " + error.message);
                 leaveRoom();
             }
         }
 
-        // Handle Remote Users
+        // --- HANDLE REMOTE USERS ---
         client.on("user-published", async (user, mediaType) => {
             await client.subscribe(user, mediaType);
+            remoteUsers[user.uid] = user;
 
             if (mediaType === "video") {
-                // Check if existing player
-                const playerContainer = document.getElementById(`user-container-${user.uid}`);
-                if (!playerContainer) {
-                    const remotePlayer = `
-                        <div class="video-user" id="user-container-${user.uid}">
-                            <div id="user-${user.uid}" class="video-player"></div>
-                            <div class="user-label">ผู้ใช้ ${user.uid}</div>
-                        </div>
-                    `;
-                    document.getElementById('video-grid').insertAdjacentHTML('beforeend', remotePlayer);
-                }
-                user.videoTrack.play(`user-${user.uid}`);
+                // เพิ่มหน้าจอเพื่อนทันทีเมื่อเพื่อนเปิดกล้อง
+                addVideoUser(user.uid, user.videoTrack, false);
             }
-
             if (mediaType === "audio") {
                 user.audioTrack.play();
+                // ถ้า Speaker ปิดอยู่ ให้ mute เสียงที่เข้ามาทันที
+                if(!isSpeakerOn) user.audioTrack.setVolume(0);
             }
         });
 
         client.on("user-unpublished", (user, mediaType) => {
-            if (mediaType === "video") {
-                const playerContainer = document.getElementById(`user-container-${user.uid}`);
-                if(playerContainer) playerContainer.remove();
-            }
+            if (mediaType === "video") removeVideoUser(user.uid);
         });
 
         client.on("user-left", (user) => {
-            const playerContainer = document.getElementById(`user-container-${user.uid}`);
-            if(playerContainer) playerContainer.remove();
+            delete remoteUsers[user.uid];
+            removeVideoUser(user.uid);
         });
 
-        /* --- IN-CALL CONTROLS --- */
+        // --- UI HELPERS FOR VIDEO ---
+        function addVideoUser(uid, videoTrack, isLocal) {
+            // เช็คว่ามีอยู่แล้วไหม
+            if(document.getElementById(`user-container-${uid}`)) return;
+
+            const container = document.createElement('div');
+            container.className = 'user-video-card';
+            container.id = `user-container-${uid}`;
+            container.innerHTML = `
+                <div id="vid-${uid}" class="video-player"></div>
+                <div class="user-name-tag">${isLocal ? 'ฉัน (Me)' : 'เพื่อน ('+uid+')'}</div>
+            `;
+            document.getElementById('video-grid').appendChild(container);
+            
+            videoTrack.play(`vid-${uid}`);
+        }
+
+        function removeVideoUser(uid) {
+            const el = document.getElementById(`user-container-${uid}`);
+            if(el) el.remove();
+        }
+
+        // --- CONTROLS ---
         async function leaveRoom() {
-            // Stop tracks
-            for (let trackName in localTracks) {
-                if (localTracks[trackName]) {
-                    localTracks[trackName].stop();
-                    localTracks[trackName].close();
-                    localTracks[trackName] = null;
+            for(let key in localTracks) {
+                if(localTracks[key]) {
+                    localTracks[key].stop();
+                    localTracks[key].close();
+                    localTracks[key] = null;
                 }
             }
-            // Leave channel
             await client.leave();
-            
-            // Clear UI
-            document.getElementById('video-grid').innerHTML = '';
-            clearInterval(callTimerInterval);
-            
-            // Go back
+            document.getElementById('video-grid').innerHTML = "";
+            stopTimer();
             loadDashboard();
         }
 
         function toggleMic() {
-            if(localTracks.audioTrack) {
-                const muted = localTracks.audioTrack.muted;
-                localTracks.audioTrack.setMuted(!muted);
-                document.getElementById('btn-mic').classList.toggle('danger');
-                document.getElementById('btn-mic').innerHTML = !muted ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
+            if(localTracks.audio) {
+                const muted = localTracks.audio.muted;
+                localTracks.audio.setMuted(!muted);
+                toggleBtnStyle('btn-mic', !muted);
             }
         }
 
         function toggleCam() {
-            if(localTracks.videoTrack) {
-                const muted = localTracks.videoTrack.muted;
-                localTracks.videoTrack.setMuted(!muted);
-                document.getElementById('btn-cam').classList.toggle('danger');
-                document.getElementById('btn-cam').innerHTML = !muted ? '<i class="fas fa-video-slash"></i>' : '<i class="fas fa-video"></i>';
+            if(localTracks.video) {
+                const muted = localTracks.video.muted;
+                localTracks.video.setMuted(!muted);
+                toggleBtnStyle('btn-cam', !muted);
             }
+        }
+
+        function toggleSpeaker() {
+            // ปุ่มนี้จะ Mute เสียงขาเข้าทั้งหมด (เพราะเบราว์เซอร์ไม่อนุญาตให้สลับ Output Device บนมือถือตรงๆ)
+            isSpeakerOn = !isSpeakerOn;
+            toggleBtnStyle('btn-speaker', isSpeakerOn); // ถ้าเปิด -> active style
+            
+            // Loop remote users and set volume
+            Object.values(remoteUsers).forEach(user => {
+                if(user.audioTrack) {
+                    user.audioTrack.setVolume(isSpeakerOn ? 100 : 0);
+                }
+            });
         }
 
         async function toggleScreen() {
-            if(!isScreenSharing) {
-                try {
-                    // Create screen track
-                    localTracks.screenTrack = await AgoraRTC.createScreenVideoTrack();
+            try {
+                if(!isScreenSharing) {
+                    // Start Share
+                    localTracks.screen = await AgoraRTC.createScreenVideoTrack();
+                    await client.unpublish(localTracks.video);
                     
-                    // Unpublish camera, publish screen
-                    await client.unpublish(localTracks.videoTrack);
-                    await client.publish(localTracks.screenTrack);
-                    
-                    // Show screen locally
-                    localTracks.screenTrack.play(`user-${client.uid}`);
-                    
+                    // Remove my cam view and replace with screen view
+                    removeVideoUser(client.uid);
+                    addVideoUser(client.uid, localTracks.screen, true); // Add screen to grid
+
+                    await client.publish(localTracks.screen);
                     isScreenSharing = true;
                     document.getElementById('btn-screen').classList.add('active');
 
-                    // Handle if user clicks "Stop Sharing" on browser UI
-                    localTracks.screenTrack.on("track-ended", () => {
-                        toggleScreen();
-                    });
+                    localTracks.screen.on("track-ended", toggleScreen); // Handle system stop btn
+                } else {
+                    // Stop Share
+                    await client.unpublish(localTracks.screen);
+                    localTracks.screen.close();
+                    localTracks.screen = null;
 
-                } catch(e) {
-                    console.error(e);
+                    // Back to Camera
+                    removeVideoUser(client.uid);
+                    addVideoUser(client.uid, localTracks.video, true);
+                    
+                    await client.publish(localTracks.video);
+                    isScreenSharing = false;
+                    document.getElementById('btn-screen').classList.remove('active');
                 }
-            } else {
-                // Switch back to camera
-                await client.unpublish(localTracks.screenTrack);
-                localTracks.screenTrack.close();
-                localTracks.screenTrack = null;
-                
-                await client.publish(localTracks.videoTrack);
-                localTracks.videoTrack.play(`user-${client.uid}`);
-
-                isScreenSharing = false;
-                document.getElementById('btn-screen').classList.remove('active');
+            } catch(e) {
+                console.error(e);
+                alert("การแชร์หน้าจอบนมือถือบางรุ่นอาจไม่รองรับ หรือถูกยกเลิก");
             }
         }
+
+        function toggleBtnStyle(id, isActive) {
+            const btn = document.getElementById(id);
+            if(isActive) {
+                btn.classList.add('active');
+                btn.classList.remove('muted');
+            } else {
+                btn.classList.remove('active');
+                btn.classList.add('muted');
+            }
+        }
+
+        // --- TIMER ---
+        function startTimer() {
+            let sec = 0;
+            timerInterval = setInterval(() => {
+                sec++;
+                let m = Math.floor(sec/60).toString().padStart(2,'0');
+                let s = (sec%60).toString().padStart(2,'0');
+                document.getElementById('timer').innerText = `${m}:${s}`;
+            }, 1000);
+        }
+        function stopTimer() { clearInterval(timerInterval); }
     </script>
 </body>
 </html>
