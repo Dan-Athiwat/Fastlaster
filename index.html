@@ -3,21 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NextGen Video Call (V4.1 Fixed)</title>
+    <title>NextGen Video Call (V4.2 Universal Share)</title>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.18.2.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
+        /* --- THEME --- */
         :root {
             --primary: #007AFF; --bg: #121212; --surface: #1e1e1e;
             --text: #ffffff; --danger: #ff3b30; --success: #34c759;
         }
+
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        body { background-color: var(--bg); color: var(--text); height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
+        body {
+            background-color: var(--bg); color: var(--text);
+            height: 100vh; width: 100vw; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
 
-        /* --- UI COMPONENTS --- */
+        /* --- COMPONENTS --- */
         .btn {
             border: none; border-radius: 12px; padding: 12px 20px; cursor: pointer;
             font-size: 1rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -37,21 +43,22 @@
         .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 10; background: var(--bg); }
         .screen.active { display: flex; }
 
-        /* AUTH SCREEN */
+        /* Auth Screen */
         .auth-container {
-            justify-content: center; align-items: center; background: radial-gradient(circle, #2a2a2a 0%, #000000 100%); padding: 20px;
+            justify-content: center; align-items: center;
+            background: radial-gradient(circle, #2a2a2a 0%, #000000 100%); padding: 20px;
         }
         .auth-box {
             width: 100%; max-width: 400px; background: rgba(30, 30, 30, 0.95);
-            padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            padding: 40px; border-radius: 20px; text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
-        /* แก้ไขปุ่มสลับหน้า ให้เป็นปุ่มชัดเจน แยก Event */
         .switch-btn {
             background: none; border: none; color: var(--primary); margin-top: 20px;
             cursor: pointer; text-decoration: underline; font-size: 0.9rem;
         }
 
-        /* --- DASHBOARD --- */
+        /* --- DASHBOARD (SIDEBAR STYLE) --- */
         #dashboard-screen { flex-direction: row; }
         .sidebar {
             width: 320px; background: var(--surface); border-right: 1px solid #333;
@@ -90,18 +97,15 @@
             align-content: center; justify-content: center;
         }
 
-        /* Responsive Grid Logic (Desktop & Mobile Unified) */
+        /* Video Item Styling */
         .video-item {
             background: #222; border-radius: 12px; overflow: hidden; position: relative;
             width: 100%; height: 100%; min-height: 200px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
-        /* Grid Layouts */
-        .grid-1 { grid-template-columns: 1fr; }
-        .grid-2 { grid-template-columns: 1fr 1fr; } 
-        /* Mobile: if portrait, stack vertically. if landscape, allow 2 cols */
-        
         .video-player { width: 100%; height: 100%; object-fit: cover; }
+        /* *** สำคัญ: แชร์หน้าจอต้องเป็น contain เพื่อให้เห็นครบ *** */
         .video-player.screen-share { object-fit: contain; background: #111; } 
+        
         .name-label {
             position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6);
             color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem;
@@ -122,7 +126,7 @@
         .ctrl-btn.off { background: rgba(255,255,255,0.1); color: var(--danger); }
         .ctrl-btn.hangup { background: var(--danger); color: white; width: 60px; }
 
-        /* --- MOBILE TWEAKS --- */
+        /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 768px) {
             #dashboard-screen { flex-direction: column; }
             .sidebar { width: 100%; height: 100%; border: none; padding: 20px; display: flex; }
@@ -137,16 +141,10 @@
             .mobile-back-btn { display: block; }
             .join-input-group { flex-direction: column; }
 
-            /* Mobile Video Grid: Auto flow */
             .video-grid { 
                 display: flex; flex-direction: column; overflow-y: auto; justify-content: flex-start;
             }
             .video-item { flex-shrink: 0; height: 250px; margin-bottom: 10px; }
-            /* Desktop style grid on Mobile Landscape */
-            @media (orientation: landscape) {
-                .video-grid { display: grid; grid-template-columns: 1fr 1fr; }
-                .video-item { height: auto; }
-            }
         }
         
         /* Desktop Grid Classes */
@@ -242,7 +240,7 @@
 
     <script>
         // ==========================================
-        // CONFIGURATION
+        // ⚙️ CONFIGURATION (ใส่ APP ID ตรงนี้)
         // ==========================================
         const AGORA_APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; 
 
@@ -256,9 +254,13 @@
 
         // --- INIT ---
         window.onload = () => {
-            // เช็ค HTTPS ทันที
             if(location.protocol !== 'https:' && location.hostname !== 'localhost') {
-                alert("⚠️ สำคัญ: กรุณานำเว็บขึ้น HTTPS (เช่น Vercel/GitHub Pages) ไม่งั้นมือถือจะเปิดกล้องไม่ได้");
+                alert("⚠️ เพื่อให้แชร์หน้าจอได้ กรุณารันบน HTTPS เท่านั้น");
+            }
+            // Check In-App Browser (Line/FB)
+            const ua = navigator.userAgent;
+            if (ua.includes("Line") || ua.includes("FBAN") || ua.includes("FBAV")) {
+                alert("⚠️ กรุณาเปิดใน Chrome หรือ Safari เพื่อใช้งานฟีเจอร์แชร์หน้าจอ");
             }
 
             const saved = localStorage.getItem('currUser');
@@ -269,10 +271,9 @@
             } else {
                 showScreen('login');
             }
-            if(AGORA_APP_ID.length < 10) alert("⚠️ อย่าลืมใส่ Agora App ID นะครับ!");
         };
 
-        // --- NAVIGATION ---
+        // --- NAVIGATION & AUTH ---
         function showScreen(name) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             if(name === 'login') document.getElementById('login-ui').classList.add('active');
@@ -280,83 +281,56 @@
             else if(name === 'dashboard') document.getElementById('dashboard-screen').classList.add('active');
             else if(name === 'video') document.getElementById('video-screen').classList.add('active');
         }
-
-        // --- AUTH & FIX BUGS ---
-        function goToRegister() { showScreen('register'); } // แยกฟังก์ชันชัดเจน
-        function goToLogin() { showScreen('login'); } // แยกฟังก์ชันชัดเจน
-
+        function goToRegister() { showScreen('register'); }
+        function goToLogin() { showScreen('login'); }
         function toggleMobileJoin(show) {
             const main = document.getElementById('main-content');
-            if(show) main.classList.add('show-mobile');
-            else main.classList.remove('show-mobile');
+            if(show) main.classList.add('show-mobile'); else main.classList.remove('show-mobile');
         }
 
         function doRegister() {
             const name = document.getElementById('r-name').value.trim();
             const phone = document.getElementById('r-phone').value.trim();
             if(!name || !phone) return alert("กรอกข้อมูลให้ครบ");
-
             let db = JSON.parse(localStorage.getItem('userDB') || "[]");
             if(db.find(u => u.name === name)) return alert("ชื่อนี้ซ้ำ");
-
-            db.push({ name, phone, pic: null });
-            localStorage.setItem('userDB', JSON.stringify(db));
-            alert("สมัครสำเร็จ!");
-            goToLogin();
+            db.push({ name, phone, pic: null }); localStorage.setItem('userDB', JSON.stringify(db));
+            alert("สมัครสำเร็จ!"); goToLogin();
         }
-
         function doLogin() {
             const name = document.getElementById('l-name').value.trim();
             const phone = document.getElementById('l-phone').value.trim();
             let db = JSON.parse(localStorage.getItem('userDB') || "[]");
             const user = db.find(u => u.name === name && u.phone === phone);
-
-            if(user) {
-                currentUser = user;
-                localStorage.setItem('currUser', JSON.stringify(user));
-                showScreen('dashboard');
-                renderProfile();
-            } else {
-                alert("ข้อมูลไม่ถูกต้อง");
-            }
+            if(user) { currentUser = user; localStorage.setItem('currUser', JSON.stringify(user)); showScreen('dashboard'); renderProfile(); }
+            else { alert("ข้อมูลไม่ถูกต้อง"); }
         }
-
-        function logout() {
-            localStorage.removeItem('currUser');
-            location.reload();
-        }
+        function logout() { localStorage.removeItem('currUser'); location.reload(); }
 
         // --- PROFILE ---
         function renderProfile() {
             document.getElementById('user-name').innerText = currentUser.name;
             document.getElementById('user-phone').innerText = currentUser.phone;
             if(currentUser.pic) document.getElementById('user-pic').src = currentUser.pic;
-            
-            const list = document.getElementById('room-list');
-            list.innerHTML = '';
+            const list = document.getElementById('room-list'); list.innerHTML = '';
             let myRooms = JSON.parse(localStorage.getItem('myRooms') || "[]");
             myRooms.forEach(r => {
-                list.innerHTML += `
-                    <div class="room-card">
-                        <div><div style="color:var(--primary); font-weight:bold;">ID: ${r.id}</div><small>${r.date}</small></div>
-                        <button class="btn btn-primary" style="width:auto; font-size:0.8rem; padding:5px 15px;" onclick="joinRoom('${r.id}')">Join</button>
-                    </div>`;
+                list.innerHTML += `<div class="room-card">
+                    <div><div style="color:var(--primary); font-weight:bold;">ID: ${r.id}</div><small>${r.date}</small></div>
+                    <button class="btn btn-primary" style="width:auto; font-size:0.8rem; padding:5px 15px;" onclick="joinRoom('${r.id}')">Join</button>
+                </div>`;
             });
         }
-
         function updatePic(input) {
             if(input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    currentUser.pic = e.target.result;
-                    localStorage.setItem('currUser', JSON.stringify(currentUser));
-                    
+                const r = new FileReader();
+                r.onload = (e) => {
+                    currentUser.pic = e.target.result; localStorage.setItem('currUser', JSON.stringify(currentUser));
                     let db = JSON.parse(localStorage.getItem('userDB'));
                     const i = db.findIndex(u => u.name === currentUser.name);
                     if(i > -1) { db[i] = currentUser; localStorage.setItem('userDB', JSON.stringify(db)); }
                     renderProfile();
-                };
-                reader.readAsDataURL(input.files[0]);
+                }; r.readAsDataURL(input.files[0]);
             }
         }
         function editName() {
@@ -369,41 +343,32 @@
             const id = Math.floor(1000 + Math.random() * 9000).toString();
             let rooms = JSON.parse(localStorage.getItem('myRooms') || "[]");
             rooms.unshift({ id, date: new Date().toLocaleDateString() });
-            localStorage.setItem('myRooms', JSON.stringify(rooms));
-            renderProfile();
-            joinRoom(id);
+            localStorage.setItem('myRooms', JSON.stringify(rooms)); renderProfile(); joinRoom(id);
         }
-        function joinRoomFromInput() {
-            const id = document.getElementById('join-id').value;
-            if(id) joinRoom(id);
-        }
+        function joinRoomFromInput() { const id = document.getElementById('join-id').value; if(id) joinRoom(id); }
 
-        // --- VIDEO CALL (FIX PERMISSION) ---
+        // --- VIDEO CALL ---
         async function joinRoom(roomId) {
+            if(AGORA_APP_ID.length < 10) return alert("⚠️ ใส่ App ID ด้วยครับ");
+            
             showScreen('video');
             document.getElementById('room-display').innerText = "ID: " + roomId;
             
             try {
                 const uid = await client.join(AGORA_APP_ID, roomId, null, null);
                 
-                // Try-Catch เพื่อแก้ปัญหา Permission Error
                 try {
                     [localTracks.audio, localTracks.video] = await AgoraRTC.createMicrophoneAndCameraTracks();
                 } catch (err) {
-                    console.error("Permission Error:", err);
-                    alert("❌ ไม่สามารถเข้าถึงกล้อง/ไมค์ได้\nสาเหตุ: คุณอาจไม่ได้ใช้ HTTPS หรือเปิดใน Line/Facebook Browser\nวิธีแก้: กรุณา Copy ลิงก์ไปเปิดใน Chrome หรือ Safari");
-                    leaveRoom();
-                    return;
+                    console.error("Mic/Cam Error:", err);
+                    alert("⚠️ ไม่สามารถเปิดกล้องได้: กรุณาเช็คการอนุญาตสิทธิ์ (Allow) หรือลองเปิดใน Browser อื่น");
+                    leaveRoom(); return;
                 }
 
                 addVideo(uid, localTracks.video, true, false);
                 await client.publish([localTracks.audio, localTracks.video]);
 
-            } catch(e) {
-                console.error(e);
-                alert("เกิดข้อผิดพลาดในการเชื่อมต่อ: " + e.message);
-                leaveRoom();
-            }
+            } catch(e) { console.error(e); leaveRoom(); }
         }
 
         client.on("user-published", async (user, mediaType) => {
@@ -416,7 +381,6 @@
             }
             updateGrid();
         });
-
         client.on("user-unpublished", (user, mediaType) => { if(mediaType === "video") removeVideo(user.uid); });
         client.on("user-left", (user) => { delete remoteUsers[user.uid]; removeVideo(user.uid); });
 
@@ -425,87 +389,91 @@
             const div = document.createElement('div');
             div.className = 'video-item';
             div.id = `vid-wrap-${uid}`;
+            // ถ้าเป็น Screen Share ให้ใช้ class ที่ object-fit: contain
             div.innerHTML = `<div id="play-${uid}" class="video-player ${isScreen?'screen-share':''}"></div><div class="name-label">${isLocal ? 'Me' : 'User ' + uid}</div>`;
             document.getElementById('video-grid').appendChild(div);
-            track.play(`play-${uid}`);
-            updateGrid();
+            track.play(`play-${uid}`); updateGrid();
         }
-
-        function removeVideo(uid) {
-            const el = document.getElementById(`vid-wrap-${uid}`);
-            if(el) el.remove();
-            updateGrid();
-        }
-
+        function removeVideo(uid) { const el = document.getElementById(`vid-wrap-${uid}`); if(el) el.remove(); updateGrid(); }
         function updateGrid() {
             const grid = document.getElementById('video-grid');
             const count = grid.children.length;
             grid.className = 'video-grid';
-            if(window.innerWidth > 768) { // Desktop Logic
+            if(window.innerWidth > 768) {
                 if(count <= 1) grid.classList.add('grid-1');
                 else if(count === 2) grid.classList.add('grid-2');
-                else if(count === 3) grid.classList.add('grid-3');
-                else if(count === 4) grid.classList.add('grid-4');
+                else if(count <= 4) grid.classList.add('grid-4');
                 else grid.classList.add('grid-6');
             }
         }
 
-        // --- CONTROLS ---
         function leaveRoom() {
             if(localTracks.audio) localTracks.audio.close();
             if(localTracks.video) localTracks.video.close();
             if(localTracks.screen) localTracks.screen.close();
-            client.leave();
-            remoteUsers = {}; localTracks = {}; isScreenSharing = false;
-            document.getElementById('video-grid').innerHTML = '';
-            showScreen('dashboard');
+            client.leave(); remoteUsers = {}; localTracks = {}; isScreenSharing = false;
+            document.getElementById('video-grid').innerHTML = ''; showScreen('dashboard');
         }
 
         function toggleMic() {
-            if(localTracks.audio) {
-                const m = !localTracks.audio.muted;
-                localTracks.audio.setMuted(m);
-                btnStyle('btn-mic', !m);
-            }
+            if(localTracks.audio) { localTracks.audio.setMuted(!localTracks.audio.muted); btnStyle('btn-mic', !localTracks.audio.muted); }
         }
         function toggleCam() {
-            if(localTracks.video) {
-                const m = !localTracks.video.muted;
-                localTracks.video.setMuted(m);
-                btnStyle('btn-cam', !m);
-            }
+            if(localTracks.video) { localTracks.video.setMuted(!localTracks.video.muted); btnStyle('btn-cam', !localTracks.video.muted); }
         }
         function toggleSpeaker() {
-            isSpeakerOn = !isSpeakerOn;
-            btnStyle('btn-vol', isSpeakerOn);
-            Object.values(remoteUsers).forEach(u => {
-                if(u.audioTrack) u.audioTrack.setVolume(isSpeakerOn ? 100 : 0);
-            });
-            const icon = document.querySelector('#btn-vol i');
-            icon.className = isSpeakerOn ? 'fas fa-volume-up' : 'fas fa-volume-mute';
+            isSpeakerOn = !isSpeakerOn; btnStyle('btn-vol', isSpeakerOn);
+            Object.values(remoteUsers).forEach(u => { if(u.audioTrack) u.audioTrack.setVolume(isSpeakerOn ? 100 : 0); });
         }
+        
+        // --- UNIVERSAL SCREEN SHARE (MOBILE & PC) ---
         async function toggleShare() {
             try {
                 if(!isScreenSharing) {
-                    localTracks.screen = await AgoraRTC.createScreenVideoTrack();
+                    // Create Screen Track (Works on Mobile & PC automatically)
+                    // Note: Browser will prompt user permission
+                    localTracks.screen = await AgoraRTC.createScreenVideoTrack({
+                        encoderConfig: "720p_1", // Use safe resolution for mobile
+                        optimizationMode: "detail" // Focus on text/details
+                    });
+
+                    // Switch tracks
                     await client.unpublish(localTracks.video);
                     removeVideo(client.uid);
+                    
+                    // Add Screen to Grid (mark as isScreen=true)
                     addVideo(client.uid, localTracks.screen, true, true);
+                    
                     await client.publish(localTracks.screen);
                     isScreenSharing = true;
                     btnStyle('btn-screen', true);
+
+                    // Listen for "Stop Sharing" click from Browser UI
                     localTracks.screen.on("track-ended", toggleShare);
+
                 } else {
+                    // Stop Sharing
                     await client.unpublish(localTracks.screen);
                     localTracks.screen.close();
+                    
+                    // Switch back to Camera
                     removeVideo(client.uid);
                     addVideo(client.uid, localTracks.video, true, false);
+                    
                     await client.publish(localTracks.video);
                     isScreenSharing = false;
                     btnStyle('btn-screen', false);
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) {
+                console.error(e);
+                if(e.code === "PERMISSION_DENIED") {
+                    // User clicked Cancel
+                } else {
+                    alert("⚠️ อุปกรณ์นี้ไม่รองรับการแชร์หน้าจอ หรือ Browser เวอร์ชันเก่าเกินไป");
+                }
+            }
         }
+
         function btnStyle(id, on) {
             const el = document.getElementById(id);
             if(on) { el.classList.add('active'); el.classList.remove('off'); }
