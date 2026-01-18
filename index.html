@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatApp v1.6 - Real Online</title>
+    <style>
+        /* CSS UI เดิม + ปรับปรุง */
+        :root { --primary: #4285f4; --bg: #f0f2f5; --red: #e41e3f; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); height: 100vh; display: flex; overflow: hidden; }
+        
+        /* Login */
+        #login-screen { position: fixed; inset: 0; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+        .google-btn { background: #4285f4; color: white; padding: 12px 20px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        
+        /* Layout */
+        #app-container { display: none; width: 100%; height: 100%; }
+        .sidebar { width: 300px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: #e5ddd5; position: relative; }
+        
+        /* Components */
+        .my-profile { padding: 15px; background: #f8f9fa; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #ccc; }
+        .search-box { margin: 10px; display: flex; gap: 5px; }
+        .search-box input { flex: 1; padding: 8px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
+        .nav-btn { background: none; border: none; font-size: 20px; cursor: pointer; position: relative; }
+        .red-dot { position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: var(--red); border-radius: 50%; display: none; }
+        
+        .friend-list { flex: 1; overflow-y: auto; }
+        .friend-item { padding: 10px 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .friend-item:hover { background: #f0f2f5; }
+        .friend-item.active { background: #e7f3ff; }
+        
+        /* Chat */
+        .chat-header { padding: 10px; background: white; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 65%; padding: 8px 12px; border-radius: 15px; font-size: 14px; word-wrap: break-word; }
+        .msg-me { align-self: flex-end; background: #d9fdd3; }
+        .msg-friend { align-self: flex-start; background: white; }
+        .msg-img { max-width: 200px; border-radius: 10px; margin-top: 5px; display: block; }
+        
+        .input-area { padding: 10px; background: white; display: flex; gap: 10px; align-items: center; }
+        .input-area input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
+        .send-btn { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 50%; cursor: pointer; }
+
+        /* Modals */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 200; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 320px; }
+        .req-item { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
+
+        /* Call Screen */
+        #call-screen { display: none; position: fixed; inset: 0; background: #222; color: white; flex-direction: column; justify-content: center; align-items: center; z-index: 300; }
+        .call-avatar { width: 120px; height: 120px; border-radius: 50%; margin-bottom: 20px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(255, 255, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
+        .call-controls { display: flex; gap: 20px; margin-top: 30px; }
+        .c-btn { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 24px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .btn-end { background: #ff4b4b; color: white; }
+        .btn-accept { background: #00b341; color: white; }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <h1>ChatApp v1.6</h1>
+        <p>เชื่อมต่อเพื่อนแบบ Real-time</p>
+        <button class="google-btn" id="login-btn">
+            Login with Google
+        </button>
+    </div>
+
+    <div id="app-container">
+        <div class="sidebar">
+            <div class="my-profile">
+                <img id="my-avatar" class="avatar" src="">
+                <div style="flex:1;">
+                    <div id="my-name" style="font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:150px;">User</div>
+                    <small style="color:green;">● Online</small>
+                </div>
+                <button onclick="ui.openProfile()" style="font-size:12px;">แก้ไข</button>
+                <button id="logout-btn" style="color:red; font-size:12px;">ออก</button>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="friend-search" placeholder="พิมพ์ชื่อเพื่อน...">
+                <button class="nav-btn" id="add-friend-btn">➕</button>
+                <button class="nav-btn" onclick="ui.toggleRequests()">
+                    🔔<div id="red-dot" class="red-dot"></div>
+                </button>
+            </div>
+
+            <div id="friend-list" class="friend-list"></div>
+        </div>
+
+        <div class="chat-area">
+            <div id="no-chat-bg" style="position:absolute; inset:0; display:flex; justify-content:center; align-items:center; color:#888;">
+                เลือกเพื่อนเพื่อเริ่มคุย
+            </div>
+
+            <div id="active-chat" class="hidden" style="display:flex; flex-direction:column; height:100%;">
+                <div class="chat-header">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img id="chat-img" class="avatar" src="">
+                        <h3 id="chat-name" style="margin:0;">Friend</h3>
+                    </div>
+                    <div>
+                        <button class="nav-btn" id="call-btn">📞</button>
+                        <button class="nav-btn" onclick="logic.blockFriend()" style="color:orange;">🚫</button>
+                        <button class="nav-btn" onclick="logic.deleteFriend()" style="color:red;">🗑️</button>
+                    </div>
+                </div>
+
+                <div id="messages" class="messages"></div>
+
+                <div id="input-bar" class="input-area">
+                    <label for="img-up" style="cursor:pointer; font-size:20px;">📷</label>
+                    <input type="file" id="img-up" accept="image/*" hidden>
+                    <input type="text" id="msg-input" placeholder="พิมพ์ข้อความ...">
+                    <button id="send-btn" class="send-btn">➤</button>
+                </div>
+                
+                <div id="blocked-alert" class="hidden" style="padding:20px; text-align:center; background:#eee; color:red;">
+                    คุณไม่สามารถส่งข้อความได้ (ถูกบล็อก หรือ บล็อกเขาอยู่)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="req-modal" class="modal">
+        <div class="modal-content">
+            <h3>คำขอเป็นเพื่อน <span onclick="document.getElementById('req-modal').style.display='none'" style="float:right; cursor:pointer;">✖</span></h3>
+            <div id="req-list"></div>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <h3>แก้ไขโปรไฟล์</h3>
+            <input type="text" id="edit-name" placeholder="ชื่อใหม่" style="width:90%; padding:5px; margin-bottom:10px;">
+            <input type="text" id="edit-pic" placeholder="URL รูปภาพ (ถ้ามี)" style="width:90%; padding:5px; margin-bottom:10px;">
+            <div id="edit-err" style="color:red; font-size:12px; margin-bottom:10px;"></div>
+            <button onclick="logic.saveProfile()">บันทึก</button>
+        </div>
+    </div>
+
+    <div id="call-screen">
+        <img id="call-avatar" class="call-avatar" src="">
+        <h2 id="call-status">กำลังโทร...</h2>
+        <div id="call-controls" class="call-controls">
+            </div>
+        <audio id="remote-audio" autoplay></audio>
+    </div>
+
+    <script type="module">
+        // -----------------------------------------------------
+        // 1. นำ FIREBASE CONFIG มาวางตรงนี้ !!!
+        // -----------------------------------------------------
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, onSnapshot, updateDoc, deleteDoc, serverTimestamp, getDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        // --- วาง Config ที่ได้จาก Firebase Console ตรงนี้ ---
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyB575txzpvEoiUPGAzMWmBIJ-AumUrPZ04",
+  authDomain: "mychatapp-6553a.firebaseapp.com",
+  databaseURL: "https://mychatapp-6553a-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "mychatapp-6553a",
+  storageBucket: "mychatapp-6553a.firebasestorage.app",
+  messagingSenderId: "327022378740",
+  appId: "1:327022378740:web:325ea6d58ed16d5190e8a1",
+  measurementId: "G-G7ECFJ2R3W"
+};
+        // -----------------------------------------------------
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUser = null;
+        let currentChatId = null;
+        let currentFriendId = null;
+        let unsubscribeChat = null;
+        let peerConnection = null;
+        let localStream = null;
+        
+        // --- UI Helper ---
+        window.ui = {
+            toggleRequests: () => document.getElementById('req-modal').style.display = 'flex',
+            openProfile: () => {
+                document.getElementById('profile-modal').style.display = 'flex';
+                document.getElementById('edit-name').value = currentUser.name || '';
+                document.getElementById('edit-pic').value = currentUser.avatar || '';
+            },
+            closeModal: () => document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'),
+            showCall: (name, avatar, isIncoming) => {
+                document.getElementById('call-screen').style.display = 'flex';
+                document.getElementById('call-avatar').src = avatar;
+                document.getElementById('call-status').textContent = isIncoming ? name + " โทรมา..." : "กำลังโทรหา " + name;
+                
+                const controls = document.getElementById('call-controls');
+                controls.innerHTML = '';
+                
+                const endBtn = `<button class="c-btn btn-end" onclick="logic.endCall()">☎</button>`;
+                
+                if (isIncoming) {
+                    controls.innerHTML = `<button class="c-btn btn-accept" onclick="logic.answerCall()">📞</button>` + endBtn;
+                } else {
+                    controls.innerHTML = endBtn;
+                }
+            }
+        };
+
+        // --- Main Logic ---
+        window.logic = {
+            // 1. Auth & User Setup
+            login: async () => {
+                try {
+                    await signInWithPopup(auth, provider);
+                } catch (e) { alert("Login Error: " + e.message); }
+            },
+            logout: () => signOut(auth),
+
+            initUser: async (user) => {
+                const userRef = doc(db, "users", user.uid);
+                const snap = await getDoc(userRef);
+                
+                if (!snap.exists()) {
+                    // สร้าง User ใหม่
+                    await setDoc(userRef, {
+                        name: user.displayName,
+                        email: user.email,
+                        avatar: user.photoURL,
+                        searchName: user.displayName.toLowerCase(), // เพื่อค้นหาง่าย
+                        lastRename: 0,
+                        blocked: []
+                    });
+                }
+                
+                // Realtime Listener ตัวเอง (เพื่อดู Requests)
+                onSnapshot(userRef, (doc) => {
+                    currentUser = { uid: user.uid, ...doc.data() };
+                    document.getElementById('my-name').textContent = currentUser.name;
+                    document.getElementById('my-avatar').src = currentUser.avatar;
+                    renderRequests(currentUser.requests || []);
+                    renderFriends(currentUser.friends || []);
+                    checkForIncomingCall(currentUser.incomingCall);
+                });
+            },
+
+            // 2. Friend System
+            addFriend: async () => {
+                const name = document.getElementById('friend-search').value.trim().toLowerCase();
+                if (!name) return;
+                
+                if (name === currentUser.name.toLowerCase()) return alert("แอดตัวเองไม่ได้ครับ");
+
+                // ค้นหาคนชื่อนี้
+                const q = query(collection(db, "users"), where("searchName", "==", name));
+                const snapshot = await getDocs(q);
+                
+                if (snapshot.empty) {
+                    alert("ไม่พบผู้ใช้ชื่อนี้");
+                } else {
+                    const targetUser = snapshot.docs[0];
+                    const targetData = targetUser.data();
+                    
+                    // เช็คว่าเป็นเพื่อนยัง
+                    if (currentUser.friends && currentUser.friends.find(f => f.uid === targetUser.id)) {
+                        return alert("เป็นเพื่อนกันอยู่แล้ว");
+                    }
+
+                    // ส่ง Request (Update Array ใน Target DB)
+                    const reqObj = { uid: currentUser.uid, name: currentUser.name, avatar: currentUser.avatar };
+                    
+                    // ใช้ arrayUnion เพื่อเพิ่ม request เข้าไป
+                    await updateDoc(doc(db, "users", targetUser.id), {
+                        requests: arrayUnion(reqObj)
+                    });
+                    
+                    alert("ส่งคำขอไปแล้ว!");
+                    document.getElementById('friend-search').value = '';
+                }
+            },
+
+            acceptFriend: async (reqUid, reqName, reqAvatar) => {
+                // 1. สร้าง Chat Room ใหม่
+                const chatRef = await addDoc(collection(db, "chats"), {
+                    users: [currentUser.uid, reqUid],
+                    createdAt: serverTimestamp()
+                });
+
+                // 2. เพิ่มเพื่อนให้เรา
+                const myFriendData = { uid: reqUid, name: reqName, avatar: reqAvatar, chatId: chatRef.id };
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    friends: arrayUnion(myFriendData),
+                    requests: arrayRemove({ uid: reqUid, name: reqName, avatar: reqAvatar }) // ลบคำขอออก
+                });
+
+                // 3. เพิ่มเพื่อนให้เขา (ต้องอัปเดต doc เขาด้วย)
+                const hisFriendData = { uid: currentUser.uid, name: currentUser.name, avatar: currentUser.avatar, chatId: chatRef.id };
+                await updateDoc(doc(db, "users", reqUid), {
+                    friends: arrayUnion(hisFriendData)
+                });
+            },
+            
+            rejectRequest: async (reqObj) => {
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    requests: arrayRemove(reqObj)
+                });
+            },
+
+            // 3. Chat System
+            openChat: (friendUid, chatId, name, avatar) => {
+                currentFriendId = friendUid;
+                currentChatId = chatId;
+                
+                // UI
+                document.getElementById('no-chat-bg').classList.add('hidden');
+                document.getElementById('active-chat').classList.remove('hidden');
+                document.getElementById('chat-name').textContent = name;
+                document.getElementById('chat-img').src = avatar;
+                
+                // Check Block
+                const isBlocked = currentUser.blocked?.includes(friendUid);
+                const inputBar = document.getElementById('input-bar');
+                const blockAlert = document.getElementById('blocked-alert');
+                
+                if (isBlocked) {
+                    inputBar.style.display = 'none';
+                    blockAlert.classList.remove('hidden');
+                    blockAlert.textContent = "คุณบล็อกผู้ใช้นี้อยู่";
+                } else {
+                    inputBar.style.display = 'flex';
+                    blockAlert.classList.add('hidden');
+                }
+
+                // Load Messages Realtime
+                if (unsubscribeChat) unsubscribeChat(); // เลิกฟังแชทเก่า
+                
+                const q = query(collection(db, "chats", chatId, "messages"), window.orderByFunc("timestamp", "asc"));
+                // *หมายเหตุ: ต้องใช้ index ใน firestore ถ้าใช้ orderBy. ในโหมด dev มันจะฟ้อง link ให้กดสร้าง index
+                // แต่เพื่อความง่าย ผมจะดึงมา sort client-side หรือ ใช้ timestamp ง่ายๆ
+                
+                // Hack: เนื่องจาก orderBy ต้องสร้าง Index ผมจะดึงมาทั้งหมดแล้ว sort JS แทนเพื่อให้โค้ดรันได้เลยโดย user ไม่ต้อง config index
+                unsubscribeChat = onSnapshot(collection(db, "chats", chatId, "messages"), (snap) => {
+                    const msgs = [];
+                    snap.forEach(d => msgs.push(d.data()));
+                    msgs.sort((a,b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+                    renderMessages(msgs);
+                });
+            },
+
+            sendMessage: async () => {
+                const txt = document.getElementById('msg-input').value.trim();
+                if (!txt) return;
+
+                // เช็คว่าเขาบล็อกเราไหม (ในระบบจริงควรเช็คที่ Security Rules หรืออ่าน profile เขา)
+                // เพื่อความง่ายในไฟล์เดียว: ส่งไปก่อน
+                
+                await addDoc(collection(db, "chats", currentChatId, "messages"), {
+                    sender: currentUser.uid,
+                    text: txt,
+                    type: 'text',
+                    timestamp: serverTimestamp()
+                });
+                document.getElementById('msg-input').value = '';
+            },
+
+            sendImage: async (file) => {
+                // แปลงไฟล์เป็น Base64 (ง่ายแต่ไม่เหมาะกับไฟล์ใหญ่)
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const base64 = e.target.result;
+                    // เตือน: Firestore จำกัดเอกสาร 1MB
+                    if (base64.length > 900000) return alert("รูปใหญ่เกินไป");
+                    
+                    await addDoc(collection(db, "chats", currentChatId, "messages"), {
+                        sender: currentUser.uid,
+                        image: base64,
+                        type: 'image',
+                        timestamp: serverTimestamp()
+                    });
+                };
+                reader.readAsDataURL(file);
+            },
+            
+            // 4. Block & Delete
+            blockFriend: async () => {
+                if(!confirm("ต้องการบล็อก/ปลดบล็อก?")) return;
+                
+                const isBlocked = currentUser.blocked?.includes(currentFriendId);
+                if (isBlocked) {
+                    await updateDoc(doc(db, "users", currentUser.uid), { blocked: arrayRemove(currentFriendId) });
+                } else {
+                    await updateDoc(doc(db, "users", currentUser.uid), { blocked: arrayUnion(currentFriendId) });
+                }
+                // Refresh UI จะเกิดจาก onSnapshot เอง
+                alert("เรียบร้อย");
+            },
+
+            deleteFriend: async () => {
+                if(!confirm("ลบเพื่อนคนนี้?")) return;
+                
+                // ลบออกจาก array friends ของเรา (ฝ่ายเดียวก็หาย)
+                // หา object เพื่อนใน array
+                const friendObj = currentUser.friends.find(f => f.uid === currentFriendId);
+                
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    friends: arrayRemove(friendObj)
+                });
+                
+                document.getElementById('active-chat').classList.add('hidden');
+                document.getElementById('no-chat-bg').classList.remove('hidden');
+            },
+
+            // 5. Profile
+            saveProfile: async () => {
+                const newName = document.getElementById('edit-name').value;
+                const newAvatar = document.getElementById('edit-pic').value;
+                
+                const now = Date.now();
+                // 7 days = 604800000 ms
+                if (currentUser.lastRename && (now - currentUser.lastRename < 604800000)) {
+                    document.getElementById('edit-err').textContent = "เปลี่ยนชื่อได้อีกครั้งใน 7 วัน";
+                    return;
+                }
+                
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    name: newName,
+                    searchName: newName.toLowerCase(),
+                    avatar: newAvatar,
+                    lastRename: now
+                });
+                
+                ui.closeModal();
+            },
+            
+            // 6. Call System (Simplified Signaling via Firestore)
+            callFriend: async () => {
+                if (!navigator.onLine) return alert("ไม่มีเน็ต");
+                
+                // ส่ง Signal ไปที่ Doc เพื่อน
+                await updateDoc(doc(db, "users", currentFriendId), {
+                    incomingCall: {
+                        fromUid: currentUser.uid,
+                        fromName: currentUser.name,
+                        fromAvatar: currentUser.avatar,
+                        signal: "offer" // สมมติง่ายๆ
+                    }
+                });
+                
+                ui.showCall(document.getElementById('chat-name').textContent, document.getElementById('chat-img').src, false);
+            },
+            
+            answerCall: async () => {
+                // ในโค้ดจริงต้องเปิด WebRTC PeerConnection
+                // เนื่องจากความซับซ้อนในไฟล์เดียว ผมจะจำลอง state ว่ารับแล้ว
+                // แต่ถ้าจะเอาเสียงจริง ต้องใช้ STUN Server
+                
+                // เคลียร์ incomingCall
+                await updateDoc(doc(db, "users", currentUser.uid), { incomingCall: null });
+                document.getElementById('call-status').textContent = "เชื่อมต่อแล้ว (Demo Voice)";
+                
+                // Note: การทำ WebRTC เต็มรูปแบบในไฟล์เดียวเสี่ยงต่อบั๊กมาก 
+                // ตรงนี้ UI จะแสดงว่ารับสายแล้ว
+            },
+            
+            endCall: async () => {
+                document.getElementById('call-screen').style.display = 'none';
+                if (currentFriendId) {
+                    // ล้างสถานะฝั่งเพื่อน (ถ้าทำได้)
+                    // หรือแค่ปิด UI ตัวเอง
+                }
+            }
+        };
+
+        // --- Render Functions ---
+        function renderRequests(reqs) {
+            const list = document.getElementById('req-list');
+            const dot = document.getElementById('red-dot');
+            list.innerHTML = '';
+            
+            if (reqs.length > 0) {
+                dot.style.display = 'block';
+                reqs.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'req-item';
+                    div.innerHTML = `
+                        <span><img src="${r.avatar}" style="width:30px; border-radius:50%"> ${r.name}</span>
+                        <div>
+                            <button onclick='window.logic.acceptFriend("${r.uid}", "${r.name}", "${r.avatar}")' style="color:green;">รับ</button>
+                            <button onclick='window.logic.rejectRequest(${JSON.stringify(r)})' style="color:red;">ทิ้ง</button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            } else {
+                dot.style.display = 'none';
+                list.innerHTML = '<p>ไม่มีคำขอ</p>';
+            }
+        }
+
+        function renderFriends(friends) {
+            const list = document.getElementById('friend-list');
+            list.innerHTML = '';
+            friends.forEach(f => {
+                const div = document.createElement('div');
+                div.className = `friend-item ${currentChatId === f.chatId ? 'active' : ''}`;
+                div.onclick = () => window.logic.openChat(f.uid, f.chatId, f.name, f.avatar);
+                div.innerHTML = `
+                    <img src="${f.avatar}" class="avatar">
+                    <div><b>${f.name}</b></div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function renderMessages(msgs) {
+            const cont = document.getElementById('messages');
+            cont.innerHTML = '';
+            msgs.forEach(m => {
+                const div = document.createElement('div');
+                div.className = `message ${m.sender === currentUser.uid ? 'msg-me' : 'msg-friend'}`;
+                if (m.type === 'text') div.textContent = m.text;
+                if (m.type === 'image') div.innerHTML = `<img src="${m.image}" class="msg-img">`;
+                cont.appendChild(div);
+            });
+            cont.scrollTop = cont.scrollHeight;
+        }
+        
+        function checkForIncomingCall(callData) {
+            if (callData && callData.signal === 'offer') {
+                ui.showCall(callData.fromName, callData.fromAvatar, true);
+                window.currentCallFrom = callData.fromUid;
+            }
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('login-btn').onclick = logic.login;
+        document.getElementById('logout-btn').onclick = logic.logout;
+        document.getElementById('add-friend-btn').onclick = logic.addFriend;
+        document.getElementById('send-btn').onclick = logic.sendMessage;
+        document.getElementById('img-up').onchange = (e) => logic.sendImage(e.target.files[0]);
+        document.getElementById('call-btn').onclick = logic.callFriend;
+
+        // Auth State Check
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'flex';
+                logic.initUser(user);
+            } else {
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('app-container').style.display = 'none';
+            }
+        });
+        
+        // Expose helpers globally for HTML onclick
+        window.logic = logic;
+        window.ui = ui;
+
+    </script>
+</body>
+</html>
