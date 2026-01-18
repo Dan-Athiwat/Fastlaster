@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NextGen Video Call V3</title>
+    <title>NextGen Video Call V4</title>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.18.2.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
@@ -32,18 +32,19 @@
             flex-direction: column;
         }
 
-        /* --- 2. COMPONENTS --- */
+        /* --- UI COMPONENTS --- */
         .btn {
             border: none; border-radius: 12px;
             padding: 12px 20px; cursor: pointer;
             font-size: 1rem; font-weight: 600;
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
             transition: 0.2s;
+            width: 100%; /* Default full width for buttons in forms */
         }
         .btn:active { transform: scale(0.96); }
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-outline { background: transparent; border: 1px solid #444; color: white; }
+        .btn-outline { background: transparent; border: 1px solid #444; color: white; width: auto; }
 
         input {
             width: 100%; padding: 14px;
@@ -53,28 +54,38 @@
         }
         input:focus { border-color: var(--primary); }
 
-        /* --- 3. SCREENS MANAGEMENT --- */
-        .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 10; background: var(--bg); }
+        /* --- SCREENS --- */
+        .screen { 
+            display: none; width: 100%; height: 100%; 
+            position: absolute; top: 0; left: 0; 
+            z-index: 10; background: var(--bg); 
+        }
         .screen.active { display: flex; }
 
-        /* AUTH SCREEN (Login/Register) */
+        /* AUTH SCREEN */
         .auth-container {
-            width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
+            justify-content: center; align-items: center;
             background: radial-gradient(circle, #2a2a2a 0%, #000000 100%);
             padding: 20px;
         }
         .auth-box {
             width: 100%; max-width: 400px;
-            background: rgba(30, 30, 30, 0.9);
+            background: rgba(30, 30, 30, 0.95);
             padding: 40px; border-radius: 20px;
             text-align: center;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
-        .auth-link { color: var(--primary); cursor: pointer; margin-top: 15px; display: block; font-size: 0.9rem; }
-        .auth-link:hover { text-decoration: underline; }
+        /* แก้ไข Link ให้กดง่ายขึ้นและไม่ซ้อนทับ */
+        .switch-auth-btn {
+            margin-top: 20px;
+            background: none; border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: underline;
+        }
 
-        /* --- 4. DASHBOARD LAYOUT --- */
+        /* --- DASHBOARD LAYOUT --- */
         #dashboard-screen { flex-direction: row; }
 
         /* Sidebar (Left) */
@@ -86,13 +97,13 @@
             position: relative; z-index: 20;
         }
         
-        /* Mobile Header (Hidden on Desktop) */
+        /* Mobile Header */
         .mobile-header {
             display: none; justify-content: space-between; align-items: center;
             margin-bottom: 20px;
         }
 
-        /* Profile Area */
+        /* Profile */
         .profile-card {
             text-align: center; margin-bottom: 30px;
             padding-bottom: 20px; border-bottom: 1px solid #333;
@@ -110,7 +121,6 @@
         }
 
         /* Room List */
-        .room-history { margin-top: 10px; }
         .room-card {
             background: #2a2a2a; padding: 15px;
             border-radius: 10px; margin-bottom: 10px;
@@ -123,59 +133,54 @@
             justify-content: center; align-items: center;
             background: var(--bg); position: relative;
         }
-        /* Mobile Back Button (Hidden on Desktop) */
         .mobile-back-btn { display: none; position: absolute; top: 20px; left: 20px; color: white; font-size: 1.5rem; cursor: pointer; }
 
-        /* Join Box UI */
-        .join-box {
-            text-align: center; width: 90%; max-width: 350px;
-        }
+        .join-box { text-align: center; width: 90%; max-width: 350px; }
         .join-icon { font-size: 4rem; color: #444; margin-bottom: 20px; }
-
-        /* --- 5. RESPONSIVE MOBILE DASHBOARD --- */
+        .join-input-group { display: flex; gap: 10px; }
+        
+        /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 768px) {
             #dashboard-screen { flex-direction: column; }
-            .sidebar { width: 100%; height: 100%; border: none; padding: 20px; }
+            .sidebar { width: 100%; height: 100%; border: none; padding: 20px; display: flex; } /* Default: Show Sidebar */
+            
             .main-content { 
                 position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
                 background: var(--bg); z-index: 30;
-                transform: translateX(100%); transition: transform 0.3s ease;
+                transform: translateX(100%); transition: transform 0.3s ease; /* Default: Hide Main */
             }
-            .main-content.show-mobile { transform: translateX(0); }
+            .main-content.show-mobile { transform: translateX(0); } /* Slide in */
             
             .mobile-header { display: flex; }
             .mobile-back-btn { display: block; }
-            
-            /* Hide Create Room button in join screen logic if needed, keeping simple */
+            .join-input-group { flex-direction: column; }
         }
 
-        /* --- 6. VIDEO CALL ROOM --- */
+        /* --- VIDEO ROOM --- */
         #video-screen { background: black; flex-direction: column; }
 
         .video-grid {
             flex: 1; width: 100%; height: 100%;
             display: grid; gap: 8px; padding: 10px;
-            padding-bottom: 100px; /* Space for controls */
+            padding-bottom: 100px;
             align-content: center; justify-content: center;
         }
 
-        /* Dynamic Grid Logic (Desktop) */
+        /* Desktop Grid Logic */
         .grid-1 { grid-template-columns: 1fr; }
         .grid-2 { grid-template-columns: 1fr 1fr; }
         .grid-3 { grid-template-columns: repeat(3, 1fr); }
         .grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-        .grid-5, .grid-6 { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr; }
+        .grid-6 { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr; }
 
         .video-item {
             background: #222; border-radius: 12px; overflow: hidden;
             position: relative; width: 100%; height: 100%;
-            min-height: 200px; /* Min height */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            min-height: 200px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
         
-        /* Video Element Handling */
         .video-player { width: 100%; height: 100%; object-fit: cover; }
-        .video-player.screen-share { object-fit: contain; background: #111; } /* แชร์หน้าจอจะไม่โดนตัด */
+        .video-player.screen-share { object-fit: contain; background: #111; } 
 
         .name-label {
             position: absolute; bottom: 10px; left: 10px;
@@ -187,17 +192,13 @@
         @media (max-width: 768px) {
             .video-grid { 
                 display: flex; flex-direction: column; 
-                overflow-y: auto; justify-content: flex-start;
-                grid-template-columns: none !important; /* ยกเลิก Grid */
+                justify-content: flex-start; overflow-y: auto;
+                grid-template-columns: none !important;
             }
-            .video-item { 
-                flex-shrink: 0; /* ไม่หด */
-                height: 250px; /* ความสูงมาตรฐานในมือถือ */
-                margin-bottom: 10px;
-            }
+            .video-item { flex-shrink: 0; height: 250px; margin-bottom: 10px; }
         }
 
-        /* --- 7. CONTROLS BAR --- */
+        /* Controls */
         .controls {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 15px;
@@ -212,20 +213,24 @@
             border: none; background: #3a3a3c; color: white;
             font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-        .ctrl-btn.active { background: white; color: black; } /* เปิด */
-        .ctrl-btn.off { background: rgba(255,255,255,0.1); color: var(--danger); } /* ปิด */
+        .ctrl-btn.active { background: white; color: black; }
+        .ctrl-btn.off { background: rgba(255,255,255,0.1); color: var(--danger); }
         .ctrl-btn.hangup { background: var(--danger); color: white; width: 60px; }
     </style>
 </head>
 <body>
 
-    <div id="login-ui" class="screen auth-container active">
+    <div id="login-ui" class="screen auth-container">
         <div class="auth-box">
             <h2 style="margin-bottom:20px;">เข้าสู่ระบบ</h2>
             <input type="text" id="l-name" placeholder="ชื่อผู้ใช้">
             <input type="tel" id="l-phone" placeholder="เบอร์โทรศัพท์">
-            <button class="btn btn-primary" style="width:100%" onclick="doLogin()">เข้าสู่ระบบ</button>
-            <span class="auth-link" onclick="nav('register')">ยังไม่มีบัญชี? สร้างผู้ใช้ใหม่</span>
+            
+            <button class="btn btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
+            
+            <button class="switch-auth-btn" onclick="navToRegister()">
+                ยังไม่มีบัญชี? สร้างผู้ใช้ใหม่
+            </button>
         </div>
     </div>
 
@@ -234,16 +239,20 @@
             <h2 style="margin-bottom:20px;">สร้างผู้ใช้ใหม่</h2>
             <input type="text" id="r-name" placeholder="ชื่อ (ห้ามซ้ำ)">
             <input type="tel" id="r-phone" placeholder="เบอร์โทรศัพท์">
-            <button class="btn btn-primary" style="width:100%" onclick="doRegister()">ตกลง</button>
-            <span class="auth-link" onclick="nav('login')">มีบัญชีแล้ว? เข้าสู่ระบบ</span>
+            
+            <button class="btn btn-primary" onclick="doRegister()">ยืนยันการสมัคร</button>
+            
+            <button class="switch-auth-btn" onclick="navToLogin()">
+                มีบัญชีแล้ว? เข้าสู่ระบบ
+            </button>
         </div>
     </div>
 
     <div id="dashboard-screen" class="screen">
         <div class="sidebar">
             <div class="mobile-header">
-                <h3>My Profile</h3>
-                <button class="btn btn-primary" style="padding: 8px 12px;" onclick="toggleMobileJoin(true)">
+                <h3>โปรไฟล์ของคุณ</h3>
+                <button class="btn btn-primary" style="width:auto; padding: 8px 12px;" onclick="toggleMobileJoin(true)">
                     <i class="fas fa-search"></i>
                 </button>
             </div>
@@ -258,12 +267,12 @@
                 <p id="user-phone" style="color:#aaa; font-size:0.9rem;">...</p>
                 <div style="margin-top:10px; display:flex; gap:10px; justify-content:center;">
                     <button class="btn btn-outline" style="font-size:0.8rem; padding:5px 10px;" onclick="editName()"><i class="fas fa-pen"></i> แก้ชื่อ</button>
-                    <button class="btn btn-danger" style="font-size:0.8rem; padding:5px 10px;" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+                    <button class="btn btn-danger" style="width:auto; font-size:0.8rem; padding:5px 10px;" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
             </div>
 
             <h4 style="margin-bottom:10px; color:#aaa;">จัดการห้อง</h4>
-            <button class="btn btn-primary" style="width:100%; margin-bottom:20px;" onclick="createRoom()">
+            <button class="btn btn-primary" style="margin-bottom:20px;" onclick="createRoom()">
                 <i class="fas fa-plus"></i> สร้างห้องใหม่
             </button>
 
@@ -280,9 +289,9 @@
                 <i class="fas fa-broadcast-tower join-icon"></i>
                 <h2>เข้าร่วมการสนทนา</h2>
                 <p style="color:#aaa; margin-bottom:20px;">ใส่ ID ห้องที่เพื่อนส่งให้ หรือสร้างห้องใหม่</p>
-                <div style="display:flex; gap:10px;">
+                <div class="join-input-group">
                     <input type="text" id="join-id" placeholder="กรอก Room ID (เช่น 1234)" style="margin-bottom:0;">
-                    <button class="btn btn-primary" onclick="joinRoomFromInput()">เข้าร่วม</button>
+                    <button class="btn btn-primary" style="width: auto; min-width: 80px;" onclick="joinRoomFromInput()">เข้าร่วม</button>
                 </div>
             </div>
         </div>
@@ -293,8 +302,7 @@
             <i class="fas fa-hashtag" style="color:var(--primary)"></i> <span id="room-display">ID: --</span>
         </div>
 
-        <div id="video-grid" class="video-grid grid-1">
-            </div>
+        <div id="video-grid" class="video-grid grid-1"></div>
 
         <div class="controls">
             <button class="ctrl-btn active" id="btn-mic" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
@@ -307,10 +315,9 @@
 
     <script>
         // ==========================================
-        // 1. CONFIGURATION (ใส่ APP ID ตรงนี้)
+        // CONFIGURATION
         // ==========================================
         const AGORA_APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; 
-        // ตัวอย่าง: "a4f5c..." (ต้องสร้าง Project Testing Mode ไม่มี Certificate)
 
         // State
         let currentUser = null;
@@ -320,48 +327,60 @@
         let isScreenSharing = false;
         let isSpeakerOn = true;
 
-        // --- INIT ---
+        // --- 1. INITIALIZATION & PERSISTENCE ---
         window.onload = () => {
+            // เช็คว่ามีข้อมูลล็อกอินค้างไว้ไหม
             const saved = localStorage.getItem('currUser');
             if(saved) {
+                // ถ้ามี -> ไปหน้า Dashboard เลย
                 currentUser = JSON.parse(saved);
-                nav('dashboard');
+                showScreen('dashboard');
                 renderProfile();
             } else {
-                nav('login');
+                // ถ้าไม่มี -> ไปหน้า Login
+                showScreen('login');
             }
-            if(AGORA_APP_ID.length < 10) alert("⚠️ ใส่ Agora App ID ในโค้ดด้วยครับ!");
+            
+            if(AGORA_APP_ID.length < 10) alert("อย่าลืมใส่ Agora App ID นะครับ!");
         };
 
-        // --- NAVIGATION ---
-        function nav(page) {
+        // --- 2. NAVIGATION SYSTEM ---
+        function showScreen(screenName) {
+            // ซ่อนทุกหน้า
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            if(page === 'login') document.getElementById('login-ui').classList.add('active');
-            else if(page === 'register') document.getElementById('register-ui').classList.add('active');
-            else if(page === 'dashboard') document.getElementById('dashboard-screen').classList.add('active');
-            else if(page === 'video') document.getElementById('video-screen').classList.add('active');
+            
+            // แสดงหน้าเป้าหมาย
+            if(screenName === 'login') document.getElementById('login-ui').classList.add('active');
+            else if(screenName === 'register') document.getElementById('register-ui').classList.add('active');
+            else if(screenName === 'dashboard') document.getElementById('dashboard-screen').classList.add('active');
+            else if(screenName === 'video') document.getElementById('video-screen').classList.add('active');
         }
 
+        // ปุ่มกดสลับหน้า Login/Register (แยกฟังก์ชันชัดเจน)
+        function navToRegister() { showScreen('register'); }
+        function navToLogin() { showScreen('login'); }
+
+        // Mobile Layout Toggle
         function toggleMobileJoin(show) {
-            // Mobile only logic for sliding join screen
             const main = document.getElementById('main-content');
-            if(show) main.classList.add('show-mobile');
-            else main.classList.remove('show-mobile');
+            if(show) main.classList.add('show-mobile'); // แสดงหน้าใส่ ID
+            else main.classList.remove('show-mobile'); // กลับไปหน้าโปรไฟล์
         }
 
-        // --- AUTH ---
+        // --- 3. AUTH LOGIC ---
         function doRegister() {
             const name = document.getElementById('r-name').value.trim();
             const phone = document.getElementById('r-phone').value.trim();
-            if(!name || !phone) return alert("กรอกให้ครบ");
+            if(!name || !phone) return alert("กรุณากรอกข้อมูลให้ครบ");
 
             let db = JSON.parse(localStorage.getItem('userDB') || "[]");
             if(db.find(u => u.name === name)) return alert("ชื่อนี้มีคนใช้แล้ว");
 
             db.push({ name, phone, pic: null });
             localStorage.setItem('userDB', JSON.stringify(db));
-            alert("สร้างสำเร็จ");
-            nav('login');
+            
+            alert("สร้างบัญชีสำเร็จ! กรุณาเข้าสู่ระบบ");
+            navToLogin();
         }
 
         function doLogin() {
@@ -372,26 +391,25 @@
 
             if(user) {
                 currentUser = user;
-                localStorage.setItem('currUser', JSON.stringify(user));
-                nav('dashboard');
+                localStorage.setItem('currUser', JSON.stringify(user)); // บันทึกถาวร
+                showScreen('dashboard');
                 renderProfile();
             } else {
-                alert("ข้อมูลไม่ถูกต้อง");
+                alert("ไม่พบผู้ใช้ หรือ เบอร์โทรผิด");
             }
         }
 
         function logout() {
-            localStorage.removeItem('currUser');
-            location.reload();
+            localStorage.removeItem('currUser'); // ลบข้อมูลถาวร
+            location.reload(); // รีโหลดเว็บ จะกลับไปหน้า Login อัตโนมัติ
         }
 
-        // --- PROFILE ---
+        // --- 4. PROFILE & ROOMS ---
         function renderProfile() {
             document.getElementById('user-name').innerText = currentUser.name;
             document.getElementById('user-phone').innerText = currentUser.phone;
             if(currentUser.pic) document.getElementById('user-pic').src = currentUser.pic;
             
-            // Render Rooms
             const list = document.getElementById('room-list');
             list.innerHTML = '';
             let myRooms = JSON.parse(localStorage.getItem('myRooms') || "[]");
@@ -399,7 +417,7 @@
                 list.innerHTML += `
                     <div class="room-card">
                         <div><div style="color:var(--primary); font-weight:bold;">ID: ${r.id}</div><small>${r.date}</small></div>
-                        <button class="btn btn-primary" style="padding:5px 10px; font-size:0.8rem" onclick="joinRoom('${r.id}')">Join</button>
+                        <button class="btn btn-primary" style="width:auto; font-size:0.8rem; padding:5px 15px;" onclick="joinRoom('${r.id}')">Join</button>
                     </div>`;
             });
         }
@@ -410,7 +428,7 @@
                 reader.onload = (e) => {
                     currentUser.pic = e.target.result;
                     localStorage.setItem('currUser', JSON.stringify(currentUser));
-                    // Update global DB
+                    
                     let db = JSON.parse(localStorage.getItem('userDB'));
                     const i = db.findIndex(u => u.name === currentUser.name);
                     if(i > -1) { db[i] = currentUser; localStorage.setItem('userDB', JSON.stringify(db)); }
@@ -425,7 +443,6 @@
             if(n) { currentUser.name = n; localStorage.setItem('currUser', JSON.stringify(currentUser)); renderProfile(); }
         }
 
-        // --- ROOM LOGIC ---
         function createRoom() {
             const id = Math.floor(1000 + Math.random() * 9000).toString();
             let rooms = JSON.parse(localStorage.getItem('myRooms') || "[]");
@@ -440,26 +457,16 @@
             if(id) joinRoom(id);
         }
 
-        // ==========================================
-        // VIDEO CALL CORE (AGORA)
-        // ==========================================
+        // --- 5. AGORA VIDEO CALL ---
         async function joinRoom(roomId) {
-            nav('video');
+            showScreen('video');
             document.getElementById('room-display').innerText = "ID: " + roomId;
             
             try {
-                // 1. Join
                 const uid = await client.join(AGORA_APP_ID, roomId, null, null);
-
-                // 2. Local Tracks
                 [localTracks.audio, localTracks.video] = await AgoraRTC.createMicrophoneAndCameraTracks();
-                
-                // 3. Add to Grid
                 addVideo(uid, localTracks.video, true, false);
-                
-                // 4. Publish
                 await client.publish([localTracks.audio, localTracks.video]);
-
             } catch(e) {
                 console.error(e);
                 alert("Error: " + e.message);
@@ -467,15 +474,10 @@
             }
         }
 
-        // Remote Handling
         client.on("user-published", async (user, mediaType) => {
             await client.subscribe(user, mediaType);
             remoteUsers[user.uid] = user;
-
-            if(mediaType === "video") {
-                // เช็คว่าเป็น Screen Share หรือไม่? (ถ้า user id เป็น video track)
-                addVideo(user.uid, user.videoTrack, false, false); 
-            }
+            if(mediaType === "video") addVideo(user.uid, user.videoTrack, false, false);
             if(mediaType === "audio") {
                 user.audioTrack.play();
                 if(!isSpeakerOn) user.audioTrack.setVolume(0);
@@ -492,26 +494,15 @@
             removeVideo(user.uid);
         });
 
-        // --- GRID SYSTEM ---
         function addVideo(uid, track, isLocal, isScreen) {
-            if(document.getElementById(`vid-wrap-${uid}`)) return; // Duplicate check
-
+            if(document.getElementById(`vid-wrap-${uid}`)) return;
             const div = document.createElement('div');
             div.className = 'video-item';
             div.id = `vid-wrap-${uid}`;
-            
-            // Screen Share Logic: object-fit: contain (แนวนอน) / Camera: cover (เต็มช่อง)
             const fitClass = isScreen ? 'screen-share' : ''; 
-            
-            div.innerHTML = `
-                <div id="play-${uid}" class="video-player ${fitClass}"></div>
-                <div class="name-label">${isLocal ? 'Me' : 'User ' + uid}</div>
-            `;
+            div.innerHTML = `<div id="play-${uid}" class="video-player ${fitClass}"></div><div class="name-label">${isLocal ? 'Me' : 'User ' + uid}</div>`;
             document.getElementById('video-grid').appendChild(div);
-            
             track.play(`play-${uid}`);
-            
-            // Update Grid CSS
             updateGrid();
         }
 
@@ -524,32 +515,22 @@
         function updateGrid() {
             const grid = document.getElementById('video-grid');
             const count = grid.children.length;
-            
-            // Reset Classes
             grid.className = 'video-grid';
-            
-            // Apply new class based on count (Desktop Only Logic via CSS)
             if(count <= 1) grid.classList.add('grid-1');
             else if(count === 2) grid.classList.add('grid-2');
             else if(count === 3) grid.classList.add('grid-3');
             else if(count === 4) grid.classList.add('grid-4');
-            else grid.classList.add('grid-6'); // 5-6 users
+            else grid.classList.add('grid-6');
         }
 
-        // --- CONTROLS ACTION ---
         function leaveRoom() {
-            // Close tracks
             if(localTracks.audio) localTracks.audio.close();
             if(localTracks.video) localTracks.video.close();
             if(localTracks.screen) localTracks.screen.close();
-            
             client.leave();
-            remoteUsers = {};
-            localTracks = {};
-            isScreenSharing = false;
-
+            remoteUsers = {}; localTracks = {}; isScreenSharing = false;
             document.getElementById('video-grid').innerHTML = '';
-            nav('dashboard');
+            showScreen('dashboard');
         }
 
         function toggleMic() {
@@ -559,7 +540,6 @@
                 btnStyle('btn-mic', !m);
             }
         }
-
         function toggleCam() {
             if(localTracks.video) {
                 const m = !localTracks.video.muted;
@@ -567,65 +547,37 @@
                 btnStyle('btn-cam', !m);
             }
         }
-
         function toggleSpeaker() {
             isSpeakerOn = !isSpeakerOn;
             btnStyle('btn-vol', isSpeakerOn);
-            // Mute/Unmute all remote users
             Object.values(remoteUsers).forEach(u => {
                 if(u.audioTrack) u.audioTrack.setVolume(isSpeakerOn ? 100 : 0);
             });
-            // เปลี่ยน Icon
             const icon = document.querySelector('#btn-vol i');
             icon.className = isSpeakerOn ? 'fas fa-volume-up' : 'fas fa-volume-mute';
         }
-
         async function toggleShare() {
             try {
                 if(!isScreenSharing) {
-                    // Start Share
-                    localTracks.screen = await AgoraRTC.createScreenVideoTrack({
-                        encoderConfig: "1080p_1" // พยายามขอความละเอียดสูง
-                    });
-                    
+                    localTracks.screen = await AgoraRTC.createScreenVideoTrack();
                     await client.unpublish(localTracks.video);
-                    
-                    // Remove my cam from grid & Add screen
                     removeVideo(client.uid);
-                    addVideo(client.uid, localTracks.screen, true, true); // true last arg = isScreen
-
+                    addVideo(client.uid, localTracks.screen, true, true);
                     await client.publish(localTracks.screen);
                     isScreenSharing = true;
-                    
-                    const btn = document.getElementById('btn-screen');
-                    btn.classList.remove('off'); btn.classList.add('active');
-
-                    // Handle system stop sharing button
-                    localTracks.screen.on("track-ended", () => {
-                        toggleShare(); // เรียกซ้ำเพื่อปิด
-                    });
-
+                    btnStyle('btn-screen', true);
+                    localTracks.screen.on("track-ended", toggleShare);
                 } else {
-                    // Stop Share
                     await client.unpublish(localTracks.screen);
                     localTracks.screen.close();
-                    
-                    // Back to Cam
                     removeVideo(client.uid);
                     addVideo(client.uid, localTracks.video, true, false);
-
                     await client.publish(localTracks.video);
                     isScreenSharing = false;
-                    
-                    const btn = document.getElementById('btn-screen');
-                    btn.classList.add('off'); btn.classList.remove('active');
+                    btnStyle('btn-screen', false);
                 }
-            } catch(e) {
-                console.error(e);
-                alert("การแชร์หน้าจอถูกยกเลิก หรืออุปกรณ์ไม่รองรับ");
-            }
+            } catch(e) { console.error(e); }
         }
-
         function btnStyle(id, on) {
             const el = document.getElementById(id);
             if(on) { el.classList.add('active'); el.classList.remove('off'); }
