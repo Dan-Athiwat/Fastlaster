@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NextGen V12.0 (Custom Grid & Fix)</title>
+    <title>NextGen V10.2 (Black Screen Fix)</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
@@ -59,74 +59,31 @@
         .action-row { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
         .room-item { background: #2a2a2a; padding: 10px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
 
-        /* --- VIDEO UI & CUSTOM GRID (1-6 Users) --- */
+        /* --- VIDEO UI (FIXED) --- */
         #ui-video { background: #000; flex-direction: column; }
+        .video-grid { flex: 1; width: 100%; height: 100%; display: grid; gap: 2px; padding: 2px; background: #000; }
+        .grid-1 { grid-template-columns: 1fr; }
+        .grid-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } 
         
-        .video-grid { 
-            flex: 1; width: 100%; height: 100%; 
-            display: grid; gap: 4px; padding: 4px; background: #000; 
-            align-content: center; /* จัดกึ่งกลางแนวตั้ง */
-        }
+        .vid-box { position: relative; width: 100%; height: 100%; background: #111; overflow: hidden; }
         
-        /* Grid Layouts Rules */
-        .g-1 { grid-template-columns: 1fr; } /* 1 คนเต็มจอ */
-        .g-2 { grid-template-columns: 1fr 1fr; } /* 2 คนแบ่งครึ่ง */
-        .g-3 { grid-template-columns: 1fr 1fr 1fr; } /* 3 คน แถวเดียว 3 ช่อง */
-        .g-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; } /* 4 คน: 2x2 */
-        
-        /* 5 คน: แถวบน 3, แถวล่าง 2 (ใช้ grid-template-columns 3 ส่วน) */
-        .g-5 { 
-            grid-template-columns: repeat(3, 1fr); 
-            grid-template-rows: repeat(2, 1fr); 
-        }
-        /* Trick ให้คนสุดท้ายอยู่กลาง หรือชิดซ้าย ตาม Grid flow ปกติ */
-        .g-5 > :nth-child(4) { grid-column: span 1; } /* ปกติ */
-        
-        /* 6 คน: แถวบน 3, แถวล่าง 3 */
-        .g-6 { 
-            grid-template-columns: repeat(3, 1fr); 
-            grid-template-rows: repeat(2, 1fr); 
-        }
-
-        /* Mobile Adjustments */
-        @media (max-width: 768px) {
-            .g-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } /* 2 คน บน-ล่าง */
-            .g-3 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr 1fr; } /* 3 คน บน-ล่าง-ล่าง */
-            .g-5 { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); } /* 5 คน: 2 คอลัมน์ 3 แถว */
-            .g-6 { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); } /* 6 คน: 2 คอลัมน์ 3 แถว */
-        }
-
-        .vid-box { position: relative; width: 100%; height: 100%; background: #111; overflow: hidden; border-radius: 8px; }
-        
-        /* 🔥 Fix Layer: Video must be top priority */
+        /* 🔥 Fix Video Layer: Ensure video is visible */
         .vid-player { width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 1; }
         .vid-player.screen-share { object-fit: contain; background: #1a1a1a; }
 
         /* 🔥 Fix Overlay: Hide when active class removed */
         .cam-off-ui {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: none; /* ซ่อนโดยปกติ */
+            display: none; /* Default Hidden */
             flex-direction: column; justify-content: center; align-items: center;
-            background: #1a1a1a; z-index: 10; /* อยู่เหนือวิดีโอถ้าเปิด */
+            background: #1a1a1a; z-index: 10; /* Higher than video */
         }
-        .cam-off-ui.active { display: flex; } /* แสดงเมื่อมีคลาส active */
+        .cam-off-ui.active { display: flex; } /* Show only when active */
         
-        .off-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; border: 2px solid #555; }
-        .off-name { color: white; font-size: 0.9rem; }
-        
-        .room-badge {
-            position: absolute; top: 20px; left: 20px; z-index: 50;
-            background: rgba(0,0,0,0.6); color: white; border: 1px solid #555;
-            padding: 6px 12px; border-radius: 20px; font-weight: 500; font-size: 0.9rem;
-            display: flex; align-items: center; gap: 6px;
-        }
+        .off-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid #555; }
+        .room-badge { position: absolute; top: 20px; left: 20px; z-index: 50; background: rgba(0,0,0,0.6); color: white; border: 1px solid #555; padding: 6px 12px; border-radius: 20px; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; }
 
-        .controls { 
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
-            display: flex; gap: 15px; background: rgba(30,30,30,0.9); 
-            padding: 10px 20px; border-radius: 50px; z-index: 50; 
-            backdrop-filter: blur(10px); border: 1px solid #444; 
-        }
+        .controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; background: rgba(30,30,30,0.9); padding: 10px 20px; border-radius: 50px; z-index: 50; backdrop-filter: blur(10px); border: 1px solid #444; }
         .c-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: #444; color: white; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .c-btn.active { background: white; color: black; }
         .c-btn.off { background: rgba(255,59,48,0.2); color: var(--danger); }
@@ -139,6 +96,10 @@
             .main-area.show { transform: translateX(0); }
             .mobile-header { display: flex; }
             .mobile-back { display: block; }
+            .grid-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+        }
+        @media (min-width: 769px) {
+            .grid-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
         }
     </style>
 </head>
@@ -214,7 +175,7 @@
             <span id="display-room-id">--</span>
         </div>
         
-        <div id="video-grid" class="video-grid g-1"></div>
+        <div id="video-grid" class="video-grid grid-1"></div>
 
         <div class="controls">
             <button class="c-btn active" id="btn-mic" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
@@ -255,7 +216,7 @@
 
         function toggleJoin(show) { document.getElementById('dash-main').classList.toggle('show', show); }
 
-        // --- AUTH ---
+        // --- AUTH & PROFILE ---
         function login() {
             const n = document.getElementById('l-name').value.trim();
             const p = document.getElementById('l-phone').value.trim();
@@ -328,7 +289,7 @@
             
             try {
                 await client.join(APP_ID, rid, null, me.id);
-                // Create tracks
+                // Create tracks ONCE
                 [local.a, local.v] = await AgoraRTC.createMicrophoneAndCameraTracks(
                     { encoderConfig: "music_standard" },
                     { encoderConfig: "360p_1" } 
@@ -409,12 +370,9 @@
             const count = g.children.length;
             g.className = 'video-grid'; // Reset class
             
-            if (count === 1) g.classList.add('g-1');
-            else if (count === 2) g.classList.add('g-2');
-            else if (count === 3) g.classList.add('g-3');
-            else if (count === 4) g.classList.add('g-4');
-            else if (count === 5) g.classList.add('g-5');
-            else if (count >= 6) g.classList.add('g-6');
+            if (count === 1) g.classList.add('grid-1');
+            else if (count === 2) g.classList.add('grid-2');
+            else if (count >= 3) g.classList.add('grid-2'); // Simple grid for stability
         }
         
         function endCall() {
