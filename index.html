@@ -2,206 +2,96 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NextGen Social V8.0 (Final Fix)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NextGen V10.0 (Screen Share)</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
     
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.18.2.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* --- CSS Reset & Variables --- */
-        :root { 
-            --primary: #007AFF; 
-            --bg: #000000; 
-            --surface: #1c1c1e; 
-            --text: #ffffff; 
-            --danger: #ff3b30; 
-            --success: #34c759;
-            --warn: #f1c40f; 
-        }
+        :root { --primary: #007AFF; --bg: #000; --surface: #1c1c1e; --text: #fff; --danger: #ff3b30; --success: #2ed573; --warn: #f1c40f; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            background-color: var(--bg); 
-            color: var(--text); 
-            height: 100vh; width: 100vw; 
-            overflow: hidden; 
-            display: flex; flex-direction: column; 
-        }
+        body { background-color: var(--bg); color: var(--text); height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* --- Buttons & Inputs --- */
-        .btn { 
-            border: none; border-radius: 12px; padding: 12px; 
-            cursor: pointer; font-weight: 600; width: 100%; 
-            display: flex; align-items: center; justify-content: center; gap: 8px; 
-            color: white; transition: 0.2s; font-size: 1rem; 
-        }
-        .btn:active { transform: scale(0.96); opacity: 0.8; }
+        .btn { border: none; border-radius: 12px; padding: 12px; cursor: pointer; font-weight: 600; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; transition: 0.2s; font-size: 1rem; }
+        .btn:active { transform: scale(0.95); opacity: 0.8; }
         .btn-primary { background: var(--primary); }
         .btn-danger { background: var(--danger); }
-        .btn-success { background: var(--success); }
-        .btn-outline { background: transparent; border: 1px solid #555; color: white; width: auto; padding: 8px 15px; }
+        .btn-outline { background: transparent; border: 1px solid #555; color: white; width: auto; padding: 8px 12px; font-size: 0.9rem; }
         
-        input { 
-            width: 100%; padding: 14px; 
-            background: #2c2c2e; border: 1px solid #444; 
-            border-radius: 10px; color: white; 
-            outline: none; margin-bottom: 15px; font-size: 1rem; 
-        }
-        input::placeholder { color: #888; }
+        input { width: 100%; padding: 14px; background: #2c2c2e; border: 1px solid #444; border-radius: 10px; color: white; outline: none; margin-bottom: 15px; font-size: 1rem; }
 
-        /* --- Screen Management --- */
-        .screen { 
-            display: none; width: 100%; height: 100%; 
-            position: absolute; top: 0; left: 0; 
-            z-index: 10; background: var(--bg); 
-        }
+        .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 10; background: var(--bg); }
         .screen.active { display: flex; }
 
-        /* --- Auth Screens (Login/Register) --- */
-        .center-wrap { 
-            justify-content: center; align-items: center; 
-            background: radial-gradient(circle at center, #222 0%, #000 100%); 
-            padding: 20px; 
-        }
-        .card { 
-            width: 100%; max-width: 400px; 
-            background: rgba(30, 30, 30, 0.95); 
-            padding: 40px; border-radius: 20px; 
-            text-align: center; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
-            border: 1px solid #333;
-        }
-        
-        /* ปุ่มลิงก์แบบกดง่าย */
-        .link-btn { 
-            margin-top: 20px; color: var(--primary); 
-            cursor: pointer; text-decoration: underline; 
-            background: none; border: none; font-size: 0.95rem; 
-            padding: 10px; display: inline-block; 
-        }
+        /* Auth */
+        .center-wrap { justify-content: center; align-items: center; background: radial-gradient(circle at center, #222 0%, #000 100%); padding: 20px; }
+        .card { width: 100%; max-width: 400px; background: rgba(30,30,30,0.95); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #333; }
+        .link-text { margin-top: 20px; color: var(--primary); cursor: pointer; text-decoration: underline; display: inline-block; padding: 10px; }
 
-        /* --- Dashboard Layout --- */
+        /* Dashboard */
         #ui-dash { flex-direction: row; }
-        
-        .sidebar { 
-            width: 320px; background: var(--surface); 
-            padding: 20px; display: flex; flex-direction: column; 
-            border-right: 1px solid #333; z-index: 20; 
-        }
-        .main-area { 
-            flex: 1; background: var(--bg); 
-            position: relative; display: flex; 
-            align-items: center; justify-content: center; 
-        }
+        .sidebar { width: 320px; background: var(--surface); padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; z-index: 20; overflow-y: auto; }
+        .main-area { flex: 1; background: var(--bg); position: relative; display: flex; align-items: center; justify-content: center; }
+        .mobile-header { display: none; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .mobile-back { display: none; position: absolute; top: 20px; left: 20px; font-size: 1.5rem; cursor: pointer; z-index: 30; }
 
-        /* Mobile Header */
-        .mobile-header { 
-            display: none; justify-content: space-between; 
-            align-items: center; margin-bottom: 20px; 
-        }
-        .mobile-back { 
-            display: none; position: absolute; top: 20px; left: 20px; 
-            font-size: 1.5rem; cursor: pointer; z-index: 30; color: white; 
-        }
-
-        /* Profile Section */
         .profile-sec { text-align: center; padding-bottom: 20px; border-bottom: 1px solid #333; margin-bottom: 20px; }
-        .avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); margin-bottom: 10px; }
+        .avatar-box { position: relative; width: 100px; height: 100px; margin: 0 auto 10px; }
+        .avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
+        .edit-pic-btn { position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #1c1c1e; }
 
-        /* Friend List */
-        .friend-list { flex: 1; overflow-y: auto; margin-bottom: 20px; }
-        .friend-item { 
-            display: flex; justify-content: space-between; align-items: center; 
-            background: #2a2a2a; padding: 12px; border-radius: 12px; margin-bottom: 10px; 
-        }
-        .f-info { display: flex; align-items: center; gap: 10px; text-align: left; }
-        .f-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #444; }
+        .room-item { background: #2a2a2a; padding: 10px 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
 
-        /* Room Item (Saved/History) */
-        .room-item { 
-            background: #2a2a2a; padding: 10px 15px; border-radius: 12px; 
-            margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; 
-        }
-        .room-item.saved { border: 1px solid var(--warn); background: rgba(241, 196, 15, 0.1); }
-
-        /* Modals */
-        .modal { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); z-index: 100; 
-            justify-content: center; align-items: center; 
-        }
-        .modal.active { display: flex; }
-        .modal-box { 
-            width: 90%; max-width: 380px; background: #1c1c1e; 
-            padding: 25px; border-radius: 20px; text-align: center; 
-            border: 1px solid #333;
-        }
-
-        /* --- Video Call UI --- */
-        .video-screen { background: #000; flex-direction: column; }
-        
-        /* Grid System */
-        .grid-container { flex: 1; width: 100%; height: 100%; display: grid; gap: 5px; padding: 5px; position: relative; }
-        
-        /* 1 Video = Fullscreen */
+        /* Video UI */
+        #ui-video { background: #000; flex-direction: column; }
+        .video-grid { flex: 1; width: 100%; height: 100%; display: grid; gap: 2px; padding: 2px; background: #000; }
         .grid-1 { grid-template-columns: 1fr; }
-        /* 2 Videos = Split */
-        .grid-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } /* Mobile Portrait */
+        .grid-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } 
         
-        .vid-box { position: relative; width: 100%; height: 100%; background: #111; overflow: hidden; border-radius: 12px; }
+        .vid-box { position: relative; width: 100%; height: 100%; background: #111; overflow: hidden; }
         .vid-player { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* Profile Overlay (When Cam Off) */
-        .profile-overlay {
+        .vid-player.screen-share { object-fit: contain; background: #1a1a1a; } /* Fit screen share */
+
+        .cam-off-ui {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: #1a1a1a; z-index: 5; color: #888;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            background: #1a1a1a; z-index: 5;
         }
-        
+        .cam-off-ui.active { display: flex; }
+        .off-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid #555; }
+
+        /* Room ID Badge */
+        .room-badge {
+            position: absolute; top: 20px; left: 20px; z-index: 50;
+            background: rgba(0,0,0,0.6); color: white; border: 1px solid #555;
+            padding: 8px 15px; border-radius: 20px; font-weight: bold;
+            display: flex; align-items: center; gap: 8px;
+        }
+
         /* Controls */
         .controls { 
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
             display: flex; gap: 15px; background: rgba(30,30,30,0.9); 
             padding: 12px 25px; border-radius: 50px; z-index: 50; 
-            backdrop-filter: blur(10px); border: 1px solid #444;
+            backdrop-filter: blur(10px); border: 1px solid #444; 
         }
-        .c-btn { 
-            width: 50px; height: 50px; border-radius: 50%; border: none; 
-            background: #444; color: white; font-size: 1.2rem; 
-            display: flex; align-items: center; justify-content: center; cursor: pointer; 
-        }
+        .c-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: #444; color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .c-btn.active { background: white; color: black; }
         .c-btn.off { background: rgba(255,59,48,0.2); color: var(--danger); }
         .c-btn.hangup { background: var(--danger); width: 60px; }
 
-        /* Top Buttons */
-        .top-btn { 
-            position: absolute; top: 20px; z-index: 50; 
-            background: rgba(0,0,0,0.6); color: white; border: 1px solid #555;
-            padding: 8px 12px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 5px;
-        }
-        .btn-switch { left: 20px; width: 45px; height: 45px; border-radius: 50%; justify-content: center; }
-        .btn-save { right: 20px; }
-        .btn-save.saved { color: var(--warn); border-color: var(--warn); background: rgba(241, 196, 15, 0.2); }
-
-        /* Incoming Call */
-        .incoming-img { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--success); margin-bottom: 15px; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(46, 213, 115, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(46, 213, 115, 0); } 100% { box-shadow: 0 0 0 0 rgba(46, 213, 115, 0); } }
-
-        /* Responsive */
         @media (max-width: 768px) {
             #ui-dash { flex-direction: column; }
             .sidebar { width: 100%; height: auto; border: none; padding: 15px; }
-            .main-area { 
-                position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-                transform: translateX(100%); transition: 0.3s; z-index: 30; 
-            }
+            .main-area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: translateX(100%); transition: 0.3s; z-index: 30; }
             .main-area.show { transform: translateX(0); }
             .mobile-header { display: flex; }
             .mobile-back { display: block; }
-            /* Desktop Grid */
             .grid-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
         }
         @media (min-width: 769px) {
@@ -213,23 +103,21 @@
 
     <div id="ui-login" class="screen center-wrap">
         <div class="card">
-            <h2 style="margin-bottom:20px;">เข้าสู่ระบบ</h2>
+            <h2>เข้าสู่ระบบ</h2><br>
             <input type="text" id="l-name" placeholder="ชื่อผู้ใช้">
             <input type="tel" id="l-phone" placeholder="เบอร์โทรศัพท์">
             <button class="btn btn-primary" onclick="login()">เข้าสู่ระบบ</button>
-            
-            <button class="link-btn" type="button" onclick="go('register')">ยังไม่มีบัญชี? สร้างผู้ใช้ใหม่</button>
+            <div class="link-text" onclick="go('register')">ยังไม่มีบัญชี? สร้างผู้ใช้ใหม่</div>
         </div>
     </div>
 
     <div id="ui-register" class="screen center-wrap">
         <div class="card">
-            <h2 style="margin-bottom:20px;">สร้างบัญชีใหม่</h2>
+            <h2>สร้างบัญชีใหม่</h2>
             <input type="text" id="r-name" placeholder="ชื่อ (ห้ามซ้ำ)">
             <input type="tel" id="r-phone" placeholder="เบอร์โทรศัพท์">
-            <button class="btn btn-primary" onclick="register()">ยืนยันการสมัคร</button>
-            
-            <button class="link-btn" type="button" onclick="go('login')">กลับไปเข้าสู่ระบบ</button>
+            <button class="btn btn-primary" onclick="register()">ยืนยัน</button>
+            <div class="link-text" onclick="go('login')">กลับไปเข้าสู่ระบบ</div>
         </div>
     </div>
 
@@ -237,30 +125,25 @@
         <div class="sidebar">
             <div class="mobile-header">
                 <h3>โปรไฟล์</h3>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn btn-outline" onclick="openSearch()"><i class="fas fa-user-plus"></i></button>
-                    <button class="btn btn-primary" onclick="toggleJoin(true)"><i class="fas fa-video"></i></button>
-                </div>
+                <button class="btn btn-primary" onclick="toggleJoin(true)"><i class="fas fa-video"></i></button>
             </div>
 
             <div class="profile-sec">
-                <div style="position:relative; width:90px; height:90px; margin:0 auto;">
+                <div class="avatar-box">
                     <img id="u-pic" src="" class="avatar">
-                    <input type="file" id="f-pic" hidden accept="image/*" onchange="savePic(this)">
-                    <label for="f-pic" style="position:absolute; bottom:5px; width:100%; background:rgba(0,0,0,0.6); font-size:10px; cursor:pointer;">แก้ไข</label>
+                    <label for="file-upload" class="edit-pic-btn"><i class="fas fa-camera" style="font-size:0.8rem;"></i></label>
+                    <input type="file" id="file-upload" hidden accept="image/*" onchange="updateProfilePic(this)">
                 </div>
-                <h3 id="u-name" style="margin-top:10px;">User</h3>
+                <h3 id="u-name">User</h3>
                 <p id="u-phone" style="color:#888; font-size:0.9rem;">...</p>
-                <div style="margin-top:15px; display:flex; gap:5px; justify-content:center;">
-                    <button id="desk-search" class="btn btn-outline" style="display:none;" onclick="openSearch()"><i class="fas fa-search"></i> ค้นหา</button>
-                    <button class="btn btn-danger" style="width:auto;" onclick="logout()">ออกจากระบบ</button>
+                
+                <div style="display:flex; gap:8px; justify-content:center; margin-top:15px;">
+                    <button class="btn btn-outline btn-sm" onclick="editName()"><i class="fas fa-pen"></i> แก้ชื่อ</button>
+                    <button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
             </div>
 
-            <h4 style="color:#888; margin-bottom:10px;">เพื่อนของคุณ</h4>
-            <div id="my-friends" class="friend-list"></div>
-            
-            <h4 style="color:#888; margin-bottom:10px;">ห้องที่บันทึก / ประวัติ</h4>
+            <h4 style="color:#888; margin-bottom:10px;">ประวัติห้อง</h4>
             <button class="btn btn-primary" onclick="createRoom()">+ สร้างห้องใหม่</button>
             <div id="room-list" style="margin-top:10px;"></div>
         </div>
@@ -269,8 +152,8 @@
             <div class="mobile-back" onclick="toggleJoin(false)"><i class="fas fa-arrow-left"></i></div>
             <div class="card">
                 <i class="fas fa-video" style="font-size:3rem; margin-bottom:20px; color:#555;"></i>
-                <h3>เข้าร่วมห้อง (Group)</h3>
-                <p style="color:#888; margin-bottom:20px;">ใส่ Room ID เพื่อเข้าร่วมประชุม</p>
+                <h3>เข้าร่วมห้อง</h3>
+                <p style="color:#888; margin-bottom:20px;">ใส่ Room ID เพื่อเข้าร่วม</p>
                 <div style="display:flex; gap:10px;">
                     <input type="text" id="join-id" placeholder="Room ID" style="margin-bottom:0;">
                     <button class="btn btn-primary" style="width:80px;" onclick="joinFromInput()">Go</button>
@@ -279,59 +162,21 @@
         </div>
     </div>
 
-    <div id="modal-search" class="modal">
-        <div class="modal-box">
-            <h3>ค้นหาเพื่อน</h3>
-            <div style="display:flex; gap:5px; margin:15px 0;">
-                <input type="text" id="s-input" placeholder="ชื่อ หรือ เบอร์โทร" style="margin-bottom:0;">
-                <button class="btn btn-primary" style="width:auto;" onclick="doSearch()">ค้นหา</button>
-            </div>
-            <div id="s-results" style="max-height:300px; overflow-y:auto;"></div>
-            <button class="btn btn-outline" style="width:100%; margin-top:15px;" onclick="closeModal('modal-search')">ปิด</button>
+    <div id="ui-video" class="screen">
+        <div class="room-badge">
+            <i class="fas fa-hashtag" style="color:var(--primary)"></i> 
+            ID: <span id="display-room-id">--</span>
         </div>
-    </div>
-
-    <div id="modal-incoming" class="modal">
-        <div class="modal-box">
-            <img id="inc-img" src="" class="incoming-img">
-            <h2 id="inc-name">Name</h2>
-            <p>กำลังโทรหาคุณ...</p>
-            <div style="display:flex; gap:15px; justify-content:center; margin-top:20px;">
-                <button class="btn btn-danger" onclick="rejectCall()"><i class="fas fa-times"></i> ไม่รับ</button>
-                <button class="btn btn-success" onclick="acceptCall()"><i class="fas fa-phone"></i> รับสาย</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="ui-video" class="screen video-screen">
-        <button class="top-btn btn-switch" onclick="switchCamera()"><i class="fas fa-sync-alt"></i></button>
-        <button id="btn-save-room" class="top-btn btn-save" onclick="toggleSaveRoom()"><i class="far fa-star"></i> บันทึก</button>
         
-        <div id="video-grid" class="grid-container grid-1">
-            </div>
-
-        <div style="position:absolute; bottom:100px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.6); padding:5px 15px; border-radius:20px; z-index:20;">
-            <span id="call-timer">00:00</span>
-        </div>
+        <div id="video-grid" class="video-grid grid-1"></div>
 
         <div class="controls">
             <button class="c-btn active" id="btn-mic" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
             <button class="c-btn active" id="btn-cam" onclick="toggleCam()"><i class="fas fa-video"></i></button>
             <button class="c-btn active" id="btn-vol" onclick="toggleSpeaker()"><i class="fas fa-volume-up"></i></button>
+            <button class="c-btn off" id="btn-screen" onclick="toggleScreenShare()"><i class="fas fa-desktop"></i></button>
+            
             <button class="c-btn hangup" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
-        </div>
-    </div>
-
-    <div id="modal-end" class="modal">
-        <div class="modal-box">
-            <h3>จบการสนทนา</h3>
-            <img id="end-img" src="" class="avatar" style="margin:20px auto;">
-            <h2 id="end-name">User</h2>
-            <p id="end-time" style="font-size:1.5rem; color:var(--primary); margin:10px 0;">00:00</p>
-            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
-                <button class="btn btn-outline" onclick="closeModal('modal-end')">ออก</button>
-                <button class="btn btn-success" onclick="callUser(lastCallID)">โทรอีกครั้ง</button>
-            </div>
         </div>
     </div>
 
@@ -341,66 +186,48 @@
         // ==========================
         const APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; 
 
-        // State
         let client = AgoraRTC.createClient({ mode: "rtc", codec: "h264" });
-        let local = { a:null, v:null };
+        let local = { a:null, v:null, s:null }; // s = screen
         let remoteUsers = {};
         let me = null;
-        let myFriends = [];
-        let mySavedRooms = [];
-        let callState = { friend:null, timer:null, start:0, type:'none' };
-        let lastCallID = null;
-        let isCamBack = false;
+        let isCamOn = true;
+        let isScreenOn = false;
         let isSpeakerOn = true;
-        let currentRoomId = null;
 
-        // --- NAVIGATION & INIT ---
+        // --- NAVIGATION ---
         function go(s) { 
-            console.log("Nav to:", s);
             document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active')); 
             document.getElementById('ui-'+s).classList.add('active'); 
         }
 
         window.onload = () => {
-            if(window.innerWidth > 768) document.getElementById('desk-search').style.display='inline-flex';
-            
             const saved = localStorage.getItem('me');
             if(saved) {
-                try { 
-                    me = JSON.parse(saved); 
-                    renderMe(); 
-                    loadFriends(); 
-                    loadSavedRooms();
-                    go('dash'); 
-                } catch(e) { localStorage.removeItem('me'); go('login'); }
-            } else {
-                go('login');
-            }
-            window.addEventListener('storage', handleSignal);
+                try { me = JSON.parse(saved); renderMe(); renderHistory(); go('dash'); } 
+                catch(e) { localStorage.removeItem('me'); go('login'); }
+            } else { go('login'); }
         };
 
         function toggleJoin(show) { document.getElementById('dash-main').classList.toggle('show', show); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        function openSearch() { document.getElementById('modal-search').classList.add('active'); doSearch(); }
 
-        // --- AUTH ---
-        function register() {
-            const n = document.getElementById('r-name').value.trim();
-            const p = document.getElementById('r-phone').value.trim();
-            if(!n || !p) return alert("กรอกข้อมูลให้ครบ");
-            let db = JSON.parse(localStorage.getItem('db')||"[]");
-            if(db.find(u=>u.n===n)) return alert("ชื่อนี้ซ้ำ");
-            const newUser = { id: Date.now().toString(), n, p, pic: 'https://via.placeholder.com/80' };
-            db.push(newUser); localStorage.setItem('db',JSON.stringify(db));
-            alert("สมัครสำเร็จ!"); go('login');
-        }
+        // --- AUTH & PROFILE ---
         function login() {
             const n = document.getElementById('l-name').value.trim();
             const p = document.getElementById('l-phone').value.trim();
             let db = JSON.parse(localStorage.getItem('db')||"[]");
             const u = db.find(x=>x.n===n && x.p===p);
-            if(u) { me=u; localStorage.setItem('me',JSON.stringify(me)); renderMe(); loadFriends(); loadSavedRooms(); go('dash'); }
+            if(u) { me=u; localStorage.setItem('me',JSON.stringify(me)); renderMe(); renderHistory(); go('dash'); }
             else alert("ไม่พบข้อมูล");
+        }
+        function register() {
+            const n = document.getElementById('r-name').value.trim();
+            const p = document.getElementById('r-phone').value.trim();
+            if(!n||!p) return alert("กรอกให้ครบ");
+            let db = JSON.parse(localStorage.getItem('db')||"[]");
+            if(db.find(u=>u.n===n)) return alert("ชื่อซ้ำ");
+            const newUser = { id: Date.now().toString(), n, p, pic: 'https://via.placeholder.com/150', nameChange: 0 };
+            db.push(newUser); localStorage.setItem('db',JSON.stringify(db));
+            alert("สำเร็จ"); go('login');
         }
         function logout() { localStorage.removeItem('me'); location.reload(); }
 
@@ -409,216 +236,98 @@
             document.getElementById('u-phone').innerText = me.p;
             if(me.pic) document.getElementById('u-pic').src = me.pic;
         }
-        function savePic(e) {
-            if(e.files[0]) {
+        function updateProfilePic(input) {
+            if(input.files[0]) {
                 const r = new FileReader();
-                r.onload = ev => {
-                    me.pic = ev.target.result; localStorage.setItem('me',JSON.stringify(me));
-                    let db = JSON.parse(localStorage.getItem('db')); db[db.findIndex(u=>u.id===me.id)] = me;
-                    localStorage.setItem('db',JSON.stringify(db)); renderMe();
-                }; r.readAsDataURL(e.files[0]);
+                r.onload = ev => { me.pic = ev.target.result; saveUserData(); renderMe(); };
+                r.readAsDataURL(input.files[0]);
             }
         }
-
-        // --- FRIENDS ---
-        function loadFriends() {
-            myFriends = JSON.parse(localStorage.getItem('friends_'+me.id) || "[]");
-            const list = document.getElementById('my-friends'); list.innerHTML = '';
-            if(myFriends.length === 0) list.innerHTML = '<p style="color:#666; font-size:0.9rem;">ยังไม่มีเพื่อน</p>';
-            myFriends.forEach(f => {
-                list.innerHTML += `
-                <div class="friend-item">
-                    <div class="f-info"><img src="${f.pic}" class="f-img"><div><div>${f.n}</div><small style="color:#888">${f.p}</small></div></div>
-                    <button class="btn btn-success" style="width:auto; padding:8px 15px;" onclick="callUser('${f.id}')"><i class="fas fa-phone"></i></button>
-                </div>`;
-            });
+        function editName() {
+            const now = Date.now();
+            const cooldown = 7 * 24 * 60 * 60 * 1000;
+            if (now - (me.nameChange||0) < cooldown) return alert("รอครบ 7 วันก่อนเปลี่ยนชื่อใหม่");
+            const newName = prompt("ชื่อใหม่:");
+            if (newName && newName.trim()) { me.n = newName; me.nameChange = now; saveUserData(); renderMe(); }
         }
-        function doSearch() {
-            const q = document.getElementById('s-input').value.trim();
+        function saveUserData() {
+            localStorage.setItem('me', JSON.stringify(me));
             let db = JSON.parse(localStorage.getItem('db')||"[]");
-            const res = q ? db.filter(u => (u.n.includes(q) || u.p.includes(q)) && u.id !== me.id) : db.filter(u=>u.id!==me.id);
-            const l = document.getElementById('s-results'); l.innerHTML = '';
-            res.forEach(u => {
-                const isF = myFriends.find(f => f.id === u.id);
-                l.innerHTML += `
-                <div class="friend-item">
-                    <div class="f-info"><img src="${u.pic}" class="f-img"><div><div>${u.n}</div><small style="color:#888; font-size:0.7rem;">ID: ${u.id}</small></div></div>
-                    ${!isF ? `<button class="btn btn-primary" style="width:auto; padding:5px 15px;" onclick="addFriend('${u.id}')">แอด</button>` : `<button class="btn btn-success" style="width:auto; padding:5px 15px;" onclick="callUser('${u.id}')"><i class="fas fa-phone"></i></button>`}
-                </div>`;
-            });
-        }
-        function addFriend(id) {
-            let db = JSON.parse(localStorage.getItem('db'));
-            const u = db.find(x => x.id === id);
-            if(u) {
-                myFriends.push(u); localStorage.setItem('friends_'+me.id, JSON.stringify(myFriends));
-                loadFriends(); doSearch();
-            }
+            const idx = db.findIndex(u => u.id === me.id);
+            if(idx > -1) { db[idx] = me; localStorage.setItem('db', JSON.stringify(db)); }
         }
 
-        // --- SAVED ROOMS ---
-        function loadSavedRooms() {
-            mySavedRooms = JSON.parse(localStorage.getItem('saved_rooms_'+me.id) || "[]");
-            renderRooms();
-        }
-        function renderRooms() {
-            const list = document.getElementById('room-list'); list.innerHTML = '';
-            mySavedRooms.forEach(r => {
-                list.innerHTML += `<div class="room-item saved"><div><i class="fas fa-star" style="color:var(--warn); margin-right:5px;"></i> ${r.id}</div><button class="btn btn-primary" style="width:auto; padding:5px 15px; font-size:0.8rem;" onclick="joinRoom('${r.id}')">Join</button></div>`;
-            });
-            let history = JSON.parse(localStorage.getItem('rooms')||"[]");
-            history.forEach(r => {
-                if(!mySavedRooms.find(s => s.id === r.id)) {
-                    list.innerHTML += `<div class="room-item"><span>${r.id}</span><button class="btn btn-primary" style="width:auto; padding:5px 15px; font-size:0.8rem;" onclick="joinRoom('${r.id}')">Join</button></div>`;
-                }
-            });
-        }
-        function toggleSaveRoom() {
-            if(!currentRoomId) return;
-            const idx = mySavedRooms.findIndex(r => r.id === currentRoomId);
-            const btn = document.getElementById('btn-save-room');
-            if(idx > -1) {
-                mySavedRooms.splice(idx, 1);
-                btn.classList.remove('saved'); btn.innerHTML = '<i class="far fa-star"></i> บันทึก';
-            } else {
-                mySavedRooms.push({ id: currentRoomId });
-                btn.classList.add('saved'); btn.innerHTML = '<i class="fas fa-star"></i> บันทึกแล้ว';
-            }
-            localStorage.setItem('saved_rooms_'+me.id, JSON.stringify(mySavedRooms)); loadSavedRooms();
-        }
+        // --- ROOMS ---
         function createRoom() {
             const id = Math.floor(1000+Math.random()*9000).toString();
-            let rs = JSON.parse(localStorage.getItem('rooms')||"[]"); rs.unshift({id});
-            localStorage.setItem('rooms',JSON.stringify(rs)); loadSavedRooms(); joinRoom(id);
+            saveRoomHistory(id); joinRoom(id);
         }
         function joinFromInput() { const v=document.getElementById('join-id').value; if(v) joinRoom(v); }
-
-        // --- CALL SIGNALING ---
-        function callUser(id) {
-            closeModal('modal-search'); closeModal('modal-end');
-            lastCallID = id;
-            let db = JSON.parse(localStorage.getItem('db'));
-            const target = db.find(u => u.id === id);
-            callState.friend = target;
-            callState.type = 'p2p';
-            
-            localStorage.setItem('signal', JSON.stringify({ from: me, to: target.id, type: 'offer', t: Date.now() }));
-            
-            go('video'); 
-            currentRoomId = null; // P2P no room ID
-            document.getElementById('btn-save-room').style.display='none';
-            // Wait for answer...
+        function saveRoomHistory(id) {
+            let rs = JSON.parse(localStorage.getItem('rooms')||"[]");
+            rs.unshift({id}); localStorage.setItem('rooms',JSON.stringify(rs)); renderHistory();
+        }
+        function renderHistory() {
+            const list = document.getElementById('room-list'); list.innerHTML='';
+            let rs = JSON.parse(localStorage.getItem('rooms')||"[]");
+            rs.forEach(r => {
+                list.innerHTML += `<div class="room-item"><span>${r.id}</span><button class="btn btn-primary btn-sm" onclick="joinRoom('${r.id}')">Join</button></div>`;
+            });
         }
 
-        function handleSignal(e) {
-            if(e.key !== 'signal') return;
-            const d = JSON.parse(e.newValue);
-            if(!d) return;
-            
-            if(d.to === me.id && d.type === 'offer' && (Date.now() - d.t < 5000)) {
-                callState.friend = d.from;
-                callState.type = 'p2p';
-                document.getElementById('inc-name').innerText = d.from.n;
-                document.getElementById('inc-img').src = d.from.pic;
-                document.getElementById('modal-incoming').classList.add('active');
-            }
-            if(d.to === me.id && d.type === 'answer') { startAgoraP2P(); }
-            if(d.to === me.id && d.type === 'reject') { alert("สายไม่ว่าง"); go('dash'); }
-        }
-
-        function acceptCall() {
-            closeModal('modal-incoming');
-            localStorage.setItem('signal', JSON.stringify({ from: me, to: callState.friend.id, type: 'answer', t: Date.now() }));
-            startAgoraP2P();
-        }
-        function rejectCall() {
-            closeModal('modal-incoming');
-            localStorage.setItem('signal', JSON.stringify({ from: me, to: callState.friend.id, type: 'reject', t: Date.now() }));
-        }
-
-        // --- AGORA VIDEO ---
+        // --- VIDEO CORE (Fast Toggle Fix) ---
         async function joinRoom(rid) {
-            if(APP_ID.length < 10) return alert("ใส่ App ID ก่อนครับ");
+            if(APP_ID.length < 10) return alert("ใส่ App ID ก่อน");
             go('video'); 
-            currentRoomId = rid;
-            callState.type = 'room';
+            document.getElementById('display-room-id').innerText = rid;
             
-            // Setup UI for Room
-            document.getElementById('btn-save-room').style.display='flex';
-            const saved = mySavedRooms.find(r=>r.id===rid);
-            const btn = document.getElementById('btn-save-room');
-            if(saved) { btn.classList.add('saved'); btn.innerHTML='<i class="fas fa-star"></i> บันทึกแล้ว'; }
-            else { btn.classList.remove('saved'); btn.innerHTML='<i class="far fa-star"></i> บันทึก'; }
-
             try {
                 await client.join(APP_ID, rid, null, me.id);
-                initLocalTracks();
-            } catch(e) { console.error(e); }
-        }
-
-        async function startAgoraP2P() {
-            const ids = [me.id, callState.friend.id].sort();
-            const chan = `p2p_${ids[0]}_${ids[1]}`;
-            try {
-                await client.join(APP_ID, chan, null, me.id);
-                initLocalTracks();
-                startTimer();
-            } catch(e) { console.error(e); }
-        }
-
-        async function initLocalTracks() {
-            try {
-                [local.a, local.v] = await AgoraRTC.createMicrophoneAndCameraTracks();
+                // Create tracks ONCE
+                [local.a, local.v] = await AgoraRTC.createMicrophoneAndCameraTracks(
+                    { encoderConfig: "music_standard" },
+                    { encoderConfig: "360p_1" } 
+                );
+                
                 await client.publish([local.a, local.v]);
                 addVideo(me.id, local.v, true);
-            } catch(e) { alert("ไม่สามารถเปิดกล้องได้"); endCall(); }
-        }
-
-        function startTimer() {
-            callState.start = Date.now();
-            callState.timer = setInterval(() => {
-                const s = Math.floor((Date.now()-callState.start)/1000);
-                const m = Math.floor(s/60).toString().padStart(2,'0');
-                document.getElementById('call-timer').innerText = `${m}:${(s%60).toString().padStart(2,'0')}`;
-            }, 1000);
+                isCamOn = true; btnStyle('btn-cam', true);
+            } catch(e) {
+                console.error(e);
+                alert("ไม่สามารถเข้าถึงกล้อง/ไมค์"); endCall();
+            }
         }
 
         // --- VIDEO HANDLERS ---
         client.on("user-published", async (u, type) => {
             await client.subscribe(u, type);
             remoteUsers[u.uid] = u;
-            if(type==='video') addVideo(u.uid, u.videoTrack);
+            if(type==='video') { addVideo(u.uid, u.videoTrack); toggleCamUI(u.uid, false); }
             if(type==='audio') u.audioTrack.play();
             updateGrid();
         });
         client.on("user-unpublished", (u, type) => {
-            if(type==='video') toggleCamUI(u.uid, true);
+            if(type==='video') toggleCamUI(u.uid, true); // Don't remove, show black screen
         });
         client.on("user-left", u => {
-            delete remoteUsers[u.uid];
-            removeVideo(u.uid);
-            if(callState.type === 'p2p') endCall();
+            delete remoteUsers[u.uid]; removeVideo(u.uid);
         });
 
-        // --- GRID UI ---
+        // --- UI HELPERS ---
         function addVideo(uid, track, isLocal) {
-            if(document.getElementById(`vid-${uid}`)) { track.play(`play-${uid}`); return; }
+            if(document.getElementById(`vid-${uid}`)) { track.play(`play-${uid}`); toggleCamUI(uid, false); return; }
             
             const div = document.createElement('div');
             div.className = 'vid-box'; div.id = `vid-${uid}`;
+            let uName = isLocal ? me.n : "User " + uid;
+            let uPic = isLocal ? me.pic : "https://via.placeholder.com/150"; 
             
-            // Get user info
-            let uName = "User " + uid;
-            let uPic = "https://via.placeholder.com/80";
-            if(isLocal) { uName = "Me"; uPic = me.pic; }
-            else if(callState.type === 'p2p' && callState.friend) { uName = callState.friend.n; uPic = callState.friend.pic; }
-
             div.innerHTML = `
                 <div id="play-${uid}" class="vid-player"></div>
-                <div id="off-${uid}" class="profile-overlay">
-                    <img src="${uPic}" class="avatar" style="border:none;">
-                    <h3>${uName}</h3>
-                    <p style="color:#666;">ปิดกล้อง</p>
+                <div id="off-${uid}" class="cam-off-ui">
+                    <img src="${uPic}" class="off-avatar">
+                    <div class="off-name">${uName}</div>
+                    <div class="off-status">ปิดกล้อง</div>
                 </div>
             `;
             document.getElementById('video-grid').appendChild(div);
@@ -626,64 +335,104 @@
             updateGrid();
         }
 
-        function removeVideo(uid) {
-            const el = document.getElementById(`vid-${uid}`);
-            if(el) el.remove();
-            updateGrid();
-        }
-
+        function removeVideo(uid) { const el = document.getElementById(`vid-${uid}`); if(el) el.remove(); updateGrid(); }
         function toggleCamUI(uid, isOff) {
             const el = document.getElementById(`off-${uid}`);
-            if(el) isOff ? el.style.display = 'flex' : el.style.display = 'none';
+            if(el) isOff ? el.classList.add('active') : el.classList.remove('active');
         }
-
         function updateGrid() {
             const g = document.getElementById('video-grid');
-            const count = g.children.length;
-            g.className = 'grid-container';
-            if(count <= 1) g.classList.add('grid-1'); else g.classList.add('grid-2');
+            g.className = g.children.length <= 1 ? "video-grid grid-1" : "video-grid grid-2";
         }
-
         function endCall() {
-            if(local.a) { local.a.close(); local.v.close(); }
-            client.leave(); clearInterval(callState.timer);
-            document.getElementById('video-grid').innerHTML = '';
-            
-            if(callState.type === 'p2p') {
-                document.getElementById('end-name').innerText = callState.friend.n;
-                document.getElementById('end-img').src = callState.friend.pic;
-                document.getElementById('end-time').innerText = document.getElementById('call-timer').innerText;
-                document.getElementById('modal-end').classList.add('active');
-            }
+            // Important: Don't just close, leave channel
+            if(local.a) { local.a.close(); local.a = null; }
+            if(local.v) { local.v.close(); local.v = null; }
+            if(local.s) { local.s.close(); local.s = null; }
+            client.leave();
+            document.getElementById('video-grid').innerHTML='';
             go('dash');
         }
 
         // --- CONTROLS ---
         function toggleMic() { if(local.a) { local.a.setMuted(!local.a.muted); btnStyle('btn-mic', !local.a.muted); } }
-        function toggleCam() { 
-            if(local.v) { 
-                local.v.setMuted(!local.v.muted); 
-                btnStyle('btn-cam', !local.v.muted);
-                toggleCamUI(me.id, local.v.muted);
-            } 
-        }
-        function toggleSpeaker() { isSpeakerOn=!isSpeakerOn; btnStyle('btn-vol', isSpeakerOn); Object.values(remoteUsers).forEach(u => u.audioTrack?.setVolume(isSpeakerOn?100:0)); }
         
+        // 🔥 Fast Cam Toggle (No Re-Allow)
+        async function toggleCam() {
+            if(!local.v) return; // No track
+            if(isCamOn) {
+                // Turn OFF: Disable track (stops light usually) & Unpublish to show black screen on remote
+                await local.v.setEnabled(false);
+                await client.unpublish(local.v);
+                
+                toggleCamUI(me.id, true); // Local UI black
+                btnStyle('btn-cam', false);
+                isCamOn = false;
+            } else {
+                // Turn ON: Enable & Publish
+                await local.v.setEnabled(true);
+                await client.publish(local.v);
+                
+                toggleCamUI(me.id, false); // Local UI video
+                btnStyle('btn-cam', true);
+                isCamOn = true;
+            }
+        }
+
+        // 🔥 Screen Share (PC/Mobile)
+        async function toggleScreenShare() {
+            if(isScreenOn) {
+                // Stop Sharing
+                await client.unpublish(local.s);
+                local.s.close(); local.s = null;
+                isScreenOn = false;
+                btnStyle('btn-screen', false);
+                
+                // Return to Cam if it was on
+                if(local.v) {
+                    await client.publish(local.v);
+                    addVideo(me.id, local.v, true);
+                    toggleCamUI(me.id, !isCamOn);
+                }
+            } else {
+                // Start Sharing
+                try {
+                    // Create Screen Track
+                    local.s = await AgoraRTC.createScreenVideoTrack();
+                    
+                    // Unpublish Cam first (Agora usually allows 1 video stream per user in basic mode)
+                    if(local.v) await client.unpublish(local.v);
+                    
+                    // Publish Screen
+                    await client.publish(local.s);
+                    
+                    // Update Local View
+                    removeVideo(me.id); // Remove cam view
+                    addVideo(me.id, local.s, true); // Add screen view
+                    // Hack: Mark screen as 'Me' in UI
+                    const vidDiv = document.getElementById(`play-${me.id}`);
+                    if(vidDiv) vidDiv.classList.add('screen-share');
+
+                    isScreenOn = true;
+                    btnStyle('btn-screen', true);
+
+                    // Listen for browser "Stop Sharing" button
+                    local.s.on("track-ended", () => {
+                        toggleScreenShare(); // recursive call to handle stop logic
+                    });
+
+                } catch(e) {
+                    console.error(e);
+                    // User cancelled or not supported
+                }
+            }
+        }
+
+        function toggleSpeaker() { /* Speaker logic */ }
         function btnStyle(id, on) {
             const el = document.getElementById(id);
             if(on) { el.classList.add('active'); el.classList.remove('off'); }
             else { el.classList.add('off'); el.classList.remove('active'); }
-        }
-
-        async function switchCamera() {
-            if(local.v) {
-                try {
-                    local.v.close(); isCamBack = !isCamBack;
-                    local.v = await AgoraRTC.createCameraVideoTrack({ facingMode: isCamBack ? "environment" : "user" });
-                    await client.publish(local.v);
-                    local.v.play(`play-${me.id}`);
-                } catch(e) {}
-            }
         }
     </script>
 </body>
