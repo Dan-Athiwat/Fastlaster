@@ -2,438 +2,527 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NextGen V10.2 (Black Screen Fix)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FutureCall - Realtime Video Chat</title>
     
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#000000">
-    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.18.2.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
-    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
     <style>
-        :root { 
-            --primary: #007AFF; --bg: #000; --surface: #1c1c1e; 
-            --text: #fff; --danger: #ff3b30; --success: #34c759; --warn: #f1c40f; 
+        /* Custom UI Styling */
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: white;
+            font-family: 'Kanit', sans-serif;
+            overflow-x: hidden;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg); color: var(--text); height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
-
-        /* UI Helpers */
-        .btn { 
-            border: none; border-radius: 10px; padding: 10px 16px; 
-            cursor: pointer; font-weight: 500; width: 100%; 
-            display: flex; align-items: center; justify-content: center; gap: 8px; 
-            color: white; transition: 0.2s; font-size: 0.95rem; 
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
         }
-        .btn:active { transform: scale(0.96); opacity: 0.9; }
-        .btn-sm { padding: 6px 12px; font-size: 0.85rem; width: auto; display: inline-flex; flex-shrink: 0; }
-        .btn-primary { background: var(--primary); }
-        .btn-danger { background: var(--danger); }
-        .btn-outline { background: transparent; border: 1px solid #444; color: #ddd; }
-        
-        input { 
-            width: 100%; padding: 10px 14px; background: #2c2c2e; border: 1px solid #444; 
-            border-radius: 10px; color: white; outline: none; font-size: 1rem; height: 44px; 
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            width: 100%;
+            height: calc(100vh - 100px);
         }
-
-        .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 10; background: var(--bg); }
-        .screen.active { display: flex; }
-
-        .center-wrap { justify-content: center; align-items: center; background: radial-gradient(circle at center, #222 0%, #000 100%); padding: 20px; }
-        .card { width: 100%; max-width: 380px; background: rgba(30,30,30,0.95); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #333; }
-        .link-text { margin-top: 15px; color: var(--primary); cursor: pointer; text-decoration: underline; display: inline-block; padding: 5px; font-size: 0.9rem; }
-
-        #ui-dash { flex-direction: row; }
-        .sidebar { width: 320px; background: var(--surface); padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; z-index: 20; overflow-y: auto; }
-        .main-area { flex: 1; background: var(--bg); position: relative; display: flex; align-items: center; justify-content: center; }
-        
-        .mobile-header { display: none; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .mobile-back { display: none; position: absolute; top: 20px; left: 20px; font-size: 1.5rem; cursor: pointer; z-index: 30; }
-
-        .profile-sec { text-align: center; padding-bottom: 20px; border-bottom: 1px solid #333; margin-bottom: 20px; }
-        .avatar-box { position: relative; width: 90px; height: 90px; margin: 0 auto 10px; }
-        .avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
-        .edit-pic-btn { position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #1c1c1e; font-size: 0.7rem; }
-        .action-row { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
-        .room-item { background: #2a2a2a; padding: 10px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
-
-        /* --- VIDEO UI (FIXED) --- */
-        #ui-video { background: #000; flex-direction: column; }
-        .video-grid { flex: 1; width: 100%; height: 100%; display: grid; gap: 2px; padding: 2px; background: #000; }
-        .grid-1 { grid-template-columns: 1fr; }
-        .grid-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } 
-        
-        .vid-box { position: relative; width: 100%; height: 100%; background: #111; overflow: hidden; }
-        
-        /* 🔥 Fix Video Layer: Ensure video is visible */
-        .vid-player { width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 1; }
-        .vid-player.screen-share { object-fit: contain; background: #1a1a1a; }
-
-        /* 🔥 Fix Overlay: Hide when active class removed */
-        .cam-off-ui {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: none; /* Default Hidden */
-            flex-direction: column; justify-content: center; align-items: center;
-            background: #1a1a1a; z-index: 10; /* Higher than video */
+        .video-container {
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        .cam-off-ui.active { display: flex; } /* Show only when active */
-        
-        .off-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid #555; }
-        .room-badge { position: absolute; top: 20px; left: 20px; z-index: 50; background: rgba(0,0,0,0.6); color: white; border: 1px solid #555; padding: 6px 12px; border-radius: 20px; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; }
-
-        .controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; background: rgba(30,30,30,0.9); padding: 10px 20px; border-radius: 50px; z-index: 50; backdrop-filter: blur(10px); border: 1px solid #444; }
-        .c-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: #444; color: white; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .c-btn.active { background: white; color: black; }
-        .c-btn.off { background: rgba(255,59,48,0.2); color: var(--danger); }
-        .c-btn.hangup { background: var(--danger); width: 60px; border-radius: 30px; }
-
-        @media (max-width: 768px) {
-            #ui-dash { flex-direction: column; }
-            .sidebar { width: 100%; height: auto; border: none; padding: 15px; }
-            .main-area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: translateX(100%); transition: 0.3s; z-index: 30; }
-            .main-area.show { transform: translateX(0); }
-            .mobile-header { display: flex; }
-            .mobile-back { display: block; }
-            .grid-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+        .video-player {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
-        @media (min-width: 769px) {
-            .grid-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+        .user-label {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.6);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            z-index: 10;
         }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <div id="ui-login" class="screen center-wrap">
-        <div class="card">
-            <h2 style="margin-bottom:20px;">เข้าสู่ระบบ</h2>
-            <input type="text" id="l-name" placeholder="ชื่อผู้ใช้">
-            <div style="height:10px;"></div>
-            <input type="tel" id="l-phone" placeholder="เบอร์โทรศัพท์">
-            <div style="height:20px;"></div>
-            <button class="btn btn-primary" onclick="login()">เข้าสู่ระบบ</button>
-            <div class="link-text" onclick="go('register')">สร้างบัญชีใหม่</div>
+<div id="app" class="min-h-screen flex flex-col items-center justify-center p-4 relative">
+
+    <div v-if="!appIdConfigured" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-90 z-50 flex items-center justify-center text-center p-6">
+        <div class="glass-panel p-8 max-w-md">
+            <h1 class="text-3xl font-bold text-red-500 mb-4">⚠️ ตั้งค่า Key ก่อน</h1>
+            <p class="mb-4 text-gray-300">กรุณาแก้ไขไฟล์โค้ดแล้วใส่ <b>Agora App ID</b> ในบรรทัดที่กำหนด เพื่อให้ระบบโทรทำงานได้จริง</p>
+            <p class="text-sm text-gray-400">ค้นหาคำว่า "YOUR_AGORA_APP_ID" ในโค้ด</p>
         </div>
     </div>
 
-    <div id="ui-register" class="screen center-wrap">
-        <div class="card">
-            <h2 style="margin-bottom:20px;">สร้างบัญชี</h2>
-            <input type="text" id="r-name" placeholder="ชื่อ (ห้ามซ้ำ)">
-            <div style="height:10px;"></div>
-            <input type="tel" id="r-phone" placeholder="เบอร์โทรศัพท์">
-            <div style="height:20px;"></div>
-            <button class="btn btn-primary" onclick="register()">ยืนยัน</button>
-            <div class="link-text" onclick="go('login')">กลับไปเข้าสู่ระบบ</div>
-        </div>
-    </div>
+    <div v-if="currentView === 'auth'" class="w-full max-w-md">
+        <div class="glass-panel p-8 shadow-2xl animate-fade-in">
+            <h1 class="text-3xl font-bold text-center mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
+                FutureCall
+            </h1>
+            <p class="text-center text-gray-400 mb-8">ระบบวิดีโอคอลคุณภาพสูง</p>
 
-    <div id="ui-dash" class="screen">
-        <div class="sidebar">
-            <div class="mobile-header">
-                <h3>โปรไฟล์</h3>
-                <button class="btn btn-primary" style="width:auto; padding: 5px 12px;" onclick="toggleJoin(true)"><i class="fas fa-video"></i></button>
-            </div>
-
-            <div class="profile-sec">
-                <div class="avatar-box">
-                    <img id="u-pic" src="" class="avatar">
-                    <label for="file-upload" class="edit-pic-btn"><i class="fas fa-camera"></i></label>
-                    <input type="file" id="file-upload" hidden accept="image/*" onchange="updateProfilePic(this)">
+            <div v-if="authMode === 'login'">
+                <div class="space-y-4">
+                    <input v-model="loginForm.name" type="text" placeholder="ชื่อผู้ใช้" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 focus:outline-none focus:border-indigo-500 transition">
+                    <input v-model="loginForm.phone" type="tel" placeholder="เบอร์โทรศัพท์" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 focus:outline-none focus:border-indigo-500 transition">
+                    <button @click="handleLogin" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-indigo-500/30">
+                        เข้าสู่ระบบ
+                    </button>
                 </div>
-                <h3 id="u-name">User</h3>
-                <p id="u-phone" style="color:#888; font-size:0.9rem;">...</p>
-                <div class="action-row">
-                    <button class="btn btn-outline btn-sm" onclick="editName()"><i class="fas fa-pen"></i> แก้ชื่อ</button>
-                    <button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+                <div class="mt-6 text-center">
+                    <span class="text-gray-500">ยังไม่มีบัญชี? </span>
+                    <button @click="authMode = 'register'" class="text-indigo-400 hover:text-indigo-300 font-semibold">สร้างบัญชีผู้ใช้</button>
                 </div>
             </div>
 
-            <h4 style="color:#888; margin-bottom:10px; font-size:0.9rem;">ประวัติห้อง</h4>
-            <button class="btn btn-primary" onclick="createRoom()">+ สร้างห้องใหม่</button>
-            <div id="room-list" style="margin-top:15px;"></div>
-        </div>
-
-        <div id="dash-main" class="main-area">
-            <div class="mobile-back" onclick="toggleJoin(false)"><i class="fas fa-arrow-left"></i></div>
-            <div class="card">
-                <i class="fas fa-video" style="font-size:3rem; margin-bottom:20px; color:#555;"></i>
-                <h3>เข้าร่วมห้อง</h3>
-                <p style="color:#888; margin-bottom:20px; font-size:0.9rem;">ใส่ Room ID เพื่อเข้าร่วม</p>
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <input type="text" id="join-id" placeholder="Room ID" style="margin-bottom:0;">
-                    <button class="btn btn-primary" style="width:auto; height:44px; padding:0 20px;" onclick="joinFromInput()">Go</button>
+            <div v-else>
+                <div class="space-y-4">
+                    <div class="flex justify-center mb-4">
+                        <div class="relative w-24 h-24 rounded-full bg-gray-700 overflow-hidden border-2 border-indigo-500 cursor-pointer" @click="$refs.fileInput.click()">
+                            <img v-if="registerForm.avatar" :src="registerForm.avatar" class="w-full h-full object-cover">
+                            <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                                <i class="fas fa-camera text-2xl"></i>
+                            </div>
+                        </div>
+                        <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleFileUpload">
+                    </div>
+                    <input v-model="registerForm.name" type="text" placeholder="ตั้งชื่อผู้ใช้ (ห้ามซ้ำ)" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 focus:outline-none focus:border-indigo-500">
+                    <input v-model="registerForm.phone" type="tel" placeholder="เบอร์โทรศัพท์" class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 focus:outline-none focus:border-indigo-500">
+                    <button @click="handleRegister" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-3 rounded-lg transition shadow-lg">
+                        ลงทะเบียน
+                    </button>
+                </div>
+                <div class="mt-6 text-center">
+                    <button @click="authMode = 'login'" class="text-gray-400 hover:text-white text-sm">ย้อนกลับ</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="ui-video" class="screen">
-        <div class="room-badge">
-            <i class="fas fa-hashtag" style="color:var(--primary)"></i> 
-            <span id="display-room-id">--</span>
-        </div>
+    <div v-else-if="currentView === 'dashboard'" class="w-full h-full flex flex-col md:flex-row gap-6 max-w-7xl mx-auto pt-10">
         
-        <div id="video-grid" class="video-grid grid-1"></div>
+        <div class="w-full md:w-1/4 glass-panel p-6 flex flex-col h-fit">
+            <div class="flex items-center gap-4 mb-6">
+                <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-indigo-500">
+                    <img :src="currentUser.avatar || 'https://via.placeholder.com/150'" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <h2 class="font-bold text-lg">{{ currentUser.name }}</h2>
+                    <p class="text-sm text-gray-400">{{ currentUser.phone }}</p>
+                    <button @click="openEditProfile" class="text-xs text-indigo-400 mt-1 hover:underline">แก้ไขโปรไฟล์</button>
+                </div>
+            </div>
+            
+            <hr class="border-gray-700 mb-6">
 
-        <div class="controls">
-            <button class="c-btn active" id="btn-mic" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
-            <button class="c-btn active" id="btn-cam" onclick="toggleCam()"><i class="fas fa-video"></i></button>
-            <button class="c-btn active" id="btn-vol" onclick="toggleSpeaker()"><i class="fas fa-volume-up"></i></button>
-            <button class="c-btn off" id="btn-screen" onclick="toggleScreenShare()"><i class="fas fa-desktop"></i></button>
-            <button class="c-btn hangup" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
+            <div class="space-y-3">
+                <h3 class="text-gray-400 uppercase text-xs font-bold tracking-wider">เมนู</h3>
+                <button @click="createNewRoom" class="w-full text-left p-3 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 transition flex items-center gap-3">
+                    <i class="fas fa-plus-circle"></i> สร้างห้องโทร
+                </button>
+                <button @click="logout" class="w-full text-left p-3 rounded-lg hover:bg-red-500/20 text-red-400 transition flex items-center gap-3">
+                    <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+                </button>
+            </div>
+
+            <div class="mt-8 flex-grow">
+                <h3 class="text-gray-400 uppercase text-xs font-bold tracking-wider mb-3">ห้องของคุณ</h3>
+                <div v-if="myRooms.length === 0" class="text-gray-600 text-sm text-center py-4">ไม่มีประวัติห้อง</div>
+                <div v-else class="space-y-2 overflow-y-auto max-h-64">
+                    <div v-for="room in myRooms" :key="room.id" @click="joinRoom(room.id)" class="p-3 bg-gray-800/50 rounded-lg cursor-pointer hover:bg-gray-700 transition flex justify-between items-center group">
+                        <div>
+                            <div class="text-sm font-bold text-gray-300">Room {{ room.id }}</div>
+                            <div class="text-xs text-gray-500">{{ room.date }}</div>
+                        </div>
+                        <i class="fas fa-video text-gray-600 group-hover:text-indigo-400"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 glass-panel p-6 flex flex-col items-center justify-center text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 z-0"></div>
+            
+            <div class="z-10 w-full max-w-lg">
+                <h1 class="text-4xl font-bold mb-2">เข้าร่วมการประชุม</h1>
+                <p class="text-gray-400 mb-8">ใส่รหัสห้อง (Room ID) เพื่อเข้าร่วมวิดีโอคอลทันที</p>
+                
+                <div class="flex gap-2">
+                    <input v-model="joinRoomId" type="text" placeholder="กรอก Room ID ที่นี่..." class="flex-1 bg-gray-800 border-2 border-gray-700 rounded-xl p-4 text-lg focus:border-indigo-500 outline-none transition placeholder-gray-600">
+                    <button @click="joinRoom(joinRoomId)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 rounded-xl font-bold text-lg transition shadow-lg shadow-indigo-500/30">
+                        เข้าร่วม
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script>
-        // ==========================
-        // ⚙️ CONFIGURATION
-        // ==========================
-        const APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; 
+    <div v-else-if="currentView === 'room'" class="w-full h-screen flex flex-col bg-gray-900">
+        <div class="h-16 glass-panel border-b border-gray-700 flex items-center justify-between px-6 shrink-0 z-20">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 px-3 py-1 rounded text-sm font-bold">ID: {{ activeRoomId }}</div>
+                <span class="text-gray-400 text-sm hidden md:inline">| รอเพื่อนเข้าร่วม...</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-gray-700 overflow-hidden">
+                    <img :src="currentUser.avatar" class="w-full h-full object-cover">
+                </div>
+                <span class="text-sm font-bold">{{ currentUser.name }}</span>
+            </div>
+        </div>
 
-        let client = AgoraRTC.createClient({ mode: "rtc", codec: "h264" });
-        let local = { a:null, v:null, s:null }; 
+        <div class="flex-1 p-4 overflow-y-auto flex items-center justify-center relative">
+            <div id="video-grid" class="video-grid content-center">
+                <div class="video-container border-2 border-indigo-500" id="local-player">
+                    <div class="user-label">{{ currentUser.name }} (คุณ)</div>
+                </div>
+                </div>
+        </div>
+
+        <div class="h-20 glass-panel border-t border-gray-700 flex items-center justify-center gap-4 shrink-0 z-20 pb-2">
+            
+            <button @click="toggleMic" :class="controls.mic ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'" class="w-12 h-12 rounded-full flex items-center justify-center transition text-white text-xl">
+                <i :class="controls.mic ? 'fas fa-microphone' : 'fas fa-microphone-slash'"></i>
+            </button>
+
+            <button @click="toggleCam" :class="controls.cam ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'" class="w-12 h-12 rounded-full flex items-center justify-center transition text-white text-xl">
+                <i :class="controls.cam ? 'fas fa-video' : 'fas fa-video-slash'"></i>
+            </button>
+
+            <button @click="shareScreen" :class="controls.screen ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'" class="w-12 h-12 rounded-full flex items-center justify-center transition text-xl">
+                <i class="fas fa-desktop"></i>
+            </button>
+
+            <button @click="leaveRoom" class="bg-red-600 hover:bg-red-700 w-16 h-12 rounded-full flex items-center justify-center transition text-white text-xl ml-4 shadow-lg shadow-red-500/30">
+                <i class="fas fa-phone-slash"></i>
+            </button>
+        </div>
+    </div>
+
+    <div v-if="showEditProfile" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div class="glass-panel p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4">แก้ไขข้อมูลส่วนตัว</h3>
+            <div class="space-y-4">
+                 <div class="flex justify-center mb-4">
+                        <div class="relative w-20 h-20 rounded-full bg-gray-700 overflow-hidden border-2 border-indigo-500 cursor-pointer" @click="$refs.editFileInput.click()">
+                            <img :src="editForm.avatar" class="w-full h-full object-cover">
+                        </div>
+                        <input type="file" ref="editFileInput" class="hidden" accept="image/*" @change="handleEditFileUpload">
+                </div>
+                <input v-model="editForm.name" class="w-full bg-gray-800 p-2 rounded border border-gray-600" placeholder="ชื่อ">
+                <div class="flex gap-2 mt-4">
+                    <button @click="saveProfile" class="flex-1 bg-indigo-600 p-2 rounded hover:bg-indigo-700">บันทึก</button>
+                    <button @click="showEditProfile = false" class="flex-1 bg-gray-600 p-2 rounded hover:bg-gray-700">ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+/**
+ * ================= CONFIGURATION =================
+ * ใส่ Agora App ID ของคุณตรงนี้ (ฟรีที่ agora.io)
+ * หากไม่ใส่จะไม่สามารถโทรได้
+ */
+const AGORA_APP_ID = 'ebab3ce9350a43c4bf6fb4312a3dbd23'; 
+
+const { createApp, reactive, ref, onMounted } = Vue;
+
+createApp({
+    setup() {
+        // --- State ---
+        const currentView = ref('auth'); // auth, dashboard, room
+        const authMode = ref('login');
+        const appIdConfigured = ref(true);
+        const currentUser = ref(null);
+        const myRooms = ref([]);
+        
+        // Forms
+        const loginForm = reactive({ name: '', phone: '' });
+        const registerForm = reactive({ name: '', phone: '', avatar: '' });
+        const joinRoomId = ref('');
+        const activeRoomId = ref('');
+
+        // Edit Profile
+        const showEditProfile = ref(false);
+        const editForm = reactive({ name: '', avatar: '' });
+
+        // Call State
+        const controls = reactive({ mic: true, cam: true, screen: false });
+        
+        // Agora Vars
+        let client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+        let localTracks = { video: null, audio: null, screen: null };
         let remoteUsers = {};
-        let me = null;
-        let isCamOn = true;
-        let isScreenOn = false;
-        let isSpeakerOn = true;
 
-        // --- INIT ---
-        function go(s) { 
-            document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active')); 
-            document.getElementById('ui-'+s).classList.add('active'); 
-        }
+        // --- Lifecycle ---
+        onMounted(() => {
+            // Check App ID
+            if (AGORA_APP_ID === 'YOUR_AGORA_APP_ID' || AGORA_APP_ID === '') {
+                appIdConfigured.value = false;
+            }
 
-        window.onload = () => {
-            const saved = localStorage.getItem('me');
-            if(saved) {
-                try { me = JSON.parse(saved); renderMe(); renderHistory(); go('dash'); } 
-                catch(e) { localStorage.removeItem('me'); go('login'); }
-            } else { go('login'); }
+            // Check Login Persistence
+            const savedUser = localStorage.getItem('fc_user');
+            if (savedUser) {
+                currentUser.value = JSON.parse(savedUser);
+                loadRooms();
+                currentView.value = 'dashboard';
+            }
+        });
+
+        // --- Auth Logic (Simulated Backend) ---
+        const getUsersDB = () => JSON.parse(localStorage.getItem('fc_users_db') || '[]');
+        
+        const handleRegister = () => {
+            if(!registerForm.name || !registerForm.phone) return alert('กรุณากรอกข้อมูลให้ครบ');
+            const db = getUsersDB();
+            
+            if(db.some(u => u.name === registerForm.name)) {
+                return alert('ชื่อนี้มีผู้ใช้งานแล้ว');
+            }
+
+            const newUser = { ...registerForm, id: Date.now() };
+            // Default avatar if none
+            if(!newUser.avatar) newUser.avatar = `https://ui-avatars.com/api/?name=${newUser.name}&background=random`;
+
+            db.push(newUser);
+            localStorage.setItem('fc_users_db', JSON.stringify(db));
+            alert('ลงทะเบียนสำเร็จ! กรุณาเข้าสู่ระบบ');
+            authMode.value = 'login';
         };
 
-        function toggleJoin(show) { document.getElementById('dash-main').classList.toggle('show', show); }
-
-        // --- AUTH & PROFILE ---
-        function login() {
-            const n = document.getElementById('l-name').value.trim();
-            const p = document.getElementById('l-phone').value.trim();
-            let db = JSON.parse(localStorage.getItem('db')||"[]");
-            const u = db.find(x=>x.n===n && x.p===p);
-            if(u) { me=u; localStorage.setItem('me',JSON.stringify(me)); renderMe(); renderHistory(); go('dash'); }
-            else alert("ไม่พบข้อมูล");
-        }
-        function register() {
-            const n = document.getElementById('r-name').value.trim();
-            const p = document.getElementById('r-phone').value.trim();
-            if(!n||!p) return alert("กรอกให้ครบ");
-            let db = JSON.parse(localStorage.getItem('db')||"[]");
-            if(db.find(u=>u.n===n)) return alert("ชื่อซ้ำ");
-            const newUser = { id: Date.now().toString(), n, p, pic: 'https://via.placeholder.com/150', nameChange: 0 };
-            db.push(newUser); localStorage.setItem('db',JSON.stringify(db));
-            alert("สำเร็จ"); go('login');
-        }
-        function logout() { localStorage.removeItem('me'); location.reload(); }
-
-        function renderMe() {
-            document.getElementById('u-name').innerText = me.n;
-            document.getElementById('u-phone').innerText = me.p;
-            if(me.pic) document.getElementById('u-pic').src = me.pic;
-        }
-        function updateProfilePic(input) {
-            if(input.files[0]) {
-                const r = new FileReader();
-                r.onload = ev => { me.pic = ev.target.result; saveUserData(); renderMe(); };
-                r.readAsDataURL(input.files[0]);
-            }
-        }
-        function editName() {
-            const now = Date.now();
-            const cooldown = 7 * 24 * 60 * 60 * 1000;
-            if (now - (me.nameChange||0) < cooldown) return alert("รอครบ 7 วันก่อนเปลี่ยนชื่อใหม่");
-            const newName = prompt("ชื่อใหม่:");
-            if (newName && newName.trim()) { me.n = newName; me.nameChange = now; saveUserData(); renderMe(); }
-        }
-        function saveUserData() {
-            localStorage.setItem('me', JSON.stringify(me));
-            let db = JSON.parse(localStorage.getItem('db')||"[]");
-            const idx = db.findIndex(u => u.id === me.id);
-            if(idx > -1) { db[idx] = me; localStorage.setItem('db', JSON.stringify(db)); }
-        }
-
-        // --- ROOMS ---
-        function createRoom() {
-            const id = Math.floor(1000+Math.random()*9000).toString();
-            saveRoomHistory(id); joinRoom(id);
-        }
-        function joinFromInput() { const v=document.getElementById('join-id').value; if(v) joinRoom(v); }
-        function saveRoomHistory(id) {
-            let rs = JSON.parse(localStorage.getItem('rooms')||"[]");
-            rs.unshift({id}); localStorage.setItem('rooms',JSON.stringify(rs)); renderHistory();
-        }
-        function renderHistory() {
-            const list = document.getElementById('room-list'); list.innerHTML='';
-            let rs = JSON.parse(localStorage.getItem('rooms')||"[]");
-            rs.forEach(r => {
-                list.innerHTML += `<div class="room-item"><span>${r.id}</span><button class="btn btn-primary btn-sm" onclick="joinRoom('${r.id}')">Join</button></div>`;
-            });
-        }
-
-        // --- VIDEO CORE ---
-        async function joinRoom(rid) {
-            if(APP_ID.length < 10) return alert("ใส่ App ID ก่อน");
-            go('video'); 
-            document.getElementById('display-room-id').innerText = rid;
+        const handleLogin = () => {
+            const db = getUsersDB();
+            const user = db.find(u => u.name === loginForm.name && u.phone === loginForm.phone);
             
-            try {
-                await client.join(APP_ID, rid, null, me.id);
-                // Create tracks ONCE
-                [local.a, local.v] = await AgoraRTC.createMicrophoneAndCameraTracks(
-                    { encoderConfig: "music_standard" },
-                    { encoderConfig: "360p_1" } 
-                );
-                
-                await client.publish([local.a, local.v]);
-                addVideo(me.id, local.v, true);
-                isCamOn = true; btnStyle('btn-cam', true);
-            } catch(e) {
-                console.error(e);
-                alert("กรุณาอนุญาตกล้อง/ไมค์"); endCall();
-            }
-        }
-
-        // --- HANDLERS (BLACK SCREEN FIX) ---
-        client.on("user-published", async (u, type) => {
-            await client.subscribe(u, type);
-            remoteUsers[u.uid] = u;
-            if(type==='video') { 
-                addVideo(u.uid, u.videoTrack, false); 
-                toggleCamUI(u.uid, false); // 🔥 FIX: ซ่อนจอดำทันทีเมื่อวิดีโอมา
-            }
-            if(type==='audio') u.audioTrack.play();
-            updateGrid();
-        });
-        client.on("user-unpublished", (u, type) => {
-            if(type==='video') toggleCamUI(u.uid, true); // แสดงจอดำเมื่อปิดกล้อง
-        });
-        client.on("user-left", u => {
-            delete remoteUsers[u.uid]; removeVideo(u.uid);
-        });
-
-        // --- UI HELPERS ---
-        function addVideo(uid, track, isLocal) {
-            // ถ้ามีช่องอยู่แล้ว ให้เล่นวิดีโอทันที
-            if(document.getElementById(`vid-${uid}`)) { 
-                if(track) track.play(`play-${uid}`); 
-                toggleCamUI(uid, false); // 🔥 Ensure hide overlay
-                return; 
-            }
-            
-            const div = document.createElement('div');
-            div.className = 'vid-box'; div.id = `vid-${uid}`;
-            let uName = isLocal ? me.n : "User " + uid;
-            let uPic = isLocal ? me.pic : "https://via.placeholder.com/150"; 
-            
-            div.innerHTML = `
-                <div id="play-${uid}" class="vid-player"></div>
-                <div id="off-${uid}" class="cam-off-ui">
-                    <img src="${uPic}" class="off-avatar">
-                    <div class="off-name">${uName}</div>
-                    <div style="color:#888; font-size:0.8rem;">ปิดกล้อง</div>
-                </div>
-            `;
-            document.getElementById('video-grid').appendChild(div);
-            
-            if(track) {
-                track.play(`play-${uid}`);
-                toggleCamUI(uid, false); // 🔥 Force Hide Overlay
-            }
-            updateGrid();
-        }
-
-        function removeVideo(uid) { const el = document.getElementById(`vid-${uid}`); if(el) el.remove(); updateGrid(); }
-        
-        function toggleCamUI(uid, isOff) {
-            const el = document.getElementById(`off-${uid}`);
-            if(el) {
-                // ถ้า isOff = true ให้แสดง (active), ถ้า false ให้ซ่อน
-                if(isOff) el.classList.add('active'); 
-                else el.classList.remove('active');
-            }
-        }
-        
-        // --- CUSTOM GRID LOGIC (1-6 USERS) ---
-        function updateGrid() {
-            const g = document.getElementById('video-grid');
-            const count = g.children.length;
-            g.className = 'video-grid'; // Reset class
-            
-            if (count === 1) g.classList.add('grid-1');
-            else if (count === 2) g.classList.add('grid-2');
-            else if (count >= 3) g.classList.add('grid-2'); // Simple grid for stability
-        }
-        
-        function endCall() {
-            if(local.a) { local.a.close(); local.a = null; }
-            if(local.v) { local.v.close(); local.v = null; }
-            if(local.s) { local.s.close(); local.s = null; }
-            client.leave();
-            document.getElementById('video-grid').innerHTML='';
-            go('dash');
-        }
-
-        // --- CONTROLS ---
-        function toggleMic() { if(local.a) { local.a.setMuted(!local.a.muted); btnStyle('btn-mic', !local.a.muted); } }
-        
-        async function toggleCam() {
-            if(!local.v) return;
-            const isEnabled = local.v.enabled; 
-            await local.v.setEnabled(!isEnabled); 
-            
-            btnStyle('btn-cam', !isEnabled);
-            toggleCamUI(me.id, isEnabled); // ถ้า enabled=true -> isOff=false
-            isCamOn = !isEnabled;
-        }
-
-        async function toggleScreenShare() {
-            if(isScreenOn) {
-                await client.unpublish(local.s);
-                local.s.close(); local.s = null;
-                isScreenOn = false;
-                btnStyle('btn-screen', false);
-                
-                if(local.v) {
-                    await client.publish(local.v);
-                    addVideo(me.id, local.v, true);
-                    toggleCamUI(me.id, !isCamOn);
-                }
+            if(user) {
+                currentUser.value = user;
+                localStorage.setItem('fc_user', JSON.stringify(user));
+                loadRooms();
+                currentView.value = 'dashboard';
             } else {
-                try {
-                    local.s = await AgoraRTC.createScreenVideoTrack();
-                    if(local.v) await client.unpublish(local.v);
-                    
-                    await client.publish(local.s);
-                    removeVideo(me.id); 
-                    addVideo(me.id, local.s, true); 
-                    const vidDiv = document.getElementById(`play-${me.id}`);
-                    if(vidDiv) vidDiv.classList.add('screen-share');
-
-                    isScreenOn = true;
-                    btnStyle('btn-screen', true);
-
-                    local.s.on("track-ended", () => { toggleScreenShare(); });
-                } catch(e) {}
+                alert('ชื่อหรือเบอร์โทรไม่ถูกต้อง หรือยังไม่ได้ลงทะเบียน');
             }
-        }
+        };
 
-        function toggleSpeaker() { /* Speaker logic */ }
-        function btnStyle(id, on) {
-            const el = document.getElementById(id);
-            if(on) { el.classList.add('active'); el.classList.remove('off'); }
-            else { el.classList.add('off'); el.classList.remove('active'); }
-        }
-    </script>
+        const logout = () => {
+            localStorage.removeItem('fc_user');
+            currentUser.value = null;
+            currentView.value = 'auth';
+        };
+
+        const handleFileUpload = (event) => {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => registerForm.avatar = e.target.result;
+                reader.readAsDataURL(file);
+            }
+        };
+
+        // --- Profile Logic ---
+        const openEditProfile = () => {
+            editForm.name = currentUser.value.name;
+            editForm.avatar = currentUser.value.avatar;
+            showEditProfile.value = true;
+        };
+
+        const handleEditFileUpload = (event) => {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => editForm.avatar = e.target.result;
+                reader.readAsDataURL(file);
+            }
+        };
+
+        const saveProfile = () => {
+            // Update in Memory
+            currentUser.value.name = editForm.name;
+            currentUser.value.avatar = editForm.avatar;
+            // Update in LocalStorage (Session)
+            localStorage.setItem('fc_user', JSON.stringify(currentUser.value));
+            // Update in DB
+            const db = getUsersDB();
+            const index = db.findIndex(u => u.phone === currentUser.value.phone); // ID by phone for now
+            if(index !== -1) {
+                db[index] = currentUser.value;
+                localStorage.setItem('fc_users_db', JSON.stringify(db));
+            }
+            showEditProfile.value = false;
+        };
+
+        // --- Room Logic ---
+        const loadRooms = () => {
+            const rooms = JSON.parse(localStorage.getItem(`fc_rooms_${currentUser.value.phone}`) || '[]');
+            myRooms.value = rooms;
+        };
+
+        const createNewRoom = () => {
+            const roomId = Math.floor(100000 + Math.random() * 900000).toString();
+            const newRoom = { id: roomId, date: new Date().toLocaleString() };
+            
+            myRooms.value.unshift(newRoom);
+            localStorage.setItem(`fc_rooms_${currentUser.value.phone}`, JSON.stringify(myRooms.value));
+            
+            joinRoom(roomId);
+        };
+
+        // --- Agora Video Call Logic ---
+        const joinRoom = async (roomId) => {
+            if(!roomId) return alert('กรุณาใส่ Room ID');
+            if(!appIdConfigured.value) return alert('กรุณาใส่ Agora App ID ในโค้ดก่อน');
+
+            activeRoomId.value = roomId;
+            currentView.value = 'room';
+
+            // 1. Join Agora Channel
+            // Use roomId as channel name, user.id as uid
+            const uid = await client.join(AGORA_APP_ID, roomId, null, currentUser.value.name);
+
+            // 2. Create Local Tracks
+            localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
+            localTracks.video = await AgoraRTC.createCameraVideoTrack();
+
+            // 3. Play Local
+            localTracks.video.play("local-player");
+
+            // 4. Publish
+            await client.publish([localTracks.audio, localTracks.video]);
+
+            // 5. Handle Remote Users
+            client.on("user-published", handleUserPublished);
+            client.on("user-unpublished", handleUserUnpublished);
+        };
+
+        const handleUserPublished = async (user, mediaType) => {
+            await client.subscribe(user, mediaType);
+            
+            if (mediaType === 'video') {
+                const remoteContainer = document.createElement("div");
+                remoteContainer.id = `user-${user.uid}`;
+                remoteContainer.className = "video-container border border-gray-600";
+                
+                // Add Name Label
+                const label = document.createElement("div");
+                label.className = "user-label";
+                label.innerText = user.uid; // Agora uses UID as string name here if passed
+                remoteContainer.appendChild(label);
+
+                document.getElementById("video-grid").append(remoteContainer);
+                user.videoTrack.play(remoteContainer);
+            }
+            if (mediaType === 'audio') {
+                user.audioTrack.play();
+            }
+        };
+
+        const handleUserUnpublished = (user) => {
+            const playerContainer = document.getElementById(`user-${user.uid}`);
+            if(playerContainer) playerContainer.remove();
+        };
+
+        const leaveRoom = async () => {
+            // Close Tracks
+            for (let trackName in localTracks) {
+                var track = localTracks[trackName];
+                if (track) {
+                    track.stop();
+                    track.close();
+                    localTracks[trackName] = undefined;
+                }
+            }
+            // Leave Channel
+            await client.leave();
+            
+            // Clean UI
+            document.getElementById("video-grid").innerHTML = `
+                <div class="video-container border-2 border-indigo-500" id="local-player">
+                    <div class="user-label">${currentUser.value.name} (คุณ)</div>
+                </div>`;
+            
+            currentView.value = 'dashboard';
+        };
+
+        // --- Controls ---
+        const toggleMic = async () => {
+            if(localTracks.audio) {
+                controls.mic = !controls.mic;
+                await localTracks.audio.setMuted(!controls.mic);
+            }
+        };
+
+        const toggleCam = async () => {
+            if(localTracks.video) {
+                controls.cam = !controls.cam;
+                await localTracks.video.setMuted(!controls.cam);
+            }
+        };
+
+        const shareScreen = async () => {
+            if(controls.screen) {
+                // Stop Sharing
+                await client.unpublish(localTracks.screen);
+                localTracks.screen.close();
+                localTracks.screen = null;
+                
+                // Switch back to Camera
+                await client.publish(localTracks.video);
+                localTracks.video.play("local-player");
+                controls.screen = false;
+            } else {
+                // Start Sharing
+                try {
+                    localTracks.screen = await AgoraRTC.createScreenVideoTrack();
+                    await client.unpublish(localTracks.video);
+                    await client.publish(localTracks.screen);
+                    
+                    localTracks.screen.play("local-player");
+                    controls.screen = true;
+
+                    // Handle if user clicks "Stop Sharing" on browser UI
+                    localTracks.screen.on("track-ended", () => {
+                        shareScreen(); // Toggle back
+                    });
+
+                } catch (e) {
+                    console.error("Screen share failed", e);
+                }
+            }
+        };
+
+        return {
+            currentView, authMode, appIdConfigured,
+            loginForm, registerForm, currentUser,
+            myRooms, joinRoomId, activeRoomId,
+            handleRegister, handleLogin, logout, handleFileUpload,
+            createNewRoom, joinRoom, leaveRoom,
+            controls, toggleMic, toggleCam, shareScreen,
+            showEditProfile, editForm, openEditProfile, handleEditFileUpload, saveProfile
+        };
+    }
+}).mount('#app');
+</script>
 </body>
 </html>
