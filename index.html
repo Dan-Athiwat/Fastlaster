@@ -3,35 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NextGen V10.0 (Screen Share)</title>
+    <title>NextGen V10.1 (Balanced UI)</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
     
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.18.2.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
     
     <style>
-        :root { --primary: #007AFF; --bg: #000; --surface: #1c1c1e; --text: #fff; --danger: #ff3b30; --success: #2ed573; --warn: #f1c40f; }
+        :root { 
+            --primary: #007AFF; --bg: #000; --surface: #1c1c1e; 
+            --text: #fff; --danger: #ff3b30; --success: #34c759; --warn: #f1c40f; 
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); color: var(--text); height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
 
-        .btn { border: none; border-radius: 12px; padding: 12px; cursor: pointer; font-weight: 600; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; transition: 0.2s; font-size: 1rem; }
-        .btn:active { transform: scale(0.95); opacity: 0.8; }
+        /* --- UI COMPONENTS (ปรับปรุงใหม่) --- */
+        .btn { 
+            border: none; border-radius: 10px; padding: 10px 16px; 
+            cursor: pointer; font-weight: 500; width: 100%; 
+            display: flex; align-items: center; justify-content: center; gap: 8px; 
+            color: white; transition: 0.2s; font-size: 0.95rem; 
+        }
+        .btn:active { transform: scale(0.96); opacity: 0.9; }
+        
+        /* ปุ่มขนาดเล็ก สำหรับแถบโปรไฟล์ */
+        .btn-sm { 
+            padding: 6px 12px; font-size: 0.85rem; width: auto; 
+            display: inline-flex; flex-shrink: 0;
+        }
+
         .btn-primary { background: var(--primary); }
         .btn-danger { background: var(--danger); }
-        .btn-outline { background: transparent; border: 1px solid #555; color: white; width: auto; padding: 8px 12px; font-size: 0.9rem; }
+        .btn-outline { background: transparent; border: 1px solid #444; color: #ddd; }
         
-        input { width: 100%; padding: 14px; background: #2c2c2e; border: 1px solid #444; border-radius: 10px; color: white; outline: none; margin-bottom: 15px; font-size: 1rem; }
+        input { 
+            width: 100%; padding: 10px 14px; /* ปรับให้เท่าปุ่ม */
+            background: #2c2c2e; border: 1px solid #444; 
+            border-radius: 10px; color: white; outline: none; 
+            font-size: 1rem; height: 44px; /* Fix height */
+        }
 
+        /* Screens */
         .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 10; background: var(--bg); }
         .screen.active { display: flex; }
 
         /* Auth */
         .center-wrap { justify-content: center; align-items: center; background: radial-gradient(circle at center, #222 0%, #000 100%); padding: 20px; }
-        .card { width: 100%; max-width: 400px; background: rgba(30,30,30,0.95); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #333; }
-        .link-text { margin-top: 20px; color: var(--primary); cursor: pointer; text-decoration: underline; display: inline-block; padding: 10px; }
+        .card { width: 100%; max-width: 380px; background: rgba(30,30,30,0.95); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #333; }
+        .link-text { margin-top: 15px; color: var(--primary); cursor: pointer; text-decoration: underline; display: inline-block; padding: 5px; font-size: 0.9rem; }
 
         /* Dashboard */
         #ui-dash { flex-direction: row; }
@@ -40,12 +62,15 @@
         .mobile-header { display: none; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .mobile-back { display: none; position: absolute; top: 20px; left: 20px; font-size: 1.5rem; cursor: pointer; z-index: 30; }
 
+        /* Profile Section (ปรับสมดุลปุ่ม) */
         .profile-sec { text-align: center; padding-bottom: 20px; border-bottom: 1px solid #333; margin-bottom: 20px; }
-        .avatar-box { position: relative; width: 100px; height: 100px; margin: 0 auto 10px; }
+        .avatar-box { position: relative; width: 90px; height: 90px; margin: 0 auto 10px; }
         .avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
-        .edit-pic-btn { position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #1c1c1e; }
+        .edit-pic-btn { position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #1c1c1e; font-size: 0.7rem; }
+        
+        .action-row { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
 
-        .room-item { background: #2a2a2a; padding: 10px 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .room-item { background: #2a2a2a; padding: 10px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
 
         /* Video UI */
         #ui-video { background: #000; flex-direction: column; }
@@ -55,7 +80,7 @@
         
         .vid-box { position: relative; width: 100%; height: 100%; background: #111; overflow: hidden; }
         .vid-player { width: 100%; height: 100%; object-fit: cover; }
-        .vid-player.screen-share { object-fit: contain; background: #1a1a1a; } /* Fit screen share */
+        .vid-player.screen-share { object-fit: contain; background: #1a1a1a; }
 
         .cam-off-ui {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -65,25 +90,23 @@
         .cam-off-ui.active { display: flex; }
         .off-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid #555; }
 
-        /* Room ID Badge */
         .room-badge {
             position: absolute; top: 20px; left: 20px; z-index: 50;
             background: rgba(0,0,0,0.6); color: white; border: 1px solid #555;
-            padding: 8px 15px; border-radius: 20px; font-weight: bold;
-            display: flex; align-items: center; gap: 8px;
+            padding: 6px 12px; border-radius: 20px; font-weight: 500; font-size: 0.9rem;
+            display: flex; align-items: center; gap: 6px;
         }
 
-        /* Controls */
         .controls { 
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
             display: flex; gap: 15px; background: rgba(30,30,30,0.9); 
-            padding: 12px 25px; border-radius: 50px; z-index: 50; 
+            padding: 10px 20px; border-radius: 50px; z-index: 50; 
             backdrop-filter: blur(10px); border: 1px solid #444; 
         }
-        .c-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: #444; color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .c-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: #444; color: white; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .c-btn.active { background: white; color: black; }
         .c-btn.off { background: rgba(255,59,48,0.2); color: var(--danger); }
-        .c-btn.hangup { background: var(--danger); width: 60px; }
+        .c-btn.hangup { background: var(--danger); width: 60px; border-radius: 30px; }
 
         @media (max-width: 768px) {
             #ui-dash { flex-direction: column; }
@@ -103,19 +126,23 @@
 
     <div id="ui-login" class="screen center-wrap">
         <div class="card">
-            <h2>เข้าสู่ระบบ</h2><br>
+            <h2 style="margin-bottom:20px;">เข้าสู่ระบบ</h2>
             <input type="text" id="l-name" placeholder="ชื่อผู้ใช้">
+            <div style="height:10px;"></div>
             <input type="tel" id="l-phone" placeholder="เบอร์โทรศัพท์">
+            <div style="height:20px;"></div>
             <button class="btn btn-primary" onclick="login()">เข้าสู่ระบบ</button>
-            <div class="link-text" onclick="go('register')">ยังไม่มีบัญชี? สร้างผู้ใช้ใหม่</div>
+            <div class="link-text" onclick="go('register')">สร้างบัญชีใหม่</div>
         </div>
     </div>
 
     <div id="ui-register" class="screen center-wrap">
         <div class="card">
-            <h2>สร้างบัญชีใหม่</h2>
+            <h2 style="margin-bottom:20px;">สร้างบัญชี</h2>
             <input type="text" id="r-name" placeholder="ชื่อ (ห้ามซ้ำ)">
+            <div style="height:10px;"></div>
             <input type="tel" id="r-phone" placeholder="เบอร์โทรศัพท์">
+            <div style="height:20px;"></div>
             <button class="btn btn-primary" onclick="register()">ยืนยัน</button>
             <div class="link-text" onclick="go('login')">กลับไปเข้าสู่ระบบ</div>
         </div>
@@ -125,27 +152,27 @@
         <div class="sidebar">
             <div class="mobile-header">
                 <h3>โปรไฟล์</h3>
-                <button class="btn btn-primary" onclick="toggleJoin(true)"><i class="fas fa-video"></i></button>
+                <button class="btn btn-primary" style="width:auto; padding: 5px 12px;" onclick="toggleJoin(true)"><i class="fas fa-video"></i></button>
             </div>
 
             <div class="profile-sec">
                 <div class="avatar-box">
                     <img id="u-pic" src="" class="avatar">
-                    <label for="file-upload" class="edit-pic-btn"><i class="fas fa-camera" style="font-size:0.8rem;"></i></label>
+                    <label for="file-upload" class="edit-pic-btn"><i class="fas fa-camera"></i></label>
                     <input type="file" id="file-upload" hidden accept="image/*" onchange="updateProfilePic(this)">
                 </div>
                 <h3 id="u-name">User</h3>
                 <p id="u-phone" style="color:#888; font-size:0.9rem;">...</p>
                 
-                <div style="display:flex; gap:8px; justify-content:center; margin-top:15px;">
+                <div class="action-row">
                     <button class="btn btn-outline btn-sm" onclick="editName()"><i class="fas fa-pen"></i> แก้ชื่อ</button>
                     <button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
             </div>
 
-            <h4 style="color:#888; margin-bottom:10px;">ประวัติห้อง</h4>
+            <h4 style="color:#888; margin-bottom:10px; font-size:0.9rem;">ประวัติห้อง</h4>
             <button class="btn btn-primary" onclick="createRoom()">+ สร้างห้องใหม่</button>
-            <div id="room-list" style="margin-top:10px;"></div>
+            <div id="room-list" style="margin-top:15px;"></div>
         </div>
 
         <div id="dash-main" class="main-area">
@@ -153,10 +180,11 @@
             <div class="card">
                 <i class="fas fa-video" style="font-size:3rem; margin-bottom:20px; color:#555;"></i>
                 <h3>เข้าร่วมห้อง</h3>
-                <p style="color:#888; margin-bottom:20px;">ใส่ Room ID เพื่อเข้าร่วม</p>
-                <div style="display:flex; gap:10px;">
+                <p style="color:#888; margin-bottom:20px; font-size:0.9rem;">ใส่ Room ID เพื่อเข้าร่วม</p>
+                
+                <div style="display:flex; gap:10px; align-items:center;">
                     <input type="text" id="join-id" placeholder="Room ID" style="margin-bottom:0;">
-                    <button class="btn btn-primary" style="width:80px;" onclick="joinFromInput()">Go</button>
+                    <button class="btn btn-primary" style="width:auto; height:44px; padding:0 20px;" onclick="joinFromInput()">Go</button>
                 </div>
             </div>
         </div>
@@ -165,7 +193,7 @@
     <div id="ui-video" class="screen">
         <div class="room-badge">
             <i class="fas fa-hashtag" style="color:var(--primary)"></i> 
-            ID: <span id="display-room-id">--</span>
+            <span id="display-room-id">--</span>
         </div>
         
         <div id="video-grid" class="video-grid grid-1"></div>
@@ -175,7 +203,6 @@
             <button class="c-btn active" id="btn-cam" onclick="toggleCam()"><i class="fas fa-video"></i></button>
             <button class="c-btn active" id="btn-vol" onclick="toggleSpeaker()"><i class="fas fa-volume-up"></i></button>
             <button class="c-btn off" id="btn-screen" onclick="toggleScreenShare()"><i class="fas fa-desktop"></i></button>
-            
             <button class="c-btn hangup" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
         </div>
     </div>
@@ -187,14 +214,14 @@
         const APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; 
 
         let client = AgoraRTC.createClient({ mode: "rtc", codec: "h264" });
-        let local = { a:null, v:null, s:null }; // s = screen
+        let local = { a:null, v:null, s:null }; 
         let remoteUsers = {};
         let me = null;
         let isCamOn = true;
         let isScreenOn = false;
         let isSpeakerOn = true;
 
-        // --- NAVIGATION ---
+        // --- INIT ---
         function go(s) { 
             document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active')); 
             document.getElementById('ui-'+s).classList.add('active'); 
@@ -294,11 +321,11 @@
                 isCamOn = true; btnStyle('btn-cam', true);
             } catch(e) {
                 console.error(e);
-                alert("ไม่สามารถเข้าถึงกล้อง/ไมค์"); endCall();
+                alert("กรุณาอนุญาตกล้อง/ไมค์"); endCall();
             }
         }
 
-        // --- VIDEO HANDLERS ---
+        // --- HANDLERS ---
         client.on("user-published", async (u, type) => {
             await client.subscribe(u, type);
             remoteUsers[u.uid] = u;
@@ -307,7 +334,7 @@
             updateGrid();
         });
         client.on("user-unpublished", (u, type) => {
-            if(type==='video') toggleCamUI(u.uid, true); // Don't remove, show black screen
+            if(type==='video') toggleCamUI(u.uid, true);
         });
         client.on("user-left", u => {
             delete remoteUsers[u.uid]; removeVideo(u.uid);
@@ -345,7 +372,6 @@
             g.className = g.children.length <= 1 ? "video-grid grid-1" : "video-grid grid-2";
         }
         function endCall() {
-            // Important: Don't just close, leave channel
             if(local.a) { local.a.close(); local.a = null; }
             if(local.v) { local.v.close(); local.v = null; }
             if(local.s) { local.s.close(); local.s = null; }
@@ -359,72 +385,50 @@
         
         // 🔥 Fast Cam Toggle (No Re-Allow)
         async function toggleCam() {
-            if(!local.v) return; // No track
+            if(!local.v) return;
             if(isCamOn) {
-                // Turn OFF: Disable track (stops light usually) & Unpublish to show black screen on remote
                 await local.v.setEnabled(false);
                 await client.unpublish(local.v);
-                
-                toggleCamUI(me.id, true); // Local UI black
+                toggleCamUI(me.id, true);
                 btnStyle('btn-cam', false);
                 isCamOn = false;
             } else {
-                // Turn ON: Enable & Publish
                 await local.v.setEnabled(true);
                 await client.publish(local.v);
-                
-                toggleCamUI(me.id, false); // Local UI video
+                toggleCamUI(me.id, false);
                 btnStyle('btn-cam', true);
                 isCamOn = true;
             }
         }
 
-        // 🔥 Screen Share (PC/Mobile)
         async function toggleScreenShare() {
             if(isScreenOn) {
-                // Stop Sharing
                 await client.unpublish(local.s);
                 local.s.close(); local.s = null;
                 isScreenOn = false;
                 btnStyle('btn-screen', false);
                 
-                // Return to Cam if it was on
                 if(local.v) {
                     await client.publish(local.v);
                     addVideo(me.id, local.v, true);
                     toggleCamUI(me.id, !isCamOn);
                 }
             } else {
-                // Start Sharing
                 try {
-                    // Create Screen Track
                     local.s = await AgoraRTC.createScreenVideoTrack();
-                    
-                    // Unpublish Cam first (Agora usually allows 1 video stream per user in basic mode)
                     if(local.v) await client.unpublish(local.v);
                     
-                    // Publish Screen
                     await client.publish(local.s);
-                    
-                    // Update Local View
-                    removeVideo(me.id); // Remove cam view
-                    addVideo(me.id, local.s, true); // Add screen view
-                    // Hack: Mark screen as 'Me' in UI
+                    removeVideo(me.id); 
+                    addVideo(me.id, local.s, true); 
                     const vidDiv = document.getElementById(`play-${me.id}`);
                     if(vidDiv) vidDiv.classList.add('screen-share');
 
                     isScreenOn = true;
                     btnStyle('btn-screen', true);
 
-                    // Listen for browser "Stop Sharing" button
-                    local.s.on("track-ended", () => {
-                        toggleScreenShare(); // recursive call to handle stop logic
-                    });
-
-                } catch(e) {
-                    console.error(e);
-                    // User cancelled or not supported
-                }
+                    local.s.on("track-ended", () => { toggleScreenShare(); });
+                } catch(e) {}
             }
         }
 
