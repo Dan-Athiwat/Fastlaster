@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NextGen V10.1 (Balanced UI)</title>
+    <title>NextGen V12.0 (Custom Grid & Fix)</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
@@ -20,7 +20,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); color: var(--text); height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* --- UI COMPONENTS (ปรับปรุงใหม่) --- */
+        /* UI Helpers */
         .btn { 
             border: none; border-radius: 10px; padding: 10px 16px; 
             cursor: pointer; font-weight: 500; width: 100%; 
@@ -28,68 +28,92 @@
             color: white; transition: 0.2s; font-size: 0.95rem; 
         }
         .btn:active { transform: scale(0.96); opacity: 0.9; }
-        
-        /* ปุ่มขนาดเล็ก สำหรับแถบโปรไฟล์ */
-        .btn-sm { 
-            padding: 6px 12px; font-size: 0.85rem; width: auto; 
-            display: inline-flex; flex-shrink: 0;
-        }
-
+        .btn-sm { padding: 6px 12px; font-size: 0.85rem; width: auto; display: inline-flex; flex-shrink: 0; }
         .btn-primary { background: var(--primary); }
         .btn-danger { background: var(--danger); }
         .btn-outline { background: transparent; border: 1px solid #444; color: #ddd; }
         
         input { 
-            width: 100%; padding: 10px 14px; /* ปรับให้เท่าปุ่ม */
-            background: #2c2c2e; border: 1px solid #444; 
-            border-radius: 10px; color: white; outline: none; 
-            font-size: 1rem; height: 44px; /* Fix height */
+            width: 100%; padding: 10px 14px; background: #2c2c2e; border: 1px solid #444; 
+            border-radius: 10px; color: white; outline: none; font-size: 1rem; height: 44px; 
         }
 
-        /* Screens */
         .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 10; background: var(--bg); }
         .screen.active { display: flex; }
 
-        /* Auth */
         .center-wrap { justify-content: center; align-items: center; background: radial-gradient(circle at center, #222 0%, #000 100%); padding: 20px; }
         .card { width: 100%; max-width: 380px; background: rgba(30,30,30,0.95); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #333; }
         .link-text { margin-top: 15px; color: var(--primary); cursor: pointer; text-decoration: underline; display: inline-block; padding: 5px; font-size: 0.9rem; }
 
-        /* Dashboard */
         #ui-dash { flex-direction: row; }
         .sidebar { width: 320px; background: var(--surface); padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; z-index: 20; overflow-y: auto; }
         .main-area { flex: 1; background: var(--bg); position: relative; display: flex; align-items: center; justify-content: center; }
+        
         .mobile-header { display: none; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .mobile-back { display: none; position: absolute; top: 20px; left: 20px; font-size: 1.5rem; cursor: pointer; z-index: 30; }
 
-        /* Profile Section (ปรับสมดุลปุ่ม) */
         .profile-sec { text-align: center; padding-bottom: 20px; border-bottom: 1px solid #333; margin-bottom: 20px; }
         .avatar-box { position: relative; width: 90px; height: 90px; margin: 0 auto 10px; }
         .avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
         .edit-pic-btn { position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #1c1c1e; font-size: 0.7rem; }
-        
         .action-row { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
-
         .room-item { background: #2a2a2a; padding: 10px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
 
-        /* Video UI */
+        /* --- VIDEO UI & CUSTOM GRID (1-6 Users) --- */
         #ui-video { background: #000; flex-direction: column; }
-        .video-grid { flex: 1; width: 100%; height: 100%; display: grid; gap: 2px; padding: 2px; background: #000; }
-        .grid-1 { grid-template-columns: 1fr; }
-        .grid-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } 
         
-        .vid-box { position: relative; width: 100%; height: 100%; background: #111; overflow: hidden; }
-        .vid-player { width: 100%; height: 100%; object-fit: cover; }
+        .video-grid { 
+            flex: 1; width: 100%; height: 100%; 
+            display: grid; gap: 4px; padding: 4px; background: #000; 
+            align-content: center; /* จัดกึ่งกลางแนวตั้ง */
+        }
+        
+        /* Grid Layouts Rules */
+        .g-1 { grid-template-columns: 1fr; } /* 1 คนเต็มจอ */
+        .g-2 { grid-template-columns: 1fr 1fr; } /* 2 คนแบ่งครึ่ง */
+        .g-3 { grid-template-columns: 1fr 1fr 1fr; } /* 3 คน แถวเดียว 3 ช่อง */
+        .g-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; } /* 4 คน: 2x2 */
+        
+        /* 5 คน: แถวบน 3, แถวล่าง 2 (ใช้ grid-template-columns 3 ส่วน) */
+        .g-5 { 
+            grid-template-columns: repeat(3, 1fr); 
+            grid-template-rows: repeat(2, 1fr); 
+        }
+        /* Trick ให้คนสุดท้ายอยู่กลาง หรือชิดซ้าย ตาม Grid flow ปกติ */
+        .g-5 > :nth-child(4) { grid-column: span 1; } /* ปกติ */
+        
+        /* 6 คน: แถวบน 3, แถวล่าง 3 */
+        .g-6 { 
+            grid-template-columns: repeat(3, 1fr); 
+            grid-template-rows: repeat(2, 1fr); 
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .g-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } /* 2 คน บน-ล่าง */
+            .g-3 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr 1fr; } /* 3 คน บน-ล่าง-ล่าง */
+            .g-5 { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); } /* 5 คน: 2 คอลัมน์ 3 แถว */
+            .g-6 { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); } /* 6 คน: 2 คอลัมน์ 3 แถว */
+        }
+
+        .vid-box { position: relative; width: 100%; height: 100%; background: #111; overflow: hidden; border-radius: 8px; }
+        
+        /* 🔥 Fix Layer: Video must be top priority */
+        .vid-player { width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 1; }
         .vid-player.screen-share { object-fit: contain; background: #1a1a1a; }
 
+        /* 🔥 Fix Overlay: Hide when active class removed */
         .cam-off-ui {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            background: #1a1a1a; z-index: 5;
+            display: none; /* ซ่อนโดยปกติ */
+            flex-direction: column; justify-content: center; align-items: center;
+            background: #1a1a1a; z-index: 10; /* อยู่เหนือวิดีโอถ้าเปิด */
         }
-        .cam-off-ui.active { display: flex; }
-        .off-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid #555; }
-
+        .cam-off-ui.active { display: flex; } /* แสดงเมื่อมีคลาส active */
+        
+        .off-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; border: 2px solid #555; }
+        .off-name { color: white; font-size: 0.9rem; }
+        
         .room-badge {
             position: absolute; top: 20px; left: 20px; z-index: 50;
             background: rgba(0,0,0,0.6); color: white; border: 1px solid #555;
@@ -115,10 +139,6 @@
             .main-area.show { transform: translateX(0); }
             .mobile-header { display: flex; }
             .mobile-back { display: block; }
-            .grid-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
-        }
-        @media (min-width: 769px) {
-            .grid-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
         }
     </style>
 </head>
@@ -163,7 +183,6 @@
                 </div>
                 <h3 id="u-name">User</h3>
                 <p id="u-phone" style="color:#888; font-size:0.9rem;">...</p>
-                
                 <div class="action-row">
                     <button class="btn btn-outline btn-sm" onclick="editName()"><i class="fas fa-pen"></i> แก้ชื่อ</button>
                     <button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
@@ -181,7 +200,6 @@
                 <i class="fas fa-video" style="font-size:3rem; margin-bottom:20px; color:#555;"></i>
                 <h3>เข้าร่วมห้อง</h3>
                 <p style="color:#888; margin-bottom:20px; font-size:0.9rem;">ใส่ Room ID เพื่อเข้าร่วม</p>
-                
                 <div style="display:flex; gap:10px; align-items:center;">
                     <input type="text" id="join-id" placeholder="Room ID" style="margin-bottom:0;">
                     <button class="btn btn-primary" style="width:auto; height:44px; padding:0 20px;" onclick="joinFromInput()">Go</button>
@@ -196,7 +214,7 @@
             <span id="display-room-id">--</span>
         </div>
         
-        <div id="video-grid" class="video-grid grid-1"></div>
+        <div id="video-grid" class="video-grid g-1"></div>
 
         <div class="controls">
             <button class="c-btn active" id="btn-mic" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
@@ -237,7 +255,7 @@
 
         function toggleJoin(show) { document.getElementById('dash-main').classList.toggle('show', show); }
 
-        // --- AUTH & PROFILE ---
+        // --- AUTH ---
         function login() {
             const n = document.getElementById('l-name').value.trim();
             const p = document.getElementById('l-phone').value.trim();
@@ -302,7 +320,7 @@
             });
         }
 
-        // --- VIDEO CORE (Fast Toggle Fix) ---
+        // --- VIDEO CORE ---
         async function joinRoom(rid) {
             if(APP_ID.length < 10) return alert("ใส่ App ID ก่อน");
             go('video'); 
@@ -310,7 +328,7 @@
             
             try {
                 await client.join(APP_ID, rid, null, me.id);
-                // Create tracks ONCE
+                // Create tracks
                 [local.a, local.v] = await AgoraRTC.createMicrophoneAndCameraTracks(
                     { encoderConfig: "music_standard" },
                     { encoderConfig: "360p_1" } 
@@ -325,16 +343,19 @@
             }
         }
 
-        // --- HANDLERS ---
+        // --- HANDLERS (BLACK SCREEN FIX) ---
         client.on("user-published", async (u, type) => {
             await client.subscribe(u, type);
             remoteUsers[u.uid] = u;
-            if(type==='video') { addVideo(u.uid, u.videoTrack); toggleCamUI(u.uid, false); }
+            if(type==='video') { 
+                addVideo(u.uid, u.videoTrack, false); 
+                toggleCamUI(u.uid, false); // 🔥 FIX: ซ่อนจอดำทันทีเมื่อวิดีโอมา
+            }
             if(type==='audio') u.audioTrack.play();
             updateGrid();
         });
         client.on("user-unpublished", (u, type) => {
-            if(type==='video') toggleCamUI(u.uid, true);
+            if(type==='video') toggleCamUI(u.uid, true); // แสดงจอดำเมื่อปิดกล้อง
         });
         client.on("user-left", u => {
             delete remoteUsers[u.uid]; removeVideo(u.uid);
@@ -342,7 +363,12 @@
 
         // --- UI HELPERS ---
         function addVideo(uid, track, isLocal) {
-            if(document.getElementById(`vid-${uid}`)) { track.play(`play-${uid}`); toggleCamUI(uid, false); return; }
+            // ถ้ามีช่องอยู่แล้ว ให้เล่นวิดีโอทันที
+            if(document.getElementById(`vid-${uid}`)) { 
+                if(track) track.play(`play-${uid}`); 
+                toggleCamUI(uid, false); // 🔥 Ensure hide overlay
+                return; 
+            }
             
             const div = document.createElement('div');
             div.className = 'vid-box'; div.id = `vid-${uid}`;
@@ -354,23 +380,43 @@
                 <div id="off-${uid}" class="cam-off-ui">
                     <img src="${uPic}" class="off-avatar">
                     <div class="off-name">${uName}</div>
-                    <div class="off-status">ปิดกล้อง</div>
+                    <div style="color:#888; font-size:0.8rem;">ปิดกล้อง</div>
                 </div>
             `;
             document.getElementById('video-grid').appendChild(div);
-            track.play(`play-${uid}`);
+            
+            if(track) {
+                track.play(`play-${uid}`);
+                toggleCamUI(uid, false); // 🔥 Force Hide Overlay
+            }
             updateGrid();
         }
 
         function removeVideo(uid) { const el = document.getElementById(`vid-${uid}`); if(el) el.remove(); updateGrid(); }
+        
         function toggleCamUI(uid, isOff) {
             const el = document.getElementById(`off-${uid}`);
-            if(el) isOff ? el.classList.add('active') : el.classList.remove('active');
+            if(el) {
+                // ถ้า isOff = true ให้แสดง (active), ถ้า false ให้ซ่อน
+                if(isOff) el.classList.add('active'); 
+                else el.classList.remove('active');
+            }
         }
+        
+        // --- CUSTOM GRID LOGIC (1-6 USERS) ---
         function updateGrid() {
             const g = document.getElementById('video-grid');
-            g.className = g.children.length <= 1 ? "video-grid grid-1" : "video-grid grid-2";
+            const count = g.children.length;
+            g.className = 'video-grid'; // Reset class
+            
+            if (count === 1) g.classList.add('g-1');
+            else if (count === 2) g.classList.add('g-2');
+            else if (count === 3) g.classList.add('g-3');
+            else if (count === 4) g.classList.add('g-4');
+            else if (count === 5) g.classList.add('g-5');
+            else if (count >= 6) g.classList.add('g-6');
         }
+        
         function endCall() {
             if(local.a) { local.a.close(); local.a = null; }
             if(local.v) { local.v.close(); local.v = null; }
@@ -383,22 +429,14 @@
         // --- CONTROLS ---
         function toggleMic() { if(local.a) { local.a.setMuted(!local.a.muted); btnStyle('btn-mic', !local.a.muted); } }
         
-        // 🔥 Fast Cam Toggle (No Re-Allow)
         async function toggleCam() {
             if(!local.v) return;
-            if(isCamOn) {
-                await local.v.setEnabled(false);
-                await client.unpublish(local.v);
-                toggleCamUI(me.id, true);
-                btnStyle('btn-cam', false);
-                isCamOn = false;
-            } else {
-                await local.v.setEnabled(true);
-                await client.publish(local.v);
-                toggleCamUI(me.id, false);
-                btnStyle('btn-cam', true);
-                isCamOn = true;
-            }
+            const isEnabled = local.v.enabled; 
+            await local.v.setEnabled(!isEnabled); 
+            
+            btnStyle('btn-cam', !isEnabled);
+            toggleCamUI(me.id, isEnabled); // ถ้า enabled=true -> isOff=false
+            isCamOn = !isEnabled;
         }
 
         async function toggleScreenShare() {
