@@ -3,162 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DanCall 1.5 - Public Video Chat</title>
+    <title>DanCall - Simple Room Connect</title>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /* --- UI DESIGN (Classic Theme) --- */
         :root {
             --bg-color: #0f172a;
             --panel-color: #1e293b;
             --primary-color: #3b82f6;
             --danger-color: #ef4444;
             --text-color: #f8fafc;
-            --glass: rgba(30, 41, 59, 0.85);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-tap-highlight-color: transparent; }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-color); color: var(--text-color); overflow: hidden; height: 100vh; width: 100vw; }
 
-        /* --- Common UI Components --- */
         .hidden { display: none !important; }
-        
-        .btn {
-            padding: 12px 20px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; transition: 0.2s;
-            background: var(--primary-color); color: white; width: 100%; margin-top: 10px;
-        }
+        .btn { padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; background: var(--primary-color); color: white; width: 100%; margin-top: 10px; font-size: 16px; transition: 0.2s; }
         .btn:active { transform: scale(0.98); }
+        input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 10px; outline: none; font-size: 16px; }
         
-        input {
-            width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; 
-            background: #0f172a; color: white; margin-bottom: 10px; outline: none;
-        }
-        input:focus { border-color: var(--primary-color); }
+        /* Screens */
+        #auth-screen, #dashboard-screen, #room-screen, #search-ui-mobile { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; }
 
-        /* --- Screens --- */
-        #auth-screen, #dashboard-screen, #room-screen, #search-ui-mobile {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-        }
-
-        /* --- Auth Screen --- */
+        /* 1. Auth Screen */
         #auth-screen { justify-content: center; align-items: center; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); z-index: 100; }
-        .auth-card {
-            background: var(--panel-color); padding: 30px; border-radius: 20px; 
-            width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center;
-        }
-        .profile-upload {
-            width: 100px; height: 100px; border-radius: 50%; background: #334155; margin: 0 auto 20px;
-            display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; cursor: pointer; border: 2px dashed #64748b;
-        }
+        .auth-card { background: var(--panel-color); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+        .profile-upload { width: 100px; height: 100px; border-radius: 50%; background: #334155; margin: 0 auto 20px; overflow: hidden; position: relative; cursor: pointer; border: 2px dashed #64748b; }
         .profile-upload img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* --- Dashboard Screen --- */
+        /* 2. Dashboard */
         #dashboard-screen { background: var(--bg-color); }
-        
-        /* Navbar */
-        .navbar {
-            height: 70px; display: flex; align-items: center; justify-content: space-between;
-            padding: 0 20px; background: var(--panel-color); border-bottom: 1px solid #334155;
-        }
-        .user-info { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .navbar { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: var(--panel-color); border-bottom: 1px solid #334155; }
+        .user-info { display: flex; align-items: center; gap: 10px; }
         .user-avatar { width: 45px; height: 45px; border-radius: 50%; background: #334155; object-fit: cover; }
-        .user-details h3 { font-size: 16px; }
-        .user-details span { font-size: 12px; color: #94a3b8; }
-
-        /* PC Top Search Bar */
+        
+        /* PC Search */
         .pc-search-bar { display: none; gap: 10px; align-items: center; background: #0f172a; padding: 5px 10px; border-radius: 8px; width: 300px; }
-        .pc-search-bar input { margin: 0; border: none; padding: 8px; }
+        .pc-search-bar input { margin: 0; border: none; padding: 8px; background: transparent; }
         
-        /* Mobile Search Button */
-        .mobile-search-btn { display: block; font-size: 20px; padding: 10px; background: transparent; color: white; border: none; }
+        /* Mobile Search Btn */
+        .mobile-search-btn { display: block; font-size: 20px; padding: 10px; background: transparent; color: white; border: none; cursor: pointer; }
 
-        /* Dashboard Content */
         .dash-content { display: flex; height: calc(100% - 70px); }
-        .sidebar {
-            width: 280px; background: var(--panel-color); padding: 20px; border-right: 1px solid #334155;
-            display: flex; flex-direction: column; gap: 15px;
-        }
+        .sidebar { width: 280px; background: var(--panel-color); padding: 20px; border-right: 1px solid #334155; display: flex; flex-direction: column; gap: 15px; }
         .room-list { flex: 1; overflow-y: auto; margin-top: 20px; }
-        .room-item {
-            background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;
-            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
-        }
-        .room-item:hover { background: rgba(255,255,255,0.1); }
-        
-        .main-area { flex: 1; padding: 20px; display: flex; justify-content: center; align-items: center; color: #64748b; text-align: center; }
+        .room-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .main-area { flex: 1; padding: 20px; display: flex; justify-content: center; align-items: center; color: #64748b; text-align: center; flex-direction: column; }
 
-        /* --- Mobile Search UI --- */
+        /* 3. Mobile Search UI */
         #search-ui-mobile { background: var(--bg-color); z-index: 50; padding: 20px; }
         .search-header { display: flex; align-items: center; margin-bottom: 20px; }
         .back-btn { font-size: 24px; margin-right: 15px; cursor: pointer; }
 
-        /* --- Room (Video Call) Screen --- */
+        /* 4. Room Screen */
         #room-screen { background: #000; z-index: 200; }
+        #room-id-display { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 8px 20px; border-radius: 20px; font-size: 16px; z-index: 10; font-weight: bold; backdrop-filter: blur(5px); }
         
-        /* Video Grid */
-        #video-grid {
-            flex: 1; display: grid; gap: 5px; padding: 5px;
-            /* Default Mobile Portrait */
-            grid-template-columns: 1fr; 
-            grid-auto-rows: 1fr;
-        }
-        
-        .video-container { position: relative; width: 100%; height: 100%; background: #222; border-radius: 12px; overflow: hidden; }
+        #video-grid { flex: 1; display: grid; gap: 2px; padding: 2px; grid-template-columns: 1fr; grid-auto-rows: 1fr; }
+        .video-container { position: relative; width: 100%; height: 100%; background: #222; overflow: hidden; border-radius: 8px; }
         .video-player { width: 100%; height: 100%; object-fit: cover; }
-        .participant-name {
-            position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6);
-            padding: 4px 10px; border-radius: 4px; font-size: 12px; color: white; z-index: 2;
-        }
+        .participant-name { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 4px; font-size: 12px; color: white; z-index: 2; }
 
-        /* Controls Bar */
-        .controls {
-            height: 80px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
-            display: flex; justify-content: center; align-items: center; gap: 15px; padding-bottom: 10px;
-        }
-        .control-btn {
-            width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer;
-            background: #334155; color: white; font-size: 20px; display: flex; justify-content: center; align-items: center;
-        }
-        .control-btn.active { background: var(--primary-color); color: white; }
-        .control-btn.danger { background: var(--danger-color); }
+        .controls { height: 90px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; gap: 20px; padding-bottom: 10px; width: 100%; position: absolute; bottom: 0; }
+        .control-btn { width: 55px; height: 55px; border-radius: 50%; border: none; cursor: pointer; background: #334155; color: white; font-size: 22px; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
         .control-btn:active { transform: scale(0.9); }
-        
-        #room-id-display {
-            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px; font-size: 14px; z-index: 10;
-        }
+        .control-btn.active { background: var(--primary-color); }
+        .control-btn.danger { background: var(--danger-color); }
 
-        /* --- Responsive Logic (PC vs Mobile) --- */
-        @media (min-width: 769px) {
-            /* PC Styles */
+        /* Responsive Rules */
+        @media (min-width: 769px) { /* PC */
             .pc-search-bar { display: flex; }
             .mobile-search-btn { display: none; }
-            .sidebar { display: flex; } /* Always show sidebar on PC */
-            
-            /* Grid Logic for PC (Horizontal/Landscape) */
-            #video-grid {
-                grid-template-columns: repeat(auto-fit, minmax(33%, 1fr));
-            }
-            #switch-cam-btn { display: none !important; } /* Hide switch camera on PC */
+            .sidebar { display: flex; }
+            .main-area { display: flex; }
+            #video-grid { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); }
+            #switch-cam-btn { display: none !important; }
         }
-
-        @media (max-width: 768px) {
-            /* Mobile Styles */
-            .sidebar { width: 100%; height: 100%; display: none; } /* Hide sidebar initially */
+        @media (max-width: 768px) { /* Mobile */
+            .sidebar { display: none; }
             .main-area { display: none; }
-            
-            /* In mobile, main dashboard is just the room list or create button */
             .dash-content { flex-direction: column; }
-            .sidebar.mobile-visible { display: flex; }
-            
-            /* Video Grid Mobile */
-            #video-grid { grid-template-columns: 1fr; } 
-            .video-container { max-height: 50vh; }
-            
-            /* If 2 people, split top/bottom */
-            #video-grid.users-2 { grid-template-rows: 1fr 1fr; }
+            .sidebar.mobile-visible { display: flex; width: 100%; height: 100%; }
+            #video-grid.users-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } 
         }
     </style>
 </head>
@@ -167,13 +96,12 @@
     <div id="auth-screen">
         <div id="login-form" class="auth-card">
             <h2>เข้าสู่ระบบ</h2>
-            <p style="margin-bottom: 20px; color: #94a3b8;">DanCall 1.5</p>
+            <p style="margin-bottom: 20px; color: #94a3b8;">DanCall Classic</p>
             <input type="text" id="login-name" placeholder="ชื่อผู้ใช้">
             <input type="tel" id="login-phone" placeholder="เบอร์โทรศัพท์">
             <button class="btn" onclick="handleLogin()">ตกลง</button>
             <p style="margin-top: 15px; font-size: 14px;">ยังไม่มีบัญชี? <span onclick="toggleAuth('signup')" style="color:var(--primary-color); cursor:pointer;">สร้างชื่อผู้ใช้</span></p>
         </div>
-
         <div id="signup-form" class="auth-card hidden">
             <h2>สร้างชื่อผู้ใช้</h2>
             <div class="profile-upload" onclick="document.getElementById('file-input').click()">
@@ -189,18 +117,18 @@
 
     <div id="dashboard-screen" class="hidden">
         <div class="navbar">
-            <div class="user-info" onclick="openProfileEdit()">
+            <div class="user-info" onclick="logoutConfirm()">
                 <img id="nav-avatar" class="user-avatar" src="" alt="Me">
                 <div class="user-details">
                     <h3 id="nav-name">Guest</h3>
-                    <span id="nav-id">ID: Loading...</span>
+                    <span id="nav-id" style="font-size:12px; color:#94a3b8;">ID: ...</span>
                 </div>
             </div>
 
             <div class="pc-search-bar">
                 <i class="fas fa-search" style="color:#64748b"></i>
-                <input type="text" id="pc-room-input" placeholder="ใส่ ID ห้องโทร">
-                <button onclick="joinRoomByInput('pc-room-input')" style="background:var(--primary-color); border:none; color:white; padding:5px 10px; border-radius:5px; cursor:pointer;">เข้าร่วม</button>
+                <input type="number" id="pc-room-input" placeholder="ใส่ ID ห้องโทร">
+                <button onclick="joinRoomByInput('pc-room-input')" style="background:var(--primary-color); border:none; color:white; padding:5px 15px; border-radius:5px; cursor:pointer;">เข้าร่วม</button>
             </div>
 
             <button class="mobile-search-btn" onclick="showMobileSearch()">
@@ -210,18 +138,16 @@
 
         <div class="dash-content">
             <div class="sidebar mobile-visible">
-                <h3>จัดการห้องโทร</h3>
-                <button class="btn" onclick="createRoom()"><i class="fas fa-plus-circle"></i> สร้างห้องโทร</button>
-                <div class="room-list" id="my-room-list">
-                    </div>
+                <h3 style="color: white;">จัดการห้องโทร</h3>
+                <button class="btn" onclick="createAndJoinRoom()"><i class="fas fa-plus-circle"></i> สร้างห้องโทร</button>
+                <div class="room-list" id="my-room-list"></div>
             </div>
 
             <div class="main-area">
-                <div>
-                    <i class="fas fa-video" style="font-size: 50px; margin-bottom: 20px;"></i>
-                    <h2>ยินดีต้อนรับสู่ DanCall</h2>
-                    <p>สร้างห้องหรือใส่ ID เพื่อเริ่มคุยกับเพื่อน</p>
-                </div>
+                <i class="fas fa-video" style="font-size: 70px; margin-bottom: 20px; color: #334155;"></i>
+                <h2>ยินดีต้อนรับสู่ DanCall</h2>
+                <p>สร้างห้องหรือใส่ ID เพื่อเริ่มคุยกับเพื่อน</p>
+                <button onclick="logout()" style="background:transparent; border:1px solid #334155; color:#94a3b8; padding:5px 15px; border-radius:5px; margin-top:20px; cursor:pointer;">ออกจากระบบ</button>
             </div>
         </div>
     </div>
@@ -231,315 +157,219 @@
             <i class="fas fa-arrow-left back-btn" onclick="hideMobileSearch()"></i>
             <h2>ค้นหาห้อง</h2>
         </div>
-        <input type="text" id="mobile-room-input" placeholder="กรอก ID ห้อง...">
+        <input type="number" id="mobile-room-input" placeholder="กรอกเลขห้อง (เช่น 5599)">
         <button class="btn" onclick="joinRoomByInput('mobile-room-input')">ค้นหาและเข้าร่วม</button>
     </div>
 
     <div id="room-screen" class="hidden">
-        <div id="room-id-display">Room ID: 1234</div>
+        <div id="room-id-display">Room ID: ...</div>
         
-        <div id="video-grid">
-            </div>
+        <div id="video-grid"></div>
 
         <div class="controls">
             <button class="control-btn" id="mic-btn" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
             <button class="control-btn" id="cam-btn" onclick="toggleCam()"><i class="fas fa-video"></i></button>
-            
-            <button class="control-btn" onclick="alert('ปรับเสียงที่อุปกรณ์ของท่าน')"><i class="fas fa-volume-up"></i></button>
-
             <button class="control-btn" id="switch-cam-btn" onclick="switchCamera()"><i class="fas fa-sync-alt"></i></button>
-
-            <button class="control-btn" onclick="shareScreen()"><i class="fas fa-desktop"></i></button>
-
             <button class="control-btn danger" onclick="leaveRoom()"><i class="fas fa-phone-slash"></i></button>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
-        const APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; // <--- สำคัญมาก! ต้องใส่ App ID จริงจาก Agora
-        const MAX_USERS = 6;
+        // ==========================================
+        const APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; 
+        // ==========================================
 
-        // --- STATE ---
-        let currentUser = null;
         let client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-        let localTracks = { videoTrack: null, audioTrack: null, screenTrack: null };
-        let remoteUsers = {};
-        let currentRoomId = null;
-        let isCamOn = true;
-        let isMicOn = true;
-        
-        // --- AUTHENTICATION (LOCAL STORAGE MOCK DATABASE) ---
+        let localTracks = { videoTrack: null, audioTrack: null };
+        let currentUser = null;
+        let isCamOn = true, isMicOn = true;
+
         window.onload = () => {
-            // Check login
-            const savedUser = localStorage.getItem('dancall_user');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
+            const saved = localStorage.getItem('dc_user_classic');
+            if(saved) {
+                currentUser = JSON.parse(saved);
                 loadDashboard();
-            } else {
-                document.getElementById('auth-screen').classList.remove('hidden');
             }
         };
 
+        // --- Auth ---
         function toggleAuth(mode) {
-            if (mode === 'signup') {
-                document.getElementById('login-form').classList.add('hidden');
-                document.getElementById('signup-form').classList.remove('hidden');
-            } else {
-                document.getElementById('signup-form').classList.add('hidden');
-                document.getElementById('login-form').classList.remove('hidden');
-            }
+            document.getElementById('login-form').classList.toggle('hidden', mode === 'signup');
+            document.getElementById('signup-form').classList.toggle('hidden', mode === 'login');
         }
 
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('preview-img').src = e.target.result;
-                }
-                reader.readAsDataURL(file);
-            }
+        function handleFileSelect(e) {
+            const reader = new FileReader();
+            reader.onload = (ev) => document.getElementById('preview-img').src = ev.target.result;
+            reader.readAsDataURL(e.target.files[0]);
         }
 
         function handleSignup() {
             const name = document.getElementById('signup-name').value;
             const phone = document.getElementById('signup-phone').value;
-            const imgSrc = document.getElementById('preview-img').src;
+            const img = document.getElementById('preview-img').src;
 
-            if (!name || !phone) return alert("กรุณากรอกข้อมูลให้ครบ");
+            if(!name || !phone) return alert("กรุณากรอกข้อมูลให้ครบ");
 
-            // Mock Unique Check
-            const existingUsers = JSON.parse(localStorage.getItem('dancall_db_users') || "[]");
-            if (existingUsers.find(u => u.name === name)) {
-                return alert("ชื่อนี้มีผู้ใช้แล้ว กรุณาใช้ชื่ออื่น");
-            }
+            const db = JSON.parse(localStorage.getItem('dc_db_classic') || "[]");
+            if(db.find(u => u.name === name)) return alert("ชื่อนี้มีคนใช้แล้ว");
 
-            // Create ID starting from 100
-            const newId = 100 + existingUsers.length;
+            const newUser = { id: Math.floor(100000 + Math.random() * 900000), name, phone, avatar: img };
+            db.push(newUser);
+            localStorage.setItem('dc_db_classic', JSON.stringify(db));
             
-            const newUser = { id: newId, name, phone, avatar: imgSrc };
-            existingUsers.push(newUser);
-            localStorage.setItem('dancall_db_users', JSON.stringify(existingUsers));
-            
-            alert("สร้างบัญชีสำเร็จ! กรุณาเข้าสู่ระบบ");
+            alert("สร้างบัญชีสำเร็จ!");
             toggleAuth('login');
         }
 
         function handleLogin() {
             const name = document.getElementById('login-name').value;
             const phone = document.getElementById('login-phone').value;
+            const db = JSON.parse(localStorage.getItem('dc_db_classic') || "[]");
             
-            const existingUsers = JSON.parse(localStorage.getItem('dancall_db_users') || "[]");
-            const user = existingUsers.find(u => u.name === name && u.phone === phone);
-
-            if (user) {
+            const user = db.find(u => u.name === name && u.phone === phone);
+            if(user) {
                 currentUser = user;
-                localStorage.setItem('dancall_user', JSON.stringify(user));
+                localStorage.setItem('dc_user_classic', JSON.stringify(user));
                 loadDashboard();
             } else {
-                alert("ชื่อหรือเบอร์โทรไม่ถูกต้อง หรือยังไม่มีบัญชี");
+                alert("ไม่พบข้อมูลผู้ใช้");
             }
         }
 
         function logout() {
-            localStorage.removeItem('dancall_user');
-            location.reload();
+            if(confirm("ต้องการออกจากระบบ?")) {
+                localStorage.removeItem('dc_user_classic');
+                location.reload();
+            }
+        }
+        
+        function logoutConfirm() {
+            // Mobile tap on profile to logout
+            if(window.innerWidth < 768) logout();
         }
 
-        // --- UI NAVIGATION ---
         function loadDashboard() {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
-            
-            // Update Nav
             document.getElementById('nav-name').innerText = currentUser.name;
             document.getElementById('nav-id').innerText = "ID: " + currentUser.id;
             document.getElementById('nav-avatar').src = currentUser.avatar;
-
-            // Load saved rooms (Mock)
-            renderRoomList();
+            renderHistory();
         }
 
-        function showMobileSearch() {
-            document.getElementById('search-ui-mobile').classList.remove('hidden');
-        }
+        // --- Room Logic ---
+        function showMobileSearch() { document.getElementById('search-ui-mobile').classList.remove('hidden'); }
+        function hideMobileSearch() { document.getElementById('search-ui-mobile').classList.add('hidden'); }
 
-        function hideMobileSearch() {
-            document.getElementById('search-ui-mobile').classList.add('hidden');
-        }
-
-        // --- ROOM LOGIC ---
-        function createRoom() {
-            const roomId = Math.floor(100000 + Math.random() * 900000); // 6 digit ID
-            const myRooms = JSON.parse(localStorage.getItem('my_rooms') || "[]");
-            myRooms.push({ id: roomId, createdBy: currentUser.name });
-            localStorage.setItem('my_rooms', JSON.stringify(myRooms));
-            renderRoomList();
+        function createAndJoinRoom() {
+            const roomId = Math.floor(10000 + Math.random() * 90000);
+            saveHistory(roomId);
             joinRoom(roomId);
-        }
-
-        function renderRoomList() {
-            const list = document.getElementById('my-room-list');
-            const myRooms = JSON.parse(localStorage.getItem('my_rooms') || "[]");
-            list.innerHTML = "";
-            myRooms.forEach(room => {
-                const item = document.createElement('div');
-                item.className = 'room-item';
-                item.innerHTML = `<span>ห้อง ${room.id}</span> <i class="fas fa-chevron-right"></i>`;
-                item.onclick = () => joinRoom(room.id);
-                list.appendChild(item);
-            });
         }
 
         function joinRoomByInput(inputId) {
             const id = document.getElementById(inputId).value;
-            if (id) joinRoom(id);
+            if(id) { saveHistory(id); joinRoom(id); }
         }
 
-        // --- AGORA VIDEO CALL LOGIC ---
-        async function joinRoom(roomId) {
-            if(!APP_ID || APP_ID.includes("ใส่")) {
-                alert("กรุณาใส่ App ID ในโค้ดก่อนใช้งาน");
-                return;
-            }
+        function saveHistory(roomId) {
+            let hist = JSON.parse(localStorage.getItem('dc_hist_classic') || "[]");
+            hist.unshift(roomId);
+            localStorage.setItem('dc_hist_classic', JSON.stringify(hist));
+            renderHistory();
+        }
 
-            currentRoomId = roomId;
-            document.getElementById('room-id-display').innerText = "Room ID: " + roomId;
-            
-            // Switch UI
+        function renderHistory() {
+            const list = document.getElementById('my-room-list');
+            const hist = JSON.parse(localStorage.getItem('dc_hist_classic') || "[]");
+            list.innerHTML = "";
+            hist.slice(0, 10).forEach(id => {
+                const item = document.createElement('div');
+                item.className = 'room-item';
+                item.innerHTML = `<span>ห้อง ${id}</span> <i class="fas fa-chevron-right"></i>`;
+                item.onclick = () => joinRoom(id);
+                list.appendChild(item);
+            });
+        }
+
+        // --- Video Call ---
+        async function joinRoom(roomId) {
+            if(!APP_ID || APP_ID.includes("ใส่")) return alert("กรุณาใส่ App ID");
+
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('search-ui-mobile').classList.add('hidden');
             document.getElementById('room-screen').classList.remove('hidden');
+            document.getElementById('room-id-display').innerText = "Room ID: " + roomId;
 
-            // 1. Join Agora Channel
-            // Note: Token is set to null (In production, use a token server)
-            const uid = await client.join(APP_ID, roomId.toString(), null, currentUser.id);
-
-            // 2. Create and publish local tracks
-            localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-            localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
-
-            // Display Local Video
-            const localPlayerContainer = document.createElement('div');
-            localPlayerContainer.id = `user-container-${uid}`;
-            localPlayerContainer.className = 'video-container';
-            localPlayerContainer.innerHTML = `
-                <div id="user-${uid}" class="video-player"></div>
-                <div class="participant-name">Me (${currentUser.name})</div>
-            `;
-            document.getElementById('video-grid').appendChild(localPlayerContainer);
-            
-            localTracks.videoTrack.play(`user-${uid}`);
-            
-            await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
-            updateGrid();
+            try {
+                const uid = await client.join(APP_ID, roomId.toString(), null, currentUser.id);
+                localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+                await client.publish(Object.values(localTracks));
+                createVideoBox(uid, localTracks.videoTrack, "ฉัน ("+currentUser.name+")", true);
+            } catch (e) {
+                alert("Error: " + e.message);
+                leaveRoom();
+            }
         }
 
-        // Handle Remote Users
         client.on("user-published", async (user, mediaType) => {
             await client.subscribe(user, mediaType);
-
-            if (mediaType === "video") {
-                const remoteContainer = document.createElement("div");
-                remoteContainer.id = `user-container-${user.uid}`;
-                remoteContainer.className = "video-container";
-                remoteContainer.innerHTML = `
-                    <div id="user-${user.uid}" class="video-player"></div>
-                    <div class="participant-name">User ${user.uid}</div>
-                `;
-                document.getElementById("video-grid").appendChild(remoteContainer);
-                user.videoTrack.play(`user-${user.uid}`);
-            }
-
-            if (mediaType === "audio") {
-                user.audioTrack.play();
-            }
-            updateGrid();
+            if(mediaType === "video") createVideoBox(user.uid, user.videoTrack, "User "+user.uid, false);
+            if(mediaType === "audio") user.audioTrack.play();
         });
 
         client.on("user-unpublished", (user) => {
-            const playerContainer = document.getElementById(`user-container-${user.uid}`);
-            if (playerContainer) playerContainer.remove();
+            const el = document.getElementById(`wrapper-${user.uid}`);
+            if(el) el.remove();
             updateGrid();
         });
 
+        function createVideoBox(uid, track, name, isLocal) {
+            const old = document.getElementById(`wrapper-${uid}`);
+            if(old) old.remove();
+
+            const wrapper = document.createElement('div');
+            wrapper.id = `wrapper-${uid}`;
+            wrapper.className = 'video-container';
+            wrapper.innerHTML = `<div id="play-${uid}" class="video-player"></div><div class="participant-name">${name}</div>`;
+            document.getElementById('video-grid').appendChild(wrapper);
+            track.play(`play-${uid}`);
+            updateGrid();
+        }
+
+        function updateGrid() {
+            const count = document.getElementById('video-grid').children.length;
+            const grid = document.getElementById('video-grid');
+            grid.className = '';
+            if(count >= 2) grid.classList.add(`users-${count}`);
+        }
+
         async function leaveRoom() {
-            for (let trackName in localTracks) {
-                var track = localTracks[trackName];
-                if (track) {
-                    track.stop();
-                    track.close();
-                    localTracks[trackName] = null;
-                }
-            }
+            if(localTracks.videoTrack) { localTracks.videoTrack.close(); localTracks.audioTrack.close(); }
             await client.leave();
             document.getElementById('video-grid').innerHTML = "";
             document.getElementById('room-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
         }
 
-        // --- CONTROLS ---
-        function updateGrid() {
-            const count = document.getElementById('video-grid').children.length;
-            const grid = document.getElementById('video-grid');
-            grid.className = ''; // reset
-            if (count >= 2) grid.classList.add(`users-${count}`);
-        }
-
         async function toggleMic() {
-            if (localTracks.audioTrack) {
-                isMicOn = !isMicOn;
-                await localTracks.audioTrack.setMuted(!isMicOn);
-                document.getElementById('mic-btn').classList.toggle('danger');
-                document.getElementById('mic-btn').innerHTML = isMicOn ? '<i class="fas fa-microphone"></i>' : '<i class="fas fa-microphone-slash"></i>';
-            }
+            isMicOn = !isMicOn;
+            await localTracks.audioTrack.setMuted(!isMicOn);
+            document.getElementById('mic-btn').classList.toggle('danger', !isMicOn);
         }
-
         async function toggleCam() {
-            if (localTracks.videoTrack) {
-                isCamOn = !isCamOn;
-                await localTracks.videoTrack.setMuted(!isCamOn);
-                document.getElementById('cam-btn').classList.toggle('danger');
-                document.getElementById('cam-btn').innerHTML = isCamOn ? '<i class="fas fa-video"></i>' : '<i class="fas fa-video-slash"></i>';
-            }
+            isCamOn = !isCamOn;
+            await localTracks.videoTrack.setMuted(!isCamOn);
+            document.getElementById('cam-btn').classList.toggle('danger', !isCamOn);
         }
-
         async function switchCamera() {
-            // Get all video devices
-            const devices = await AgoraRTC.getCameras();
-            if(devices.length > 1 && localTracks.videoTrack) {
-                const currentLabel = localTracks.videoTrack.getTrackLabel();
-                // Find next device
-                const nextDevice = devices.find(d => d.label !== currentLabel);
-                if(nextDevice) {
-                    await localTracks.videoTrack.setDevice(nextDevice.deviceId);
-                }
-            } else {
-                alert("ไม่พบกล้องตัวอื่น");
-            }
-        }
-
-        async function shareScreen() {
-            try {
-                if(!localTracks.screenTrack) {
-                    localTracks.screenTrack = await AgoraRTC.createScreenVideoTrack();
-                    // Replace camera track with screen track
-                    await client.unpublish(localTracks.videoTrack);
-                    await client.publish(localTracks.screenTrack);
-                    
-                    // Show screen on local view
-                    localTracks.screenTrack.play(`user-${client.uid}`);
-                } else {
-                    // Stop screen share -> back to camera
-                    await client.unpublish(localTracks.screenTrack);
-                    localTracks.screenTrack.close();
-                    localTracks.screenTrack = null;
-                    await client.publish(localTracks.videoTrack);
-                    localTracks.videoTrack.play(`user-${client.uid}`);
-                }
-            } catch (e) {
-                console.error("Screen share failed", e);
+            const cams = await AgoraRTC.getCameras();
+            if(cams.length > 1) {
+                const current = localTracks.videoTrack.getTrackLabel();
+                const next = cams.find(c => c.label !== current) || cams[0];
+                await localTracks.videoTrack.setDevice(next.deviceId);
             }
         }
     </script>
