@@ -2,8 +2,8 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RealTalk v1.5 - Public Video Call</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>RealTalk v1.6 - Ultimate</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -16,323 +16,263 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body { font-family: 'Prompt', sans-serif; background-color: #0f172a; color: white; overflow: hidden; }
+        body { font-family: 'Prompt', sans-serif; background-color: #0f172a; color: white; overflow: hidden; touch-action: manipulation; }
         
-        /* Glassmorphism UI */
         .glass {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Video Grid Layout */
+        /* Responsive Video Grid */
         #video-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 10px;
+            gap: 8px;
             width: 100%;
             height: 100%;
-            padding: 10px;
+            padding: 8px;
+            /* Default Mobile: 1 col */
+            grid-template-columns: 1fr; 
+            grid-auto-rows: 1fr;
         }
+
+        /* Tablet & Desktop Adjustments */
+        @media (min-width: 640px) { #video-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { #video-grid { grid-template-columns: repeat(3, 1fr); } }
 
         .video-container {
             position: relative;
-            background: #000;
+            background: #1a1a1a;
             border-radius: 12px;
             overflow: hidden;
             width: 100%;
             height: 100%;
-            min-height: 200px;
         }
 
         .video-player { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Mobile Optimization */
-        @media (max-width: 768px) {
-            #video-grid { grid-template-columns: 1fr; } 
-            .mobile-full { height: 100vh; width: 100vw; }
+        /* Control Bar Animation */
+        #controls-bar {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .controls-hidden {
+            transform: translateY(150%) translateX(-50%) !important;
         }
 
         /* Hide Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 2px; }
     </style>
 </head>
-<body class="h-screen w-screen relative">
+<body class="h-screen w-screen relative bg-slate-900">
 
-    <div id="auth-screen" class="absolute inset-0 z-50 flex items-center justify-center bg-slate-900 bg-[url('https://source.unsplash.com/random/1920x1080?technology')] bg-cover bg-center">
-        <div class="absolute inset-0 bg-black/60"></div>
+    <div id="auth-screen" class="absolute inset-0 z-50 flex items-center justify-center bg-[url('https://source.unsplash.com/random/1920x1080?technology')] bg-cover bg-center">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
         
-        <div id="login-form" class="glass p-8 rounded-2xl shadow-2xl w-96 relative z-10 animate-fade-in-up">
+        <div id="login-form" class="glass p-6 md:p-8 rounded-2xl shadow-2xl w-[90%] max-w-sm relative z-10 animate-fade-in-up">
             <h1 class="text-3xl font-bold text-center mb-6 text-blue-400">เข้าสู่ระบบ</h1>
-            <input type="text" id="login-name" placeholder="ชื่อผู้ใช้" class="w-full p-3 mb-4 bg-slate-800 rounded-lg border border-slate-600 focus:outline-none focus:border-blue-500">
-            <input type="tel" id="login-phone" placeholder="เบอร์โทรศัพท์" class="w-full p-3 mb-6 bg-slate-800 rounded-lg border border-slate-600 focus:outline-none focus:border-blue-500">
-            <button onclick="handleLogin()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold transition">ตกลง</button>
-            <p class="mt-4 text-center text-sm text-gray-400">ยังไม่มีบัญชี? <span onclick="toggleAuth('signup')" class="text-blue-400 cursor-pointer hover:underline">สร้างชื่อผู้ใช้</span></p>
+            <input type="text" id="login-name" placeholder="ชื่อผู้ใช้" class="w-full p-3 mb-4 bg-slate-800 rounded-xl border border-slate-600 focus:outline-none focus:border-blue-500">
+            <input type="tel" id="login-phone" placeholder="เบอร์โทรศัพท์" class="w-full p-3 mb-6 bg-slate-800 rounded-xl border border-slate-600 focus:outline-none focus:border-blue-500">
+            <button onclick="handleLogin()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition shadow-lg shadow-blue-600/30">ตกลง</button>
+            <p class="mt-4 text-center text-sm text-gray-400">ยังไม่มีบัญชี? <span onclick="toggleAuth('signup')" class="text-blue-400 cursor-pointer hover:underline font-bold">สร้างชื่อผู้ใช้</span></p>
         </div>
 
-        <div id="signup-form" class="hidden glass p-8 rounded-2xl shadow-2xl w-96 relative z-10">
+        <div id="signup-form" class="hidden glass p-6 md:p-8 rounded-2xl shadow-2xl w-[90%] max-w-sm relative z-10">
             <h1 class="text-2xl font-bold text-center mb-6 text-green-400">สร้างผู้ใช้ใหม่</h1>
             <div class="flex justify-center mb-4">
-                <div class="relative w-20 h-20 rounded-full bg-slate-700 overflow-hidden border-2 border-green-400">
+                <div class="relative w-20 h-20 rounded-full bg-slate-700 overflow-hidden border-2 border-green-400 shadow-lg">
                     <img id="signup-preview" src="https://via.placeholder.com/150" class="w-full h-full object-cover">
                     <input type="file" id="signup-file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="previewImage(event)">
                 </div>
             </div>
-            <input type="text" id="signup-name" placeholder="ตั้งชื่อผู้ใช้ (ห้ามซ้ำ)" class="w-full p-3 mb-4 bg-slate-800 rounded-lg border border-slate-600">
-            <input type="tel" id="signup-phone" placeholder="เบอร์โทรศัพท์" class="w-full p-3 mb-6 bg-slate-800 rounded-lg border border-slate-600">
-            <button onclick="handleSignup()" class="w-full py-3 bg-green-600 hover:bg-green-500 rounded-lg font-bold transition">บันทึกข้อมูล</button>
+            <input type="text" id="signup-name" placeholder="ตั้งชื่อผู้ใช้ (ห้ามซ้ำ)" class="w-full p-3 mb-4 bg-slate-800 rounded-xl border border-slate-600">
+            <input type="tel" id="signup-phone" placeholder="เบอร์โทรศัพท์" class="w-full p-3 mb-6 bg-slate-800 rounded-xl border border-slate-600">
+            <button onclick="handleSignup()" class="w-full py-3 bg-green-600 hover:bg-green-500 rounded-xl font-bold transition shadow-lg shadow-green-600/30">บันทึกข้อมูล</button>
             <button onclick="toggleAuth('login')" class="w-full mt-2 py-2 text-gray-400 hover:text-white transition">ยกเลิก</button>
         </div>
     </div>
 
-    <div id="dashboard" class="hidden absolute inset-0 bg-slate-900 overflow-hidden">
+    <div id="dashboard" class="hidden absolute inset-0 bg-slate-900 overflow-hidden flex flex-col md:flex-row">
         
-        <div class="md:hidden h-full flex flex-col p-4 relative z-10 overflow-y-auto">
-            <div class="flex items-center justify-between mb-8">
-                <div class="flex items-center space-x-4">
-                    <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-blue-500 relative group">
-                        <img id="user-avatar-mobile" src="" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center cursor-pointer" onclick="editProfile()">
-                            <i class="fas fa-camera text-white"></i>
-                        </div>
+        <div class="w-full md:w-80 glass z-20 flex flex-col md:h-full border-b md:border-b-0 md:border-r border-slate-700 shrink-0">
+            
+            <div class="p-4 md:p-6 flex items-center justify-between md:block">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-blue-500 shrink-0">
+                        <img id="user-avatar" src="" class="w-full h-full object-cover">
                     </div>
-                    <div>
-                        <h2 id="user-name-display-mobile" class="text-xl font-bold">User</h2>
-                        <p id="user-phone-display-mobile" class="text-xs text-gray-400">08X-XXX-XXXX</p>
+                    <div class="overflow-hidden">
+                        <h2 id="user-name-display" class="text-lg md:text-xl font-bold truncate">User</h2>
+                        <p id="user-phone-display" class="text-xs text-gray-400">08X-XXX-XXXX</p>
                     </div>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="toggleMobileSearch(true)" class="text-blue-400 hover:bg-blue-500/20 p-2 rounded-lg">
-                        <i class="fas fa-search text-xl"></i>
-                    </button>
-                    <button onclick="logout()" class="text-red-400 hover:bg-red-500/20 p-2 rounded-lg">
-                        <i class="fas fa-power-off text-xl"></i>
-                    </button>
+                
+                <div class="flex items-center gap-2 md:mt-4 md:justify-between">
+                    <button onclick="toggleMobileSearch()" class="md:hidden p-2 text-blue-400 bg-slate-800 rounded-lg"><i class="fas fa-search"></i></button>
+                    <button onclick="logout()" class="p-2 text-red-400 hover:bg-red-500/10 rounded-lg md:w-full md:flex md:justify-center md:bg-slate-800/50"><i class="fas fa-power-off"></i> <span class="hidden md:inline ml-2">ออกจากระบบ</span></button>
                 </div>
             </div>
 
-            <div class="mb-6">
-                <h3 class="text-sm uppercase text-gray-400 font-bold mb-3">สร้างห้องโทร</h3>
-                <button onclick="createRoom()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-bold shadow-lg hover:shadow-blue-500/50 transition flex items-center justify-center gap-2">
-                    <i class="fas fa-video"></i> สร้างห้องใหม่
-                </button>
-            </div>
-
-            <div class="flex-1 overflow-y-auto pb-20">
-                <h3 class="text-sm uppercase text-gray-400 font-bold mb-3">ห้องของคุณ</h3>
-                <div id="room-list-mobile" class="space-y-2">
-                    </div>
-            </div>
-        </div>
-
-        <div id="mobile-search-overlay" class="md:hidden hidden absolute inset-0 z-20 bg-slate-900/95 flex items-start justify-center pt-20 p-4 transition-all duration-300">
-             <div class="glass p-6 rounded-2xl text-center w-full max-w-md relative animate-fade-in-up">
-                <button onclick="toggleMobileSearch(false)" class="absolute top-4 right-4 text-gray-400 hover:text-white">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-                <h2 class="text-2xl font-bold mb-6">เข้าร่วมการสนทนา</h2>
-                <div class="flex gap-2">
-                    <input type="text" id="join-room-id-mobile" placeholder="ใส่ ID ห้อง..." class="flex-1 p-3 bg-slate-800 rounded-xl border border-slate-600 focus:border-blue-500 outline-none text-center text-lg tracking-widest">
-                    <button onclick="joinRoomCheck('mobile')" class="px-6 py-3 bg-blue-600 rounded-xl font-bold hover:bg-blue-500"><i class="fas fa-arrow-right"></i></button>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="hidden md:flex h-full flex-row relative z-10">
-            <div class="w-80 glass p-6 flex flex-col border-r border-slate-700 z-20">
-                <div class="flex items-center space-x-4 mb-8">
-                    <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-blue-500 relative group">
-                        <img id="user-avatar-pc" src="" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center cursor-pointer" onclick="editProfile()">
-                            <i class="fas fa-camera text-white"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <h2 id="user-name-display-pc" class="text-xl font-bold">User</h2>
-                        <p id="user-phone-display-pc" class="text-xs text-gray-400">08X-XXX-XXXX</p>
-                    </div>
-                    <button onclick="logout()" class="ml-auto text-red-400 hover:bg-red-500/20 p-2 rounded-lg"><i class="fas fa-power-off"></i></button>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="text-sm uppercase text-gray-400 font-bold mb-3">สร้างห้องโทร</h3>
-                    <button onclick="createRoom()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-bold shadow-lg hover:shadow-blue-500/50 transition flex items-center justify-center gap-2">
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                <div class="md:block">
+                    <h3 class="text-xs uppercase text-gray-400 font-bold mb-2">เมนูหลัก</h3>
+                    <button onclick="createRoom()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-bold shadow-lg hover:shadow-blue-500/50 transition flex items-center justify-center gap-2 mb-4">
                         <i class="fas fa-video"></i> สร้างห้องใหม่
                     </button>
                 </div>
 
-                <div class="flex-1 overflow-y-auto">
-                    <h3 class="text-sm uppercase text-gray-400 font-bold mb-3">ห้องของคุณ</h3>
-                    <div id="room-list-pc" class="space-y-2">
+                <div>
+                    <h3 class="text-xs uppercase text-gray-400 font-bold mb-2">ห้องของคุณ</h3>
+                    <div id="room-list" class="space-y-2 pb-20 md:pb-0">
                         </div>
                 </div>
             </div>
+        </div>
 
-            <div class="flex-1 flex flex-col p-6 relative justify-center items-center">
-                <div class="absolute top-0 left-0 w-full h-full bg-[url('https://source.unsplash.com/random/1920x1080?abstract')] bg-cover opacity-20 pointer-events-none"></div>
-                
-                <div class="relative z-10 max-w-xl w-full">
-                    <div class="glass p-6 rounded-2xl text-center">
-                        <h2 class="text-2xl font-bold mb-4">เข้าร่วมการสนทนา</h2>
-                        <div class="flex gap-2">
-                            <input type="text" id="join-room-id-pc" placeholder="ใส่ ID ห้องที่นี่..." class="flex-1 p-3 bg-slate-800 rounded-xl border border-slate-600 focus:border-blue-500 outline-none text-center text-lg tracking-widest">
-                            <button onclick="joinRoomCheck('pc')" class="px-6 py-3 bg-blue-600 rounded-xl font-bold hover:bg-blue-500"><i class="fas fa-arrow-right"></i></button>
-                        </div>
+        <div class="flex-1 relative bg-slate-900 flex flex-col">
+            <div class="absolute inset-0 bg-[url('https://source.unsplash.com/random/1920x1080?abstract')] bg-cover opacity-10 pointer-events-none"></div>
+
+            <div id="join-interface" class="absolute inset-0 z-10 flex items-center justify-center p-4 transition-all duration-300 md:relative md:opacity-100 hidden md:flex">
+                <div class="glass p-6 rounded-2xl w-full max-w-md text-center relative shadow-2xl">
+                    
+                    <button onclick="toggleMobileSearch()" class="md:hidden absolute top-4 right-4 text-gray-400 p-2"><i class="fas fa-times text-xl"></i></button>
+
+                    <h2 class="text-2xl font-bold mb-6 text-white">เข้าร่วมการสนทนา</h2>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3 w-full">
+                        <input type="number" id="join-room-id" placeholder="ID ห้อง (4 หลัก)" class="flex-1 p-3 bg-slate-800/80 rounded-xl border border-slate-600 focus:border-blue-500 outline-none text-center text-xl tracking-widest text-white placeholder-gray-500 w-full appearance-none m-0">
+                        <button onclick="joinRoomCheck()" class="w-full sm:w-auto px-6 py-3 bg-blue-600 rounded-xl font-bold hover:bg-blue-500 transition shadow-lg whitespace-nowrap">
+                            เข้าร่วม <i class="fas fa-arrow-right ml-1"></i>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 
-    <div id="call-room" class="hidden absolute inset-0 bg-black z-50 flex flex-col">
+    <div id="call-room" class="hidden absolute inset-0 bg-black z-50 overflow-hidden touch-manipulation">
         
-        <div class="absolute top-4 left-4 z-20 glass px-4 py-2 rounded-full flex items-center gap-2">
+        <div class="absolute top-safe left-4 z-20 mt-4 glass px-3 py-1.5 rounded-full flex items-center gap-2 pointer-events-none">
             <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            <span id="room-id-display" class="font-mono font-bold text-sm">ID: 1234</span>
+            <span id="room-id-display" class="font-mono font-bold text-sm">ID: ----</span>
         </div>
 
-        <div id="video-grid" class="flex-1">
+        <div id="video-grid" onclick="toggleControls()">
             </div>
 
-        <div class="glass absolute bottom-6 left-1/2 transform -translate-x-1/2 rounded-2xl px-6 py-4 flex items-center gap-4 shadow-2xl z-50 w-[90%] md:w-auto justify-center">
+        <div id="controls-bar" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 glass rounded-2xl px-4 py-3 flex items-center justify-between gap-3 shadow-2xl z-50 w-[90%] max-w-md sm:w-auto transition-transform duration-300">
             
-            <button id="btn-mic" onclick="toggleMic()" class="w-12 h-12 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition">
+            <button id="btn-mic" onclick="stopProp(event); toggleMic()" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition text-white">
                 <i class="fas fa-microphone"></i>
             </button>
 
-            <button id="btn-sound" onclick="toggleAudioOutput()" class="w-12 h-12 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition text-green-400">
+            <button id="btn-sound" onclick="stopProp(event); toggleAudioOutput()" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition text-green-400">
                 <i class="fas fa-volume-up"></i>
             </button>
 
-            <button id="btn-cam" onclick="toggleCam()" class="w-12 h-12 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition">
+            <button id="btn-cam" onclick="stopProp(event); toggleCam()" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition text-white">
                 <i class="fas fa-video"></i>
             </button>
 
-            <button id="btn-switch" onclick="switchCamera()" class="md:hidden w-12 h-12 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition">
+            <button id="btn-switch" onclick="stopProp(event); switchCamera()" class="md:hidden w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition text-white">
                 <i class="fas fa-sync-alt"></i>
             </button>
 
-            <button id="btn-screen" onclick="shareScreen()" class="hidden md:flex w-12 h-12 rounded-full bg-slate-700 hover:bg-slate-600 items-center justify-center transition">
+            <button id="btn-screen" onclick="stopProp(event); shareScreen()" class="hidden md:flex w-12 h-12 rounded-full bg-slate-700 hover:bg-slate-600 items-center justify-center transition text-white">
                 <i class="fas fa-desktop"></i>
             </button>
 
-            <button onclick="leaveRoom()" class="w-14 h-12 rounded-full bg-red-600 hover:bg-red-500 flex items-center justify-center transition shadow-lg shadow-red-600/30">
-                <i class="fas fa-phone-slash text-xl"></i>
+            <div class="w-[1px] h-8 bg-gray-600 mx-1"></div>
+
+            <button onclick="stopProp(event); leaveRoom()" class="w-12 h-10 sm:w-14 sm:h-12 rounded-full bg-red-600 hover:bg-red-500 flex items-center justify-center transition shadow-lg shadow-red-600/30 text-white">
+                <i class="fas fa-phone-slash text-lg"></i>
             </button>
         </div>
     </div>
 
-    <div id="toast" class="fixed top-5 right-5 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-xl transform translate-x-full transition-transform duration-300 z-[100]">
-        ข้อความแจ้งเตือน
+    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl transition-all duration-300 -translate-y-20 z-[100] text-sm font-bold whitespace-nowrap">
+        แจ้งเตือน
     </div>
 
     <script>
         // ================= CONFIGURATION =================
         const firebaseConfig = {
-            apiKey: "PASTE_YOUR_FIREBASE_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "...",
-            appId: "..."
-        };
-        const AGORA_APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; 
-        
-        // ================= STATE & INIT =================
+  apiKey: "AIzaSyAcPjFpeMnidAtoKRZax92_itt37OIJSh0",
+  authDomain: "fastlast-82722.firebaseapp.com",
+  projectId: "fastlast-82722",
+  storageBucket: "fastlast-82722.firebasestorage.app",
+  messagingSenderId: "787410467682",
+  appId: "1:787410467682:web:023457e4fc97edf0448a3b",
+  measurementId: "G-3QTLT30467"
+};
+        const AGORA_APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; // ใส่ของจริง
+
+        // ================= STATE =================
         let db;
         let currentUser = JSON.parse(localStorage.getItem('realtalk_user')) || null;
-        let agoraClient;
+        let agoraClient = null;
         let localTracks = { video: null, audio: null, screen: null };
         let remoteUsers = {};
-        let isMicOn = true;
-        let isCamOn = true;
-        let isAudioOn = true;
-        let currentRoomId = null;
+        let isMicOn = true, isCamOn = true, isAudioOn = true;
+        let controlTimeout;
 
+        // Init DB
         try {
-            if (firebaseConfig.apiKey !== "PASTE_YOUR_FIREBASE_API_KEY") {
+            if (firebaseConfig.apiKey !== "PASTE_YOUR_API_KEY") {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
-            } else {
-                console.warn("Using LocalStorage Mock DB");
-                db = { mock: true }; 
-            }
-        } catch (e) { console.error("Firebase Init Error", e); }
+            } else { db = { mock: true }; }
+        } catch (e) { console.error(e); }
 
-        // ================= AUTH FUNCTIONS =================
+        // ================= APP INIT =================
         function init() {
-            if (currentUser) {
-                showDashboard();
-            } else {
-                document.getElementById('auth-screen').classList.remove('hidden');
-            }
+            if (currentUser) showDashboard();
+            else document.getElementById('auth-screen').classList.remove('hidden');
         }
 
+        // ================= AUTH =================
         function toggleAuth(mode) {
-            if(mode === 'signup') {
-                document.getElementById('login-form').classList.add('hidden');
-                document.getElementById('signup-form').classList.remove('hidden');
-            } else {
-                document.getElementById('signup-form').classList.add('hidden');
-                document.getElementById('login-form').classList.remove('hidden');
-            }
-        }
-
-        function previewImage(event) {
-            const reader = new FileReader();
-            reader.onload = function(){ document.getElementById('signup-preview').src = reader.result; };
-            reader.readAsDataURL(event.target.files[0]);
-        }
-
-        async function handleSignup() {
-            const name = document.getElementById('signup-name').value;
-            const phone = document.getElementById('signup-phone').value;
-            const fileInput = document.getElementById('signup-file');
-            
-            if(!name || !phone) return showToast('กรุณากรอกข้อมูลให้ครบ');
-
-            if(db.mock) {
-                let users = JSON.parse(localStorage.getItem('rt_users')) || [];
-                if(users.find(u => u.name === name)) return showToast('ชื่อนี้ถูกใช้แล้ว');
-                
-                let avatar = "https://via.placeholder.com/150";
-                if(fileInput.files[0]) {
-                     avatar = await toBase64(fileInput.files[0]);
-                }
-
-                const user = { name, phone, avatar, id: Date.now().toString() };
-                users.push(user);
-                localStorage.setItem('rt_users', JSON.stringify(users));
-                
-                showToast('ลงทะเบียนสำเร็จ');
-                toggleAuth('login');
-            } else {
-                // Real Firebase Logic Here
-            }
+            const login = document.getElementById('login-form');
+            const signup = document.getElementById('signup-form');
+            if(mode === 'signup') { login.classList.add('hidden'); signup.classList.remove('hidden'); }
+            else { signup.classList.add('hidden'); login.classList.remove('hidden'); }
         }
 
         function handleLogin() {
-            const name = document.getElementById('login-name').value;
-            const phone = document.getElementById('login-phone').value;
+            const name = document.getElementById('login-name').value.trim();
+            const phone = document.getElementById('login-phone').value.trim();
+            if(!name || !phone) return showToast('กรุณากรอกข้อมูล');
 
-            if(db.mock) {
-                let users = JSON.parse(localStorage.getItem('rt_users')) || [];
-                const user = users.find(u => u.name === name && u.phone === phone);
-                if(user) {
-                    currentUser = user;
-                    localStorage.setItem('realtalk_user', JSON.stringify(user));
-                    showDashboard();
-                } else {
-                    showToast('ชื่อหรือเบอร์โทรไม่ถูกต้อง');
-                }
-            } else {
-                // Real Firebase Login
+            // Mock Logic
+            let users = JSON.parse(localStorage.getItem('rt_users')) || [];
+            const user = users.find(u => u.name === name && u.phone === phone);
+            
+            if(user || db.mock) { // Allow mock login if user not found for demo
+                const finalUser = user || { name, phone, avatar: "https://via.placeholder.com/150", id: Date.now().toString() }; 
+                if(!user) { users.push(finalUser); localStorage.setItem('rt_users', JSON.stringify(users)); }
+                
+                currentUser = finalUser;
+                localStorage.setItem('realtalk_user', JSON.stringify(finalUser));
+                showDashboard();
             }
+        }
+
+        function handleSignup() {
+            const name = document.getElementById('signup-name').value.trim();
+            const phone = document.getElementById('signup-phone').value.trim();
+            
+            if(!name || !phone) return showToast('กรุณากรอกข้อมูลให้ครบ');
+            
+            let users = JSON.parse(localStorage.getItem('rt_users')) || [];
+            if(users.find(u => u.name === name)) return showToast('ชื่อนี้ถูกใช้แล้ว');
+
+            const newUser = { name, phone, avatar: document.getElementById('signup-preview').src, id: Date.now().toString() };
+            users.push(newUser);
+            localStorage.setItem('rt_users', JSON.stringify(users));
+            showToast('ลงทะเบียนสำเร็จ');
+            toggleAuth('login');
         }
 
         function logout() {
@@ -340,124 +280,99 @@
             location.reload();
         }
 
-        // ================= DASHBOARD FUNCTIONS (Updated) =================
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = e => document.getElementById('signup-preview').src = e.target.result;
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        // ================= DASHBOARD UI =================
         function showDashboard() {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
             
-            // Update Both Mobile & PC Displays
-            ['mobile', 'pc'].forEach(type => {
-                document.getElementById(`user-name-display-${type}`).innerText = currentUser.name;
-                document.getElementById(`user-phone-display-${type}`).innerText = currentUser.phone;
-                document.getElementById(`user-avatar-${type}`).src = currentUser.avatar || "https://via.placeholder.com/150";
-            });
-
+            document.getElementById('user-name-display').innerText = currentUser.name;
+            document.getElementById('user-phone-display').innerText = currentUser.phone;
+            document.getElementById('user-avatar').src = currentUser.avatar;
             loadMyRooms();
         }
 
-        function toggleMobileSearch(show) {
-            const overlay = document.getElementById('mobile-search-overlay');
-            if(show) {
-                overlay.classList.remove('hidden');
+        function toggleMobileSearch() {
+            const ui = document.getElementById('join-interface');
+            if(ui.classList.contains('hidden')) {
+                ui.classList.remove('hidden');
+                ui.classList.add('fixed', 'bg-black/90', 'z-50'); // Mobile Mode
             } else {
-                overlay.classList.add('hidden');
+                ui.classList.add('hidden');
+                ui.classList.remove('fixed', 'bg-black/90', 'z-50');
             }
         }
 
         function createRoom() {
             const roomId = Math.floor(1000 + Math.random() * 9000).toString();
             let rooms = JSON.parse(localStorage.getItem('rt_rooms_' + currentUser.name)) || [];
-            rooms.push({ id: roomId, createdBy: currentUser.name, timestamp: Date.now() });
+            rooms.push({ id: roomId, created: Date.now() });
             localStorage.setItem('rt_rooms_' + currentUser.name, JSON.stringify(rooms));
-            
             loadMyRooms();
-            showToast(`สร้างห้อง ${roomId} สำเร็จ!`);
             startCall(roomId);
         }
 
         function loadMyRooms() {
-            const listMobile = document.getElementById('room-list-mobile');
-            const listPc = document.getElementById('room-list-pc');
-            listMobile.innerHTML = '';
-            listPc.innerHTML = '';
-
+            const list = document.getElementById('room-list');
+            list.innerHTML = '';
             let rooms = JSON.parse(localStorage.getItem('rt_rooms_' + currentUser.name)) || [];
-            
-            rooms.forEach(room => {
+            rooms.forEach(r => {
                 const el = document.createElement('div');
-                el.className = 'bg-slate-800/50 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-700 transition';
-                el.innerHTML = `
-                    <div onclick="startCall('${room.id}')" class="flex-1">
-                        <span class="font-bold text-blue-400 text-lg">#${room.id}</span>
-                        <span class="text-xs text-gray-400 block">Host: You</span>
-                    </div>
-                    <button onclick="shareRoom('${room.id}')" class="text-gray-400 hover:text-white"><i class="fas fa-share-alt"></i></button>
-                `;
-                // Clone for both lists
-                listMobile.appendChild(el.cloneNode(true));
-                listPc.appendChild(el);
+                el.className = 'bg-slate-800/50 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-700 transition border border-slate-700';
+                el.innerHTML = `<span class="font-bold text-blue-400">#${r.id}</span> <i class="fas fa-chevron-right text-xs text-gray-500"></i>`;
+                el.onclick = () => startCall(r.id);
+                list.appendChild(el);
             });
         }
 
-        function joinRoomCheck(type) {
-            const id = document.getElementById(`join-room-id-${type}`).value;
-            if(id.length === 4) {
-                if(type === 'mobile') toggleMobileSearch(false);
-                startCall(id);
-            } else {
-                showToast('กรุณาใส่ ID 4 หลัก');
-            }
+        function joinRoomCheck() {
+            const id = document.getElementById('join-room-id').value;
+            if(id.length === 4) startCall(id);
+            else showToast('กรุณาใส่รหัส 4 หลัก');
         }
 
-        // ================= CALL LOGIC (AGORA SDK) - คงเดิม =================
+        // ================= CALL SYSTEM (AGORA) =================
         async function startCall(roomId) {
-            if (AGORA_APP_ID === "PASTE_YOUR_AGORA_APP_ID") {
-                alert("กรุณาใส่ Agora App ID ในโค้ดบรรทัดที่ 290 ก่อนใช้งานจริง!");
-                return;
-            }
+            if (AGORA_APP_ID.includes("PASTE")) return alert("กรุณาใส่ Agora App ID ก่อน!");
+
+            // Cleanup old session if exists (Prevents iOS Crash)
+            if(agoraClient) await leaveRoom();
 
             document.getElementById('dashboard').classList.add('hidden');
             document.getElementById('call-room').classList.remove('hidden');
             document.getElementById('room-id-display').innerText = `ID: ${roomId}`;
-            currentRoomId = roomId;
-
-            // Initialize Agora
-            agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
             
-            // Event Listeners
+            // Reset UI
+            document.getElementById('video-grid').innerHTML = '';
+            toggleControls(true); // Show controls initially
+
+            // Init Client
+            agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
             agoraClient.on("user-published", handleUserPublished);
             agoraClient.on("user-unpublished", handleUserUnpublished);
+            agoraClient.on("user-left", handleUserLeft); // Handle leaving separately
 
             try {
                 const uid = await agoraClient.join(AGORA_APP_ID, roomId, null, currentUser.name);
                 
-                // Create Local Tracks (Audio + Video)
+                // Create Tracks
                 localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
-                localTracks.video = await AgoraRTC.createCameraVideoTrack({
-                    encoderConfig: "720p_1"
-                });
+                localTracks.video = await AgoraRTC.createCameraVideoTrack({ encoderConfig: "360p_1" }); // Lower res for mobile stability
 
-                // Display Local Video
-                const playerContainer = document.createElement('div');
-                playerContainer.id = `user-container-${uid}`;
-                playerContainer.className = 'video-container relative border-2 border-blue-500';
-                playerContainer.innerHTML = `
-                    <div id="user-${uid}" class="video-player"></div>
-                    <div class="absolute bottom-2 left-2 bg-black/60 px-2 py-1 rounded text-xs font-bold">${currentUser.name} (คุณ)</div>
-                `;
-                document.getElementById('video-grid').appendChild(playerContainer);
+                // Add Local User to Grid
+                addVideoUser(uid, currentUser.name, true);
+                localTracks.video.play(`user-video-${uid}`);
                 
-                localTracks.video.play(`user-${uid}`);
-
-                // Publish
                 await agoraClient.publish([localTracks.audio, localTracks.video]);
-                
-                // Update Grid CSS
-                updateGrid();
 
-            } catch (error) {
-                console.error(error);
-                showToast("เกิดข้อผิดพลาดในการเข้าร่วม หรือห้องเต็ม");
+            } catch (err) {
+                console.error(err);
+                showToast("ไม่สามารถเข้าห้องได้ (Check App ID/Net)");
                 leaveRoom();
             }
         }
@@ -466,147 +381,162 @@
             await agoraClient.subscribe(user, mediaType);
             
             if (mediaType === 'video') {
-                if(Object.keys(remoteUsers).length >= 5) {
-                    showToast("ห้องเต็มแล้ว (สูงสุด 6 คน)");
-                    return;
+                if(!remoteUsers[user.uid]) {
+                    remoteUsers[user.uid] = user;
+                    addVideoUser(user.uid, user.uid, false);
                 }
+                // When video comes back, hide the "Camera Off" overlay
+                const overlay = document.getElementById(`cam-off-${user.uid}`);
+                if(overlay) overlay.classList.add('hidden');
 
-                remoteUsers[user.uid] = user;
-
-                const playerContainer = document.createElement('div');
-                playerContainer.id = `user-container-${user.uid}`;
-                playerContainer.className = 'video-container relative';
-                playerContainer.innerHTML = `
-                    <div id="user-${user.uid}" class="video-player"></div>
-                    <div class="absolute bottom-2 left-2 bg-black/60 px-2 py-1 rounded text-xs font-bold">${user.uid}</div>
-                `;
-                document.getElementById('video-grid').appendChild(playerContainer);
-                user.videoTrack.play(`user-${user.uid}`);
-                updateGrid();
+                user.videoTrack.play(`user-video-${user.uid}`);
             }
-
             if (mediaType === 'audio') {
                 user.audioTrack.play();
-                if (!isAudioOn) user.audioTrack.setVolume(0);
+                if(!isAudioOn) user.audioTrack.setVolume(0);
             }
         }
 
-        function handleUserUnpublished(user) {
-            const playerContainer = document.getElementById(`user-container-${user.uid}`);
-            if (playerContainer) playerContainer.remove();
+        // Modified: Handle Mute vs Leave
+        function handleUserUnpublished(user, mediaType) {
+            if (mediaType === 'video') {
+                // User turned off camera -> SHOW "Camera Off"
+                const overlay = document.getElementById(`cam-off-${user.uid}`);
+                if(overlay) overlay.classList.remove('hidden');
+            }
+        }
+
+        function handleUserLeft(user) {
+            // User actually left the room -> REMOVE Element
+            const el = document.getElementById(`user-container-${user.uid}`);
+            if(el) el.remove();
             delete remoteUsers[user.uid];
-            updateGrid();
+        }
+
+        // Helper: Add Video DOM
+        function addVideoUser(uid, name, isLocal) {
+            const grid = document.getElementById('video-grid');
+            const div = document.createElement('div');
+            div.id = `user-container-${uid}`;
+            div.className = 'video-container shadow-lg';
+            
+            // Note: playsinline is CRITICAL for iOS
+            div.innerHTML = `
+                <div id="user-video-${uid}" class="video-player w-full h-full bg-black"></div>
+                
+                <div id="cam-off-${uid}" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center z-10 hidden">
+                    <div class="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center mb-2">
+                        <span class="text-2xl font-bold uppercase text-gray-400">${name.charAt(0)}</span>
+                    </div>
+                    <p class="text-white font-bold">${name}</p>
+                    <p class="text-red-400 text-xs animate-pulse">ได้ปิดกล้องอยู่</p>
+                </div>
+
+                <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-bold text-white z-20">
+                    ${name} ${isLocal ? '(คุณ)' : ''}
+                </div>
+            `;
+            grid.appendChild(div);
         }
 
         async function leaveRoom() {
-            if(localTracks.audio) { localTracks.audio.close(); localTracks.audio = null; }
-            if(localTracks.video) { localTracks.video.close(); localTracks.video = null; }
-            if(localTracks.screen) { localTracks.screen.close(); localTracks.screen = null; }
-            
-            if(agoraClient) await agoraClient.leave();
-            
-            document.getElementById('video-grid').innerHTML = '';
+            try {
+                if(localTracks.audio) { localTracks.audio.close(); localTracks.audio = null; }
+                if(localTracks.video) { localTracks.video.close(); localTracks.video = null; }
+                if(localTracks.screen) { localTracks.screen.close(); localTracks.screen = null; }
+                if(agoraClient) await agoraClient.leave();
+            } catch(e) { console.log("Cleanup error", e); }
+
             document.getElementById('call-room').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
             remoteUsers = {};
         }
 
-        // ================= CONTROLS (คงเดิม) =================
-        function toggleMic() {
-            if(!localTracks.audio) return;
-            isMicOn = !isMicOn;
-            localTracks.audio.setMuted(!isMicOn);
-            updateBtnStyle('btn-mic', isMicOn, 'fa-microphone', 'fa-microphone-slash');
+        // ================= CONTROLS LOGIC =================
+        function toggleControls(forceShow = false) {
+            const bar = document.getElementById('controls-bar');
+            
+            if (forceShow || bar.classList.contains('controls-hidden')) {
+                // SHOW
+                bar.classList.remove('controls-hidden');
+                clearTimeout(controlTimeout);
+                controlTimeout = setTimeout(() => {
+                    bar.classList.add('controls-hidden');
+                }, 5000); // 5 Seconds Auto-hide
+            } else {
+                // HIDE
+                bar.classList.add('controls-hidden');
+            }
         }
 
+        function stopProp(e) {
+            e.stopPropagation(); // Prevent clicking button from toggling bar immediately
+            // Reset Timer on interaction
+            clearTimeout(controlTimeout);
+            controlTimeout = setTimeout(() => {
+                 document.getElementById('controls-bar').classList.add('controls-hidden');
+            }, 5000);
+        }
+
+        // Camera Logic (Show Overlay for Local)
         function toggleCam() {
             if(!localTracks.video) return;
             isCamOn = !isCamOn;
             localTracks.video.setEnabled(isCamOn);
-            updateBtnStyle('btn-cam', isCamOn, 'fa-video', 'fa-video-slash');
+            
+            updateBtn('btn-cam', isCamOn, 'fa-video', 'fa-video-slash');
+
+            // Toggle Local Overlay manually
+            const overlay = document.getElementById(`cam-off-${agoraClient.uid}`);
+            if(isCamOn) overlay.classList.add('hidden');
+            else overlay.classList.remove('hidden');
+        }
+
+        function toggleMic() {
+            if(!localTracks.audio) return;
+            isMicOn = !isMicOn;
+            localTracks.audio.setMuted(!isMicOn);
+            updateBtn('btn-mic', isMicOn, 'fa-microphone', 'fa-microphone-slash');
         }
 
         function toggleAudioOutput() {
             isAudioOn = !isAudioOn;
             const btn = document.getElementById('btn-sound');
             if(isAudioOn) {
+                btn.classList.replace('text-red-500', 'text-green-400');
                 btn.innerHTML = '<i class="fas fa-volume-up"></i>';
-                btn.classList.remove('text-red-500');
-                btn.classList.add('text-green-400');
-                Object.values(remoteUsers).forEach(u => u.audioTrack && u.audioTrack.setVolume(100));
+                Object.values(remoteUsers).forEach(u => u.audioTrack?.setVolume(100));
             } else {
+                btn.classList.replace('text-green-400', 'text-red-500');
                 btn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-                btn.classList.remove('text-green-400');
-                btn.classList.add('text-red-500');
-                Object.values(remoteUsers).forEach(u => u.audioTrack && u.audioTrack.setVolume(0));
+                Object.values(remoteUsers).forEach(u => u.audioTrack?.setVolume(0));
             }
         }
 
-        async function switchCamera() {
-            try {
-                const cameras = await AgoraRTC.getCameras();
-                if(cameras.length < 2) return showToast("ไม่พบกล้องตัวอื่น");
-                showToast("ฟีเจอร์สลับกล้องยังไม่สมบูรณ์ในตัวอย่างนี้");
-            } catch(e) { console.error(e); }
-        }
-
-        async function shareScreen() {
-            if(localTracks.screen) {
-                await agoraClient.unpublish(localTracks.screen);
-                localTracks.screen.close();
-                localTracks.screen = null;
-                await agoraClient.publish(localTracks.video);
-                document.getElementById('btn-screen').classList.remove('bg-blue-600');
-            } else {
-                try {
-                    localTracks.screen = await AgoraRTC.createScreenVideoTrack();
-                    await agoraClient.unpublish(localTracks.video);
-                    await agoraClient.publish(localTracks.screen);
-                    document.getElementById('btn-screen').classList.add('bg-blue-600');
-                } catch(e) { showToast("ยกเลิกแชร์หน้าจอ"); }
-            }
-        }
-
-        // ================= UTILS (คงเดิม) =================
-        function updateBtnStyle(id, isOn, iconOn, iconOff) {
+        function updateBtn(id, state, iconOn, iconOff) {
             const btn = document.getElementById(id);
-            if(isOn) {
+            if(state) {
+                btn.classList.replace('bg-red-500', 'bg-slate-700');
                 btn.innerHTML = `<i class="fas ${iconOn}"></i>`;
-                btn.classList.remove('bg-red-500');
-                btn.classList.add('bg-slate-700');
             } else {
+                btn.classList.replace('bg-slate-700', 'bg-red-500');
                 btn.innerHTML = `<i class="fas ${iconOff}"></i>`;
-                btn.classList.remove('bg-slate-700');
-                btn.classList.add('bg-red-500');
             }
         }
 
-        function updateGrid() {
-            const count = document.getElementById('video-grid').children.length;
-            const grid = document.getElementById('video-grid');
-            if(count === 1) grid.className = "flex items-center justify-center p-4";
-            else grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-2 w-full h-full";
-        }
-
+        // ================= UTILS =================
         function showToast(msg) {
             const t = document.getElementById('toast');
             t.innerText = msg;
-            t.classList.remove('translate-x-full');
-            setTimeout(() => t.classList.add('translate-x-full'), 3000);
+            t.classList.remove('-translate-y-20');
+            t.classList.add('translate-y-5');
+            setTimeout(() => {
+                t.classList.remove('translate-y-5');
+                t.classList.add('-translate-y-20');
+            }, 3000);
         }
 
-        function toBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
-        }
-
-        // Start App
         init();
-
     </script>
 </body>
 </html>
