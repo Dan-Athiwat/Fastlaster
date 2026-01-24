@@ -2,117 +2,143 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DanCall 3.2 - Fix Display</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DanCall 3.4 - Hybrid</title>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
         /* --- CORE THEME --- */
-        :root { --bg: #0f172a; --panel: #1e293b; --primary: #3b82f6; --danger: #ef4444; --text: #f8fafc; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        :root { 
+            --bg: #0f172a; 
+            --panel: #1e293b; 
+            --card-bg: #283040; 
+            --primary: #3b82f6; 
+            --danger: #ef4444; 
+            --text: #f8fafc; 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; width: 100vw; }
 
         .hidden { display: none !important; }
-        .btn { padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; background: var(--primary); color: white; width: 100%; margin-top: 10px; font-size: 16px; }
-        input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 10px; outline: none; font-size: 16px; }
         
-        /* Screens */
-        #auth-screen, #dashboard-screen, #room-screen, #search-mobile { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        /* Buttons & Inputs */
+        .btn { padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; background: var(--primary); color: white; width: 100%; font-size: 16px; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); opacity: 0.9; }
+        input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; background: #161e2e; color: white; margin-bottom: 15px; outline: none; font-size: 16px; }
+        input:focus { border-color: var(--primary); }
 
-        /* AUTH SCREEN */
+        /* Screens */
+        #auth-screen, #dashboard-screen, #room-screen, #search-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; }
+
+        /* --- 1. AUTH SCREEN --- */
         #auth-screen { justify-content: center; align-items: center; background: linear-gradient(135deg, #0f172a, #1e1b4b); z-index: 100; }
         .auth-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .avatar-up { width: 100px; height: 100px; border-radius: 50%; background: #334155; margin: 0 auto 20px; overflow: hidden; position: relative; border: 2px dashed #64748b; cursor: pointer; }
+        
+        /* แก้บัครูปโปรไฟล์ล้น: เพิ่ม overflow: hidden และ object-fit */
+        .avatar-up { 
+            width: 100px; height: 100px; border-radius: 50%; background: #334155; 
+            margin: 0 auto 20px; position: relative; border: 2px dashed #64748b; cursor: pointer;
+            overflow: hidden; /* บังคับตัดส่วนเกิน */
+        }
         .avatar-up img { width: 100%; height: 100%; object-fit: cover; }
         .link-text { color: var(--primary); cursor: pointer; font-size: 14px; margin-top: 15px; display: block; }
 
-        /* Dashboard */
+        /* --- 2. DASHBOARD --- */
+        #dashboard-screen { background: var(--bg); overflow-y: auto; }
+
+        /* >> MOBILE DASHBOARD (V3.3 Style) << */
+        .mobile-dash-layout { padding: 20px; }
+        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-top: 10px; }
+        .profile-sec { display: flex; align-items: center; gap: 12px; }
+        
+        /* แก้บัครูปโปรไฟล์ Mobile */
+        .profile-circle { 
+            width: 50px; height: 50px; border-radius: 50%; border: 2px solid #334155; 
+            overflow: hidden; /* บังคับตัดวงกลม */
+        }
+        .profile-circle img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .profile-sec div h3 { font-size: 18px; line-height: 1.2; font-weight: 600; margin: 0; }
+        .profile-sec div span { font-size: 13px; color: #94a3b8; }
+        .search-icon-btn { font-size: 24px; color: white; background: transparent; border: none; cursor: pointer; padding: 10px; }
+        
+        .sec-title { font-size: 20px; font-weight: 600; margin-bottom: 15px; }
+        .btn-create-big {
+            background: var(--primary); color: white; width: 100%; padding: 18px;
+            border-radius: 15px; border: none; font-size: 18px; font-weight: 600;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); cursor: pointer; margin-bottom: 20px;
+        }
+        .room-card {
+            background: var(--card-bg); padding: 15px 20px; border-radius: 12px;
+            margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: 0.2s;
+        }
+        .room-card:active { background: #334155; }
+
+        /* >> PC DASHBOARD (V3.2 Style) - Hidden by default << */
+        .pc-dash-layout { display: none; height: 100%; flex-direction: column; }
         .navbar { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: var(--panel); border-bottom: 1px solid #334155; }
         .user-info { display: flex; align-items: center; gap: 10px; }
-        .user-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
-        .dash-content { display: flex; height: calc(100% - 70px); }
-        .sidebar { width: 280px; background: var(--panel); padding: 20px; border-right: 1px solid #334155; display: flex; flex-direction: column; }
-        .main-area { flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column; color: #64748b; }
-
-        /* ROOM UI (Fixed Video Sizing) */
-        #room-screen { background: #000; z-index: 200; position: relative; }
+        .pc-avatar-circle { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; background: #334155; }
+        .pc-avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
         
+        .dash-content { display: flex; height: calc(100% - 70px); width: 100%; }
+        .pc-sidebar { width: 280px; background: var(--panel); padding: 20px; border-right: 1px solid #334155; display: flex; flex-direction: column; }
+        .pc-main { flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column; color: #64748b; }
+
+        /* --- 3. SEARCH SCREEN (Mobile Overlay) --- */
+        #search-screen { background: var(--bg); padding: 20px; z-index: 300; padding-top: 40px; }
+        .search-nav { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }
+        .search-nav i { font-size: 24px; cursor: pointer; }
+
+        /* --- 4. ROOM SCREEN --- */
+        #room-screen { background: #000; z-index: 200; position: relative; }
         .room-info-bar {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.6); padding: 8px 20px; border-radius: 30px;
+            position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.6); padding: 6px 16px; border-radius: 30px;
             display: flex; gap: 10px; align-items: center; z-index: 500; backdrop-filter: blur(5px);
-            transition: top 0.3s ease;
+            transition: top 0.3s ease; font-size: 14px;
         }
-        .room-info-bar.hide-up { top: -60px; }
+        .room-info-bar.hide-up { top: -80px; }
 
-        /* --- VIDEO GRID LOGIC --- */
+        /* >> GRID SYSTEM (Using V3.2 Logic for sizing) << */
         #video-grid {
-            flex: 1; 
-            display: grid; 
-            gap: 10px; 
-            padding: 10px;
-            align-content: center; 
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+            flex: 1; display: grid; gap: 10px; padding: 10px;
+            align-content: center; justify-content: center; width: 100%; height: 100%;
         }
 
-        /* Default Box Style */
         .video-box { 
-            position: relative; 
-            background: #222; 
-            overflow: hidden; 
-            border-radius: 15px; 
-            width: 100%; 
-            height: 100%; 
+            position: relative; background: #222; overflow: hidden; 
+            border-radius: 15px; width: 100%; height: 100%; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        
-        .video-player { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; /* เต็มกล่อง */
-            transform: rotateY(180deg); /* Mirror effect for self */
-        }
-        /* Remote videos shouldn't be mirrored usually, but fine for simple app */
-        .video-box[data-remote="true"] .video-player { transform: none; }
+        .video-player { width: 100%; height: 100%; object-fit: cover; }
 
-        /* --- GRID LAYOUTS --- */
-        
-        /* 1 คน (เราเอง): ไม่ให้เต็มจอ ให้เป็นกล่องตรงกลาง */
+        /* -- Grid Rules (V3.2 Style: ทำให้ช่องเราเล็ก ไม่เต็มจอ) -- */
         #video-grid.users-1 {
-            display: flex; /* ใช้ Flex เพื่อจัดกลาง */
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
         }
         #video-grid.users-1 .video-box {
             width: 100%;
-            max-width: 400px; /* จำกัดความกว้าง */
-            aspect-ratio: 3/4; /* สัดส่วนแนวตั้งสวยๆ */
-            height: auto;
-            max-height: 70vh;
+            max-width: 400px; /* จำกัดขนาดตาม V3.2 */
+            aspect-ratio: 3/4; /* สัดส่วนสวยงาม */
+            height: auto; max-height: 70vh;
         }
-
-        /* 2 คน: แบ่งครึ่งบนล่าง (มือถือ) / ซ้ายขวา (คอม) */
+        
         #video-grid.users-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+        #video-grid.users-3, #video-grid.users-4 { grid-template-columns: 1fr 1fr; }
         
-        /* 3-4 คน: 2 คอลัมน์ */
-        #video-grid.users-3, #video-grid.users-4 { grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; }
-        
-        /* 5-6 คน: 2 คอลัมน์ 3 แถว */
-        #video-grid.users-5, #video-grid.users-6 { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); }
-
-
         /* Avatar Mode */
         .no-cam-view {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             background: #1e293b; z-index: 2;
         }
-        .no-cam-view img { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px; border: 2px solid var(--primary); object-fit: cover; }
-        .no-cam-view span { font-size: 14px; font-weight: bold; color: white; }
+        .no-cam-view-circle { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; margin-bottom: 10px; border: 2px solid var(--primary); }
+        .no-cam-view-circle img { width: 100%; height: 100%; object-fit: cover; }
 
         /* Spinner */
         .disconnect-overlay {
@@ -123,38 +149,56 @@
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--danger); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Controls */
+        /* --- CONTROLS --- */
         .controls {
-            height: 90px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
-            display: flex; justify-content: center; align-items: center; gap: 15px;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+            display: flex; justify-content: center; align-items: center; gap: 20px;
             position: absolute; bottom: 0; width: 100%; z-index: 500;
             transition: transform 0.4s ease;
         }
         .controls.hide-down { transform: translateY(100%); }
-        .ctrl-btn { width: 55px; height: 55px; border-radius: 50%; border: none; cursor: pointer; background: #334155; color: white; font-size: 22px; display: flex; justify-content: center; align-items: center; }
+
+        .ctrl-btn { 
+            width: 55px; height: 55px; border-radius: 50%; border: none; cursor: pointer; 
+            background: #334155; color: white; font-size: 24px; 
+            display: flex; justify-content: center; align-items: center; 
+        }
         .ctrl-btn.active { background: var(--primary); }
         .ctrl-btn.danger { background: var(--danger); }
 
-        /* Responsive PC Overrides */
+        /* === MEDIA QUERIES === */
+
+        /* >> PC MODE (>768px): V3.2 Style << */
         @media (min-width: 769px) {
-            .sidebar { display: flex; }
-            .mobile-search-btn { display: none; }
+            /* Hide Mobile Dash */
+            .mobile-dash-layout { display: none; }
+            /* Show PC Dash */
+            .pc-dash-layout { display: flex; }
             
-            /* PC 1 User: Center Box */
+            /* Grid PC */
             #video-grid.users-1 .video-box { max-width: 500px; aspect-ratio: 16/9; }
-            
-            /* PC 2 Users: Side by Side */
             #video-grid.users-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
-            
-            /* PC 3+ Users */
             #video-grid.users-3, #video-grid.users-4, #video-grid.users-5, #video-grid.users-6 { 
                 grid-template-columns: repeat(3, 1fr); 
-                grid-auto-rows: 1fr; 
+            }
+            
+            /* Controls PC (V3.2 Style: Normal Padding) */
+            .controls { 
+                height: 90px; 
+                padding-bottom: 0; /* ไม่ต้องดันขึ้นเยอะ */
             }
         }
+
+        /* >> MOBILE MODE (<=768px): V3.3 Style << */
         @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .main-area { display: none; }
+            /* Show Mobile Dash, Hide PC Dash is default/handled by CSS above */
+            
+            /* Controls Mobile (V3.3 Style: Safe Area Aware) */
+            .controls {
+                height: auto;
+                padding-top: 15px;
+                padding-bottom: calc(30px + env(safe-area-inset-bottom)); /* ดันขึ้นหนีขอบล่าง */
+            }
         }
     </style>
 </head>
@@ -163,7 +207,7 @@
     <div id="auth-screen">
         <div id="login-form" class="auth-card">
             <h2>เข้าสู่ระบบ</h2>
-            <p style="color:#94a3b8; margin-bottom:20px;">DanCall 3.2</p>
+            <p style="color:#94a3b8; margin-bottom:20px;">DanCall Hybrid</p>
             <input type="text" id="login-name" placeholder="ชื่อผู้ใช้">
             <input type="tel" id="login-phone" placeholder="เบอร์โทรศัพท์">
             <button class="btn" onclick="handleLogin()">เข้าสู่ระบบ</button>
@@ -184,40 +228,66 @@
     </div>
 
     <div id="dashboard-screen" class="hidden">
-        <div class="navbar">
-            <div class="user-info">
-                <img id="nav-avatar" class="user-avatar" src="">
-                <div>
-                    <h3 id="nav-name" style="margin:0; font-size:16px;">User</h3>
-                    <span id="nav-phone" style="font-size:12px; color:#94a3b8;">08X-XXX</span>
+        
+        <div class="mobile-dash-layout">
+            <div class="dash-header">
+                <div class="profile-sec">
+                    <div class="profile-circle">
+                        <img id="mob-avatar" src="" onclick="logout()">
+                    </div>
+                    <div>
+                        <h3 id="mob-name">Name</h3>
+                        <span id="mob-id">ID: 100</span>
+                    </div>
                 </div>
+                <button class="search-icon-btn" onclick="showSearch()"><i class="fas fa-search"></i></button>
             </div>
-            <div style="display:flex; gap:10px;">
-                <input type="number" id="pc-room" placeholder="ID ห้อง" style="width:150px; margin:0; display:none;" class="pc-show">
-                <button onclick="joinRoomCheck('pc-room')" style="width:auto; margin:0; padding:8px 15px;" class="btn pc-show">เข้า</button>
-                <i class="fas fa-search mobile-show" style="font-size:24px; color:white; padding:10px;" onclick="showSearch()"></i>
+
+            <h3 class="sec-title">จัดการห้องโทร</h3>
+            
+            <button class="btn-create-big" onclick="createRoom()">
+                <i class="fas fa-plus"></i> สร้างห้องโทร
+            </button>
+
+            <div id="mobile-room-list">
+                <div class="room-card" style="opacity:0.5; pointer-events:none;"><span>ไม่มีประวัติห้อง</span></div>
             </div>
         </div>
-        <div class="dash-content">
-            <div class="sidebar">
-                <h3>จัดการห้อง</h3>
-                <button class="btn" onclick="createRoom()">+ สร้างห้อง</button>
-                <div id="room-list" style="margin-top:20px; font-size:14px; color:#94a3b8;"></div>
+
+        <div class="pc-dash-layout">
+            <div class="navbar">
+                <div class="user-info">
+                    <div class="pc-avatar-circle"><img id="nav-avatar" src=""></div>
+                    <div><h3 id="nav-name">User</h3><span id="nav-phone" style="font-size:12px; color:#94a3b8;">User</span></div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <input type="number" id="pc-room" placeholder="ID ห้อง" style="width:150px; margin:0;">
+                    <button onclick="joinRoomCheck('pc-room')" style="width:auto; margin:0; padding:8px 15px;" class="btn">เข้า</button>
+                </div>
             </div>
-            <div class="main-area">
-                <i class="fas fa-video" style="font-size:80px; margin-bottom:20px;"></i>
-                <h2>ยินดีต้อนรับ</h2>
-                <p>สร้างห้องหรือรับลิ้งค์จากเพื่อนเพื่อเริ่มคุย</p>
-                <button onclick="logout()" style="background:transparent; border:1px solid #334155; color:#94a3b8; padding:5px 15px; margin-top:20px; cursor:pointer;">ออกจากระบบ</button>
+            <div class="dash-content">
+                <div class="pc-sidebar">
+                    <h3>จัดการห้อง</h3>
+                    <button class="btn" onclick="createRoom()">+ สร้างห้อง</button>
+                    <div id="pc-room-list" style="margin-top:20px; color:#94a3b8;"></div>
+                </div>
+                <div class="pc-main">
+                    <i class="fas fa-video" style="font-size:80px; margin-bottom:20px;"></i>
+                    <h2>ยินดีต้อนรับสู่ DanCall</h2>
+                    <p>เวอร์ชั่น PC (Classic V3.2)</p>
+                    <button onclick="logout()" style="background:transparent; border:1px solid #334155; color:#94a3b8; padding:5px 15px; margin-top:20px; cursor:pointer;">ออกจากระบบ</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="search-mobile" class="hidden" style="background:var(--bg); padding:20px; z-index:300;">
-        <h2>ค้นหาห้อง</h2>
-        <input type="number" id="mob-room" placeholder="เลขห้อง">
-        <button class="btn" onclick="joinRoomCheck('mob-room')">เข้าร่วม</button>
-        <button class="btn" style="background:#334155;" onclick="hideSearch()">ยกเลิก</button>
+    <div id="search-screen" class="hidden">
+        <div class="search-nav">
+            <i class="fas fa-arrow-left" onclick="hideSearch()"></i>
+            <h2>ค้นหาห้อง</h2>
+        </div>
+        <input type="number" id="search-input" placeholder="กรอกเลขห้อง (เช่น 4686)">
+        <button class="btn" style="padding:15px; font-size:18px;" onclick="joinRoomCheck('search-input')">ค้นหาและเข้าร่วม</button>
     </div>
 
     <div id="room-screen" class="hidden" onclick="toggleControls()">
@@ -281,7 +351,6 @@
             
             const db = JSON.parse(localStorage.getItem('dc3_users_db') || "[]");
             if(db.find(u => u.name === name)) return alert("ชื่อนี้มีแล้ว");
-            if(db.find(u => u.phone === phone)) return alert("เบอร์นี้มีแล้ว");
 
             const newUser = { uid: Math.floor(Math.random()*100000), name, phone, avatar: img };
             db.push(newUser);
@@ -319,20 +388,60 @@
         function loadDashboard() {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
+            
+            // Mobile Data
+            document.getElementById('mob-name').innerText = currentUser.name;
+            document.getElementById('mob-id').innerText = "ID: " + currentUser.uid;
+            document.getElementById('mob-avatar').src = currentUser.avatar;
+
+            // PC Data
             document.getElementById('nav-name').innerText = currentUser.name;
             document.getElementById('nav-phone').innerText = currentUser.phone;
             document.getElementById('nav-avatar').src = currentUser.avatar;
-            if(window.innerWidth > 768) {
-                document.querySelectorAll('.pc-show').forEach(e => e.style.display = 'block');
-                document.querySelectorAll('.mobile-show').forEach(e => e.style.display = 'none');
+
+            updateHistory();
+        }
+
+        function updateHistory() {
+            const history = JSON.parse(localStorage.getItem('dc_history') || "[]");
+            const mobList = document.getElementById('mobile-room-list');
+            const pcList = document.getElementById('pc-room-list');
+            
+            let html = "";
+            if(history.length === 0) {
+                html = `<div class="room-card" style="opacity:0.5;"><span>ไม่มีประวัติห้อง</span></div>`;
+            } else {
+                history.forEach(room => {
+                    html += `<div class="room-card" onclick="joinRoom('${room}')">
+                        <span>ห้อง ${room}</span> <i class="fas fa-chevron-right"></i>
+                    </div>`;
+                });
+            }
+            mobList.innerHTML = html;
+            pcList.innerHTML = html;
+        }
+
+        function addToHistory(roomId) {
+            let history = JSON.parse(localStorage.getItem('dc_history') || "[]");
+            if(!history.includes(roomId)) {
+                history.unshift(roomId);
+                localStorage.setItem('dc_history', JSON.stringify(history));
             }
         }
 
-        // --- ROOM ---
-        function createRoom() { joinRoom(Math.floor(1000 + Math.random() * 9000)); }
-        function joinRoomCheck(id) { const r = document.getElementById(id).value; if(r) joinRoom(r); }
-        function showSearch() { document.getElementById('search-mobile').classList.remove('hidden'); }
-        function hideSearch() { document.getElementById('search-mobile').classList.add('hidden'); }
+        // --- NAVIGATION ---
+        function showSearch() { document.getElementById('search-screen').classList.remove('hidden'); }
+        function hideSearch() { document.getElementById('search-screen').classList.add('hidden'); }
+
+        function createRoom() { 
+            const room = Math.floor(100000 + Math.random() * 900000); 
+            joinRoom(room); 
+        }
+        function joinRoomCheck(id) { 
+            const r = document.getElementById(id).value; 
+            if(r) joinRoom(r); 
+        }
+        
         function shareLink() {
             const url = window.location.origin + window.location.pathname + "?room=" + document.getElementById('room-id-txt').innerText.split(': ')[1];
             navigator.clipboard.writeText(url).then(() => alert("คัดลอกลิ้งค์แล้ว!"));
@@ -342,8 +451,10 @@
         async function joinRoom(roomId) {
             if(!APP_ID || APP_ID.includes("ใส่")) return alert("กรุณาใส่ App ID");
 
+            addToHistory(roomId);
+            
             document.getElementById('dashboard-screen').classList.add('hidden');
-            document.getElementById('search-mobile').classList.add('hidden');
+            document.getElementById('search-screen').classList.add('hidden');
             document.getElementById('room-screen').classList.remove('hidden');
             document.getElementById('room-id-txt').innerText = "ID: " + roomId;
             
@@ -355,7 +466,7 @@
                 localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
                 localTracks.video = await AgoraRTC.createCameraVideoTrack();
                 
-                // Play Local First
+                // Play Local
                 createVideoBox(currentUser.uid, localTracks.video, currentUser.name, currentUser.avatar, true);
                 
                 await client.publish([localTracks.audio, localTracks.video]);
@@ -416,7 +527,7 @@
                 box.innerHTML = `
                     <div id="play-${uid}" class="video-player"></div>
                     <div class="no-cam-view hidden">
-                        <img src="${avatar}">
+                        <div class="no-cam-view-circle"><img src="${avatar}"></div>
                         <span>${name}</span>
                     </div>
                     <div style="position:absolute; bottom:10px; left:10px; background:rgba(0,0,0,0.6); color:white; font-size:12px; padding:2px 10px; border-radius:15px;">${name}</div>
@@ -426,7 +537,6 @@
             
             box.querySelector('.no-cam-view').classList.add('hidden');
             
-            // ต้อง play() หลังจาก append ลง DOM แล้วเสมอ
             if(track) {
                 setTimeout(() => { track.play(`play-${uid}`); }, 100);
             }
