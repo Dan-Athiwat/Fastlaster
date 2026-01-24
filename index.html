@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DanCall 4.4</title>
+    <title>DanCall 4.6 - Original UI + Call</title>
     
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/agora-rtm-sdk@1.5.1/index.js"></script>
@@ -12,280 +12,220 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* --- THEME --- */
-        :root { --bg: #0f172a; --panel: #1e293b; --card-bg: #283040; --primary: #3b82f6; --danger: #ef4444; --success: #22c55e; --text: #f8fafc; }
+        /* --- 1. THEME --- */
+        :root { --bg: #0f172a; --panel: #1e293b; --card-bg: #283040; --primary: #3b82f6; --danger: #ef4444; --success: #22c55e; --warning: #facc15; --text: #f8fafc; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; width: 100vw; }
         .hidden { display: none !important; }
 
-        /* Common Elements */
-        .btn { padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; background: var(--primary); color: white; transition: 0.2s; font-size: 14px; }
+        .btn { padding: 14px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; background: var(--primary); color: white; width: 100%; font-size: 16px; margin-top: 10px; transition: 0.2s; }
         .btn:active { transform: scale(0.98); opacity: 0.9; }
-        input { padding: 10px 15px; border-radius: 8px; border: 1px solid #334155; background: #161e2e; color: white; outline: none; font-size: 14px; }
+        input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; background: #161e2e; color: white; margin-bottom: 15px; outline: none; font-size: 16px; }
         
-        /* Layout Containers */
-        #auth-screen, #dashboard-screen, #room-screen, #friend-screen, #chat-screen, #app-permission-gate { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        #auth-screen, #dashboard-screen, #room-screen, #search-screen, #app-permission-gate, #incoming-call-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; }
 
-        /* --- 1. PC UI MATCH (เหมือนรูปที่ส่งมา) --- */
-        .pc-dash-layout { display: none; height: 100%; width: 100%; }
-        
-        /* Sidebar (Left) */
-        .pc-sidebar { 
-            width: 260px; background: #111827; border-right: 1px solid #1f2937; 
-            padding: 20px; display: flex; flex-direction: column; 
+        /* --- 2. INCOMING CALL (หน้าจอรับสาย) --- */
+        #incoming-call-screen { 
+            background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; text-align: center;
+            background-image: url('https://media.giphy.com/media/3o7bu3XilJ5BOiSGic/giphy.gif'); 
+            background-size: cover; background-blend-mode: overlay;
         }
-        .pc-sidebar h2 { font-size: 18px; margin-bottom: 20px; color: #fff; }
-        .btn-create-pc { 
-            width: 100%; padding: 12px; background: var(--primary); color: white; 
-            border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 20px;
-        }
-        .room-list-pc { flex: 1; overflow-y: auto; }
-        .pc-room-card {
-            background: #1f2937; padding: 12px; border-radius: 8px; margin-bottom: 8px;
-            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
-            color: #9ca3af; font-size: 14px; transition: 0.2s;
-        }
-        .pc-room-card:hover { background: #374151; color: white; }
+        .caller-avatar-circle { width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--success); overflow: hidden; margin: 0 auto 20px; animation: pulse-ring 2s infinite; }
+        .caller-avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+        .call-actions { display: flex; gap: 40px; margin-top: 50px; }
+        .call-btn { width: 70px; height: 70px; border-radius: 50%; border: none; font-size: 24px; color: white; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .btn-answer { background: var(--success); animation: bounce 1s infinite; }
+        .btn-decline { background: var(--danger); }
+        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        /* Main Content (Right) */
-        .pc-main { flex: 1; display: flex; flex-direction: column; background: #0f172a; position: relative; }
-        
-        /* Top Bar (Right) */
-        .pc-topbar { 
-            height: 60px; display: flex; justify-content: flex-end; align-items: center; 
-            padding: 0 20px; gap: 10px; border-bottom: 1px solid #1f2937;
-        }
-        .pc-user-profile { display: flex; align-items: center; gap: 10px; margin-right: auto; }
-        .pc-user-profile img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid #3b82f6; }
-        
-        /* ปุ่มเพื่อน + ช่องค้นหา + ปุ่มเข้า (เหมือนรูปเป๊ะ) */
-        .pc-top-actions { display: flex; gap: 10px; align-items: center; }
-        .pc-icon-btn { background: transparent; border: none; color: #fff; font-size: 18px; cursor: pointer; padding: 8px; }
-        .pc-input-room { width: 150px; background: #111827; border: 1px solid #374151; }
-        .btn-join-pc { background: var(--primary); color: white; padding: 8px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+        /* --- 3. ROOM SAVE UI (ขอบเหลือง) --- */
+        .room-card.saved-room { border: 2px solid var(--warning); box-shadow: 0 0 10px rgba(250, 204, 21, 0.3); }
+        .save-btn { background: rgba(0,0,0,0.5); border: none; color: #94a3b8; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; }
+        .save-btn.active { color: var(--warning); }
 
-        /* Center Content */
-        .pc-center-view { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #64748b; }
+        /* --- 4. DASHBOARD & AUTH (V3.9.1 Style) --- */
+        #app-permission-gate { justify-content: center; align-items: center; background: rgba(0,0,0,0.95); z-index: 999; padding: 20px; text-align: center; }
+        .perm-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 100%; max-width: 350px; border: 1px solid #334155; }
         
-        /* --- 2. MOBILE UI (V3.9.1 Original + Friend Btn) --- */
-        .mobile-dash-layout { display: flex; flex-direction: column; height: 100%; padding: 20px; overflow-y: auto; }
-        .mob-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-top: 10px; }
-        .mob-profile { display: flex; align-items: center; gap: 12px; }
-        .mob-avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #334155; overflow: hidden; }
-        .mob-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* Mobile Top Right Icons */
-        .mob-actions { display: flex; gap: 15px; }
-        .mob-icon-btn { font-size: 24px; color: white; background: transparent; border: none; cursor: pointer; }
+        #auth-screen { justify-content: center; align-items: center; background: linear-gradient(135deg, #0f172a, #1e1b4b); z-index: 100; }
+        .auth-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; }
+        .avatar-up, .profile-circle, .pc-avatar-circle { border-radius: 50%; overflow: hidden; display: flex; justify-content: center; align-items: center; background: #334155; }
+        .avatar-up { width: 100px; height: 100px; margin: 0 auto 20px; border: 2px dashed #64748b; }
+        .profile-circle { width: 50px; height: 50px; border: 2px solid #334155; }
+        .pc-avatar-circle { width: 45px; height: 45px; }
+        img { width: 100%; height: 100%; object-fit: cover; }
 
-        .btn-create-mob { 
-            width: 100%; padding: 18px; background: var(--primary); color: white; 
-            border: none; border-radius: 15px; font-size: 18px; font-weight: 600; 
-            display: flex; justify-content: center; align-items: center; gap: 10px;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); margin-bottom: 20px;
-        }
-        .mob-room-card { 
-            background: var(--card-bg); padding: 15px 20px; border-radius: 12px; 
-            margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; 
-            cursor: pointer; 
-        }
+        #dashboard-screen { background: var(--bg); overflow-y: auto; }
+        .mobile-dash-layout { padding: 20px; }
+        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-top: 10px; }
+        .profile-sec { display: flex; align-items: center; gap: 12px; }
+        .search-icon-btn { font-size: 24px; color: white; background: transparent; border: none; padding: 10px; }
+        .btn-create-big { background: var(--primary); color: white; width: 100%; padding: 18px; border-radius: 15px; border: none; font-size: 18px; display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .room-card { background: var(--card-bg); padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
 
-        /* --- 3. ROOM UI (V3.9.1 Strict - Small Local) --- */
+        .pc-dash-layout { display: none; height: 100%; flex-direction: column; }
+        .navbar { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: var(--panel); border-bottom: 1px solid #334155; }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .pc-sidebar { width: 280px; background: var(--panel); padding: 20px; border-right: 1px solid #334155; display: flex; flex-direction: column; }
+        .pc-main { flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column; color: #64748b; }
+        .dash-content { display: flex; height: calc(100% - 70px); width: 100%; }
+
+        #search-screen { background: var(--bg); padding: 20px; z-index: 300; padding-top: 40px; }
+
+        /* --- 5. ROOM UI (V3.9.1 Strict - Screen Share & Small View) --- */
         #room-screen { background: #000; z-index: 200; position: relative; }
-        .room-info-bar { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 6px 16px; border-radius: 30px; display: flex; gap: 10px; align-items: center; z-index: 500; font-size: 14px; transition: top 0.3s ease; }
+        .room-info-bar { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 6px 16px; border-radius: 30px; display: flex; gap: 10px; align-items: center; z-index: 500; backdrop-filter: blur(5px); font-size: 14px; transition: top 0.3s ease; }
         .room-info-bar.hide-up { top: -80px; }
 
         #video-grid { flex: 1; display: grid; gap: 10px; padding: 10px; align-content: center; justify-content: center; width: 100%; height: 100%; }
         .video-box { position: relative; background: #222; overflow: hidden; border-radius: 15px; width: 100%; height: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .video-player { width: 100%; height: 100%; object-fit: cover; background: black; }
         
-        /* Grid Logic V3.9.1 */
+        /* *** จุดสำคัญ V3.9.1: ทำให้จอเล็กเมื่ออยู่คนเดียว *** */
         #video-grid.users-1 { display: flex; align-items: center; justify-content: center; }
-        #video-grid.users-1 .video-box { width: 100%; max-width: 400px; aspect-ratio: 3/4; height: auto; max-height: 70vh; }
+        #video-grid.users-1 .video-box { 
+            width: 100%; 
+            max-width: 400px; /* บังคับขนาดไม่ให้เต็มจอ */
+            aspect-ratio: 3/4; /* สัดส่วนแนวตั้งสวยๆ */
+            height: auto; 
+            max-height: 70vh; 
+        }
+
         #video-grid.users-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
         #video-grid.users-3 { grid-template-columns: 1fr 1fr; }
 
-        /* Fix Profile Circle in Room */
         .no-cam-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #1e293b; z-index: 5; }
         .no-cam-view.hidden { display: none !important; }
-        .room-avatar-circle { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid var(--primary); margin-bottom: 10px; display: flex; justify-content: center; align-items: center; background: #000; }
-        .room-avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-room-circle { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--primary); overflow: hidden; display: flex; justify-content: center; align-items: center; margin-bottom: 10px; background: black; }
 
         .controls { background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; gap: 20px; position: absolute; bottom: 0; width: 100%; z-index: 500; transition: transform 0.4s ease; height: auto; padding-top: 15px; padding-bottom: calc(30px + env(safe-area-inset-bottom)); }
         .controls.hide-down { transform: translateY(100%); }
         .ctrl-btn { width: 55px; height: 55px; border-radius: 50%; border: none; cursor: pointer; background: #334155; color: white; font-size: 24px; display: flex; justify-content: center; align-items: center; }
+        .ctrl-btn.active { background: var(--primary); }
         .ctrl-btn.danger { background: var(--danger); }
 
-        /* --- 4. FRIEND & CHAT (V4.2 Cloud) --- */
-        #friend-screen { background: var(--bg); z-index: 150; }
-        .friend-content { flex: 1; padding: 20px; overflow-y: auto; padding-bottom: 80px; }
-        .friend-tabs { position: absolute; bottom: 0; width: 100%; height: 70px; background: var(--panel); display: flex; justify-content: space-around; border-top: 1px solid #334155; padding-bottom: env(safe-area-inset-bottom); }
-        .tab-btn { background: transparent; border: none; color: #64748b; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 5px; width: 50%; }
-        .tab-btn.active { color: var(--primary); }
-        .user-card { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .uc-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #4b5563; }
-        .online-dot { width: 10px; height: 10px; background: #9ca3af; border-radius: 50%; position: absolute; bottom: 0; right: 0; border: 2px solid var(--card-bg); }
-        
-        #chat-screen { background: #0b1120; z-index: 200; }
-        .chat-header { height: 60px; background: var(--panel); display: flex; align-items: center; padding: 0 15px; gap: 10px; border-bottom: 1px solid #334155; }
-        .chat-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .chat-footer { height: 70px; background: var(--panel); padding: 10px; display: flex; gap: 10px; align-items: center; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
-        .msg { max-width: 70%; padding: 10px 15px; border-radius: 15px; font-size: 14px; }
-        .msg.me { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
-        .msg.friend { align-self: flex-start; background: #334155; color: #e2e8f0; border-bottom-left-radius: 2px; }
+        .disconnect-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--danger); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Notifications */
-        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #22c55e; color: white; padding: 10px 20px; border-radius: 20px; z-index: 2000; opacity: 0; pointer-events: none; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        #toast.show { top: 40px; opacity: 1; }
-
-        /* Auth & Gate */
-        #auth-screen, #app-permission-gate { justify-content: center; align-items: center; background: linear-gradient(135deg, #0f172a, #1e1b4b); z-index: 100; }
-        .auth-card, .perm-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; }
-        
-        /* Media Queries */
         @media (min-width: 769px) {
             .mobile-dash-layout { display: none; }
             .pc-dash-layout { display: flex; }
+            #video-grid.users-1 .video-box { max-width: 500px; aspect-ratio: 16/9; }
             .controls { height: 90px; padding-bottom: 0; }
-            #video-grid.users-1 .video-box { max-width: 500px; aspect-ratio: 16/9; } /* PC ให้จอใหญ่ขึ้นนิดนึง แต่ยังคง ratio */
         }
     </style>
 </head>
 <body>
 
-    <div id="toast"><i class="fas fa-comment"></i> <span id="toast-msg">ข้อความใหม่</span></div>
+    <div id="incoming-call-screen" class="hidden">
+        <div class="caller-avatar-circle"><img id="caller-img" src=""></div>
+        <h2 id="caller-name">สายเรียกเข้า...</h2>
+        <p id="caller-id" style="color:#94a3b8;">ID: ...</p>
+        <div class="call-actions">
+            <button class="call-btn btn-decline" onclick="rejectCall()"><i class="fas fa-phone-slash"></i></button>
+            <button class="call-btn btn-answer" onclick="acceptCall()"><i class="fas fa-phone"></i></button>
+        </div>
+    </div>
 
     <div id="app-permission-gate" class="hidden">
         <div class="perm-card">
+            <i class="fas fa-cog perm-icon"></i>
             <h3>อนุญาตสิทธิ์</h3>
-            <p style="color:#94a3b8; font-size:14px;">แอพต้องการใช้กล้อง/ไมค์</p>
-            <button class="btn" style="width:100%; margin-top:20px;" onclick="apkRequestPermission()">อนุญาต (Allow)</button>
+            <button class="btn" style="background:var(--success);" onclick="apkRequestPermission()">อนุญาต (Allow)</button>
         </div>
     </div>
 
     <div id="auth-screen">
         <div id="login-form" class="auth-card">
             <h2>เข้าสู่ระบบ</h2>
-            <input type="text" id="login-name" placeholder="ชื่อผู้ใช้" style="width:100%; margin-bottom:10px;">
-            <input type="tel" id="login-phone" placeholder="เบอร์โทรศัพท์ (ID)" style="width:100%; margin-bottom:10px;">
-            <button class="btn" style="width:100%;" onclick="handleLogin()">เข้าสู่ระบบ</button>
-            <p style="color:var(--primary); cursor:pointer; margin-top:10px;" onclick="toggleAuth('signup')">สร้างบัญชีใหม่</p>
+            <input type="text" id="login-name" placeholder="ชื่อผู้ใช้">
+            <input type="tel" id="login-phone" placeholder="เบอร์โทรศัพท์ (ID)">
+            <button class="btn" onclick="handleLogin()">เข้าสู่ระบบ</button>
+            <span class="link-text" onclick="toggleAuth('signup')">สร้างผู้ใช้ใหม่</span>
         </div>
         <div id="signup-form" class="auth-card hidden">
-            <h2>สร้างบัญชี</h2>
-            <div style="width:100px; height:100px; border-radius:50%; background:#334155; margin:0 auto 20px; overflow:hidden; border:2px dashed #64748b;" onclick="document.getElementById('file-input').click()">
-                <img id="preview-img" src="https://via.placeholder.com/100" style="width:100%; height:100%; object-fit:cover;">
-                <input type="file" id="file-input" hidden onchange="loadFile(event)">
-            </div>
-            <input type="text" id="signup-name" placeholder="ชื่อผู้ใช้" style="width:100%; margin-bottom:10px;">
-            <input type="tel" id="signup-phone" placeholder="เบอร์โทรศัพท์" style="width:100%; margin-bottom:10px;">
-            <button class="btn" style="width:100%;" onclick="handleSignup()">ยืนยัน</button>
-            <p style="color:var(--primary); cursor:pointer; margin-top:10px;" onclick="toggleAuth('login')">กลับ</p>
+            <h2>สร้างชื่อผู้ใช้</h2>
+            <div class="avatar-up" onclick="document.getElementById('file-input').click()"><img id="preview-img" src="https://via.placeholder.com/100"><input type="file" id="file-input" hidden accept="image/*" onchange="loadFile(event)"></div>
+            <input type="text" id="signup-name" placeholder="ตั้งชื่อผู้ใช้">
+            <input type="tel" id="signup-phone" placeholder="เบอร์โทรศัพท์">
+            <button class="btn" onclick="handleSignup()">ยืนยัน</button>
+            <span class="link-text" onclick="toggleAuth('login')">กลับ</span>
         </div>
     </div>
 
     <div id="dashboard-screen" class="hidden">
-        
         <div class="mobile-dash-layout">
-            <div class="mob-header">
-                <div class="mob-profile">
-                    <div class="mob-avatar"><img id="mob-avatar" src=""></div>
-                    <div><h3 id="mob-name" style="margin:0;">User</h3><span id="mob-id" style="font-size:12px; color:#94a3b8;">ID</span></div>
+            <div class="dash-header">
+                <div class="profile-sec">
+                    <div class="profile-circle"><img id="mob-avatar" src="" onclick="logout()"></div>
+                    <div><h3 id="mob-name">User</h3><span id="mob-id">ID</span></div>
                 </div>
-                <div class="mob-actions">
-                    <button class="mob-icon-btn" onclick="openFriendScreen()"><i class="fas fa-user-friends"></i></button>
-                    <button class="mob-icon-btn" onclick="openRoomSearch()"><i class="fas fa-search"></i></button>
-                </div>
+                <button class="search-icon-btn" onclick="showSearch()"><i class="fas fa-search"></i></button>
             </div>
-            <h3 style="font-size:20px; font-weight:600; margin-bottom:15px;">จัดการห้อง</h3>
-            <button class="btn-create-mob" onclick="createRoom()">+ สร้างห้อง</button>
+            <h3 style="font-size:20px; font-weight:600; margin-bottom:15px;">จัดการห้องโทร</h3>
+            <button class="btn-create-big" onclick="createRoom()"><i class="fas fa-plus"></i> สร้างห้องโทร</button>
             <div id="mobile-room-list"></div>
         </div>
-
         <div class="pc-dash-layout">
-            <div class="pc-sidebar">
-                <h2>จัดการห้อง</h2>
-                <button class="btn-create-pc" onclick="createRoom()">+ สร้างห้อง</button>
-                <div id="pc-room-list" class="room-list-pc"></div>
-            </div>
-            
-            <div class="pc-main">
-                <div class="pc-topbar">
-                    <div class="pc-user-profile">
-                        <img id="nav-avatar" src="">
-                        <span id="nav-name" style="font-weight:600; font-size:14px;">User</span>
-                    </div>
-                    
-                    <div class="pc-top-actions">
-                        <button class="pc-icon-btn" onclick="openFriendScreen()"><i class="fas fa-user-friends"></i></button>
-                        <input type="number" id="pc-room-input" class="pc-input-room" placeholder="ID ห้อง">
-                        <button class="btn-join-pc" onclick="joinRoomCheck('pc-room-input')">เข้า</button>
-                    </div>
+            <div class="navbar">
+                <div class="user-info">
+                    <div class="pc-avatar-circle"><img id="nav-avatar" src=""></div>
+                    <div><h3 id="nav-name">User</h3><span id="nav-phone" style="font-size:12px; color:#94a3b8;">User</span></div>
                 </div>
-
-                <div class="pc-center-view">
-                    <i class="fas fa-video" style="font-size:80px; margin-bottom:20px; opacity:0.5;"></i>
+                <div style="display:flex; gap:10px;">
+                    <input type="number" id="pc-room" placeholder="ID ห้อง" style="width:150px; margin:0;">
+                    <button onclick="joinRoomCheck('pc-room')" style="width:auto; margin:0; padding:8px 15px;" class="btn">เข้า</button>
+                </div>
+            </div>
+            <div class="dash-content">
+                <div class="pc-sidebar">
+                    <h3>จัดการห้อง</h3>
+                    <button class="btn" onclick="createRoom()">+ สร้างห้อง</button>
+                    <div id="pc-room-list" style="margin-top:20px; color:#94a3b8;"></div>
+                </div>
+                <div class="pc-main">
+                    <i class="fas fa-video" style="font-size:80px; margin-bottom:20px;"></i>
                     <p>DanCall PC</p>
-                    <button onclick="logout()" style="background:transparent; border:1px solid #334155; color:#64748b; padding:5px 15px; margin-top:20px; border-radius:5px; cursor:pointer;">ออกจากระบบ</button>
+                    <button onclick="logout()" style="background:transparent; border:1px solid #334155; color:#94a3b8; padding:5px 15px; margin-top:20px;">ออกจากระบบ</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="friend-screen" class="hidden">
-        <div style="padding:20px; background:var(--panel); border-bottom:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="margin:0;">เพื่อน</h3>
-            <i class="fas fa-times" style="font-size:24px; cursor:pointer;" onclick="closeFriendScreen()"></i>
-        </div>
-        <div id="tab-friend-list" class="friend-content"></div>
-        <div id="tab-add-friend" class="friend-content hidden">
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <input type="text" id="search-friend-input" placeholder="ใส่ ID เพื่อน (Cloud)" style="flex:1; margin:0;">
-                <button class="btn" style="width:auto;" onclick="searchUserGlobal()">ค้นหา</button>
-            </div>
-            <div id="search-result-area"></div>
-        </div>
-        <div class="friend-tabs">
-            <button class="tab-btn active" onclick="switchFriendTab('list')"><i class="fas fa-user-friends" style="font-size:20px; margin-bottom:5px;"></i> เพื่อน</button>
-            <button class="tab-btn" onclick="switchFriendTab('add')"><i class="fas fa-user-plus" style="font-size:20px; margin-bottom:5px;"></i> เพิ่มเพื่อน</button>
-        </div>
-    </div>
-
-    <div id="chat-screen" class="hidden">
-        <div class="chat-header">
-            <i class="fas fa-arrow-left" style="font-size:20px; cursor:pointer;" onclick="closeChat()"></i>
-            <img id="chat-head-img" src="">
-            <span id="chat-head-name" style="font-weight:600;">Name</span>
-        </div>
-        <div id="chat-body" class="chat-body"></div>
-        <div class="chat-footer">
-            <input type="text" id="msg-input" placeholder="ข้อความ..." style="flex:1; margin:0;">
-            <button class="btn" style="width:auto; border-radius:50%; width:45px; height:45px; padding:0; display:flex; justify-content:center; align-items:center;" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-        </div>
+    <div id="search-screen" class="hidden">
+        <div class="search-nav" style="display:flex; gap:15px; padding-bottom:20px;"><i class="fas fa-arrow-left" style="font-size:24px;" onclick="hideSearch()"></i><h2>ค้นหาห้อง</h2></div>
+        <input type="number" id="search-input" placeholder="กรอกเลขห้อง">
+        <button class="btn" onclick="joinRoomCheck('search-input')">ค้นหา</button>
     </div>
 
     <div id="room-screen" class="hidden" onclick="toggleControls()">
         <div class="room-info-bar" id="top-bar">
             <span style="color:white; font-weight:bold;" id="room-id-txt">ID</span>
-            <i class="fas fa-copy" style="margin-left:10px; cursor:pointer;" onclick="copyLink()"></i>
+            <button id="btn-save-room" class="save-btn" onclick="toggleSaveRoom()" style="margin-left:10px;"><i class="fas fa-star"></i></button>
+            <button onclick="shareLink()" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:50%; width:30px; height:30px; margin-left:5px;"><i class="fas fa-link"></i></button>
         </div>
         <div id="video-grid"></div>
         <div class="controls" id="control-bar" onclick="event.stopPropagation()">
             <button class="ctrl-btn" id="btn-mic" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
             <button class="ctrl-btn" id="btn-cam" onclick="toggleCam()"><i class="fas fa-video"></i></button>
+            <button class="ctrl-btn" id="btn-screen" onclick="shareScreen()"><i class="fas fa-desktop"></i></button>
             <button class="ctrl-btn danger" onclick="leaveRoom()"><i class="fas fa-phone-slash"></i></button>
         </div>
     </div>
 
-    <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+    <audio id="ringtone" src="https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3" loop></audio>
 
     <script>
         const APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; 
         
         let client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-        let localTracks = { video: null, audio: null };
-        let rtmClient, currentUser, currentChatFriend;
-        let disconnectTimers = {}, controlsTimeout;
+        let rtmClient; 
+        let localTracks = { video: null, audio: null, screen: null };
+        let currentUser = null, currentRoomId = null, incomingCallRoom = null;
+        let controlsTimeout, disconnectTimers = {};
+        let isSharing = false;
 
         function isAndroidApp() {
             const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -296,203 +236,124 @@
             const saved = localStorage.getItem('dc3_active_user');
             const urlParams = new URLSearchParams(window.location.search);
             const inviteRoom = urlParams.get('room');
-
             if(saved) {
                 currentUser = JSON.parse(saved);
-                if(!currentUser.friends) currentUser.friends = [];
-                await initRTM();
+                await initSignal();
                 if(inviteRoom) handleJoinFlow(inviteRoom); else loadDashboard();
             }
         };
 
-        // --- RTM Cloud ---
-        async function initRTM() {
+        // --- SIGNALING (CALL) ---
+        async function initSignal() {
             if(!APP_ID || APP_ID.includes("ใส่")) return;
             try {
                 rtmClient = AgoraRTM.createInstance(APP_ID);
                 await rtmClient.login({ uid: currentUser.uid.toString() });
-                await rtmClient.addOrUpdateLocalUserAttributes({ name: currentUser.name, avatar: currentUser.avatar });
-                rtmClient.on('MessageFromPeer', ({ text }, peerId) => handleIncomingMessage(peerId, text));
-                checkOnline();
-            } catch(e){ console.log(e); }
-        }
-
-        async function checkOnline() {
-            if(!rtmClient || !currentUser.friends.length) return;
-            const ids = currentUser.friends.map(f => f.uid.toString());
-            try {
-                const status = await rtmClient.queryPeersOnlineStatus(ids);
-                currentUser.friends.forEach(f => {
-                    const el = document.getElementById(`status-${f.uid}`);
-                    if(el) el.style.background = status[f.uid.toString()] ? '#22c55e' : '#9ca3af';
+                rtmClient.on('MessageFromPeer', ({ text }, peerId) => {
+                    const msg = JSON.parse(text);
+                    if(msg.type === 'call') showIncomingCall(msg.room, msg.name, msg.avatar);
                 });
-            } catch(e){}
+            } catch (err) { console.log(err); }
         }
-
-        async function searchUserGlobal() {
-            const key = document.getElementById('search-friend-input').value.trim();
-            if(!key) return;
-            document.getElementById('search-result-area').innerHTML = `<p style="text-align:center;color:#94a3b8;">ค้นหา...</p>`;
+        async function sendCallSignal(targetId) {
+            if(!rtmClient) return;
             try {
-                const attr = await rtmClient.getUserAttributes(key);
-                if(attr && attr.name) {
-                    const isFriend = currentUser.friends.some(f => f.uid.toString() === key);
-                    document.getElementById('search-result-area').innerHTML = `
-                    <div class="user-card" style="border:1px solid #3b82f6; margin-top:15px;">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <img src="${attr.avatar}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
-                            <div><div style="font-weight:600;">${attr.name}</div><div style="font-size:12px; color:#94a3b8;">ID: ${key}</div></div>
-                        </div>
-                        <button class="btn" style="padding:5px 10px; background:${isFriend?'#334155':'var(--primary)'}" onclick="toggleFriend('${key}', '${attr.name}', '${attr.avatar}')">${isFriend?'ลบ':'เพิ่ม'}</button>
-                    </div>`;
-                } else document.getElementById('search-result-area').innerHTML = `<p style="text-align:center;color:#ef4444;">ไม่พบผู้ใช้</p>`;
-            } catch(e) { document.getElementById('search-result-area').innerHTML = `<p style="text-align:center;color:#ef4444;">ไม่พบผู้ใช้</p>`; }
+                const payload = JSON.stringify({ type: 'call', room: targetId, name: currentUser.name, avatar: currentUser.avatar });
+                await rtmClient.sendMessageToPeer({ text: payload }, targetId.toString());
+            } catch(e) {}
         }
 
-        function toggleFriend(uid, name, avatar) {
-            const idx = currentUser.friends.findIndex(f => f.uid.toString() === uid);
-            if(idx === -1) {
-                currentUser.friends.push({ uid, name, avatar });
-                alert("เพิ่มแล้ว");
-                rtmClient.sendMessageToPeer({ text: "👋 เพิ่มเพื่อนแล้ว" }, uid).catch(()=>{});
-            } else {
-                currentUser.friends.splice(idx, 1);
-                alert("ลบแล้ว");
-            }
-            localStorage.setItem('dc3_active_user', JSON.stringify(currentUser));
-            searchUserGlobal(); renderFriendList();
+        // --- CALL UI ---
+        function showIncomingCall(roomId, name, avatar) {
+            incomingCallRoom = roomId;
+            document.getElementById('incoming-call-screen').classList.remove('hidden');
+            document.getElementById('caller-name').innerText = name + " โทรมา...";
+            document.getElementById('caller-id').innerText = "ห้อง: " + roomId;
+            document.getElementById('caller-img').src = avatar || "https://via.placeholder.com/150";
+            document.getElementById('ringtone').play().catch(()=>{});
+        }
+        function acceptCall() { document.getElementById('ringtone').pause(); document.getElementById('incoming-call-screen').classList.add('hidden'); if(incomingCallRoom) handleJoinFlow(incomingCallRoom); }
+        function rejectCall() { document.getElementById('ringtone').pause(); document.getElementById('incoming-call-screen').classList.add('hidden'); incomingCallRoom = null; }
+
+        // --- ROOM SAVE ---
+        function toggleSaveRoom() {
+            if(!currentRoomId) return;
+            let h = JSON.parse(localStorage.getItem('dc_history_v2') || "[]");
+            let idx = h.findIndex(r => r.id === currentRoomId);
+            let saved = false;
+            if(idx > -1) { h[idx].saved = !h[idx].saved; saved = h[idx].saved; } 
+            else { h.unshift({ id: currentRoomId, saved: true }); saved = true; }
+            localStorage.setItem('dc_history_v2', JSON.stringify(h));
+            updateSaveBtnUI(saved);
+        }
+        function updateSaveBtnUI(s) {
+            const btn = document.getElementById('btn-save-room');
+            if(s) { btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-star"></i>'; } 
+            else { btn.classList.remove('active'); btn.innerHTML = '<i class="far fa-star"></i>'; }
+        }
+        function checkIsSaved(rid) {
+            let h = JSON.parse(localStorage.getItem('dc_history_v2') || "[]");
+            const r = h.find(x => x.id === rid);
+            updateSaveBtnUI(r ? r.saved : false);
+        }
+        function addToHistory(rid) {
+            let h = JSON.parse(localStorage.getItem('dc_history_v2') || "[]");
+            if(!h.find(x => x.id === rid)) { h.unshift({ id: rid, saved: false }); localStorage.setItem('dc_history_v2', JSON.stringify(h)); }
         }
 
-        // --- Chat ---
-        function handleIncomingMessage(id, text) {
-            document.getElementById('notif-sound').play().catch(()=>{});
-            if(currentChatFriend && currentChatFriend.uid.toString() === id) renderMsg(text, 'friend');
-            else {
-                const f = currentUser.friends.find(x => x.uid.toString() === id);
-                const t = document.getElementById('toast');
-                document.getElementById('toast-msg').innerText = `ข้อความจาก ${f ? f.name : id}`;
-                t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
-            }
-        }
-        async function sendMessage() {
-            const inp = document.getElementById('msg-input');
-            const txt = inp.value.trim();
-            if(!txt || !currentChatFriend) return;
-            try {
-                await rtmClient.sendMessageToPeer({ text: txt }, currentChatFriend.uid.toString());
-                renderMsg(txt, 'me'); inp.value = '';
-            } catch(e) { alert("ส่งไม่ได้ (เพื่อนออฟไลน์)"); }
-        }
-        function renderMsg(txt, type) {
-            const div = document.createElement('div');
-            div.className = `msg ${type}`; div.innerText = txt;
-            const b = document.getElementById('chat-body');
-            b.appendChild(div); b.scrollTop = b.scrollHeight;
+        // --- DASHBOARD ---
+        function updateHistory() {
+            let old = JSON.parse(localStorage.getItem('dc_history') || "[]");
+            let h = JSON.parse(localStorage.getItem('dc_history_v2') || "[]");
+            if(old.length > 0) { old.forEach(id => { if(!h.find(r => r.id === id)) h.push({id:id, saved:false}); }); localStorage.setItem('dc_history_v2', JSON.stringify(h)); localStorage.removeItem('dc_history'); }
+            
+            const html = h.length ? h.map(i => `<div class="room-card ${i.saved?'saved-room':''}" onclick="handleJoinFlow('${i.id}')"><span>ห้อง ${i.id} ${i.saved?'<i class="fas fa-star" style="color:var(--warning)"></i>':''}</span> <i class="fas fa-chevron-right"></i></div>`).join('') : `<div style="text-align:center;opacity:0.5;">ไม่มีประวัติ</div>`;
+            document.getElementById('mobile-room-list').innerHTML = html; document.getElementById('pc-room-list').innerHTML = html;
         }
 
-        // --- Core UI & Logic ---
-        function handleLogin() {
-            const name = document.getElementById('login-name').value;
-            const phone = document.getElementById('login-phone').value;
-            const db = JSON.parse(localStorage.getItem('dc3_users_db') || "[]");
-            const user = db.find(u => u.name === name && u.phone === phone);
-            if(user) { currentUser = user; localStorage.setItem('dc3_active_user', JSON.stringify(user)); initRTM(); loadDashboard(); } 
-            else alert("ไม่พบข้อมูล");
-        }
-        function handleSignup() {
-            const name = document.getElementById('signup-name').value;
-            const phone = document.getElementById('signup-phone').value;
-            const img = document.getElementById('preview-img').src;
-            if(!name || !phone) return alert("กรอกให้ครบ");
-            const db = JSON.parse(localStorage.getItem('dc3_users_db') || "[]");
-            db.push({ uid: phone, name, phone, avatar: img, friends: [] });
-            localStorage.setItem('dc3_users_db', JSON.stringify(db));
-            alert("สมัครสำเร็จ"); toggleAuth('login');
-        }
-        function loadFile(e) { const r = new FileReader(); r.onload=ev=>document.getElementById('preview-img').src=ev.target.result; r.readAsDataURL(e.target.files[0]); }
+        // --- CORE ---
         function toggleAuth(m) { document.getElementById('login-form').classList.toggle('hidden'); document.getElementById('signup-form').classList.toggle('hidden'); }
-        function logout() { localStorage.removeItem('dc3_active_user'); if(rtmClient) rtmClient.logout(); window.location.reload(); }
+        function loadFile(e) { const r = new FileReader(); r.onload=ev=>document.getElementById('preview-img').src=ev.target.result; r.readAsDataURL(e.target.files[0]); }
+        function handleSignup() {
+            const name=document.getElementById('signup-name').value; const phone=document.getElementById('signup-phone').value; const img=document.getElementById('preview-img').src;
+            if(!name||!phone) return alert("กรอกให้ครบ");
+            const db=JSON.parse(localStorage.getItem('dc3_users_db')||"[]");
+            db.push({uid:phone, name, phone, avatar:img}); localStorage.setItem('dc3_users_db', JSON.stringify(db));
+            alert("สำเร็จ"); toggleAuth('login');
+        }
+        function handleLogin() {
+            const name=document.getElementById('login-name').value; const phone=document.getElementById('login-phone').value;
+            const user=(JSON.parse(localStorage.getItem('dc3_users_db')||"[]")).find(u=>u.name===name && u.phone===phone);
+            if(user){ currentUser=user; localStorage.setItem('dc3_active_user', JSON.stringify(user)); initSignal(); loadDashboard(); } else alert("ไม่พบข้อมูล");
+        }
+        function logout() { localStorage.removeItem('dc3_active_user'); if(rtmClient)rtmClient.logout(); window.location.href=window.location.pathname.split('?')[0]; }
 
         function loadDashboard() {
-            document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('dashboard-screen').classList.remove('hidden');
-            
-            // Mobile Data
-            document.getElementById('mob-name').innerText = currentUser.name;
-            document.getElementById('mob-id').innerText = "ID: " + currentUser.uid;
-            document.getElementById('mob-avatar').src = currentUser.avatar;
-            
-            // PC Data
-            document.getElementById('nav-name').innerText = currentUser.name;
-            document.getElementById('nav-avatar').src = currentUser.avatar;
-            
+            document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('dashboard-screen').classList.remove('hidden');
+            document.getElementById('mob-name').innerText=currentUser.name; document.getElementById('mob-avatar').src=currentUser.avatar; document.getElementById('mob-id').innerText="ID: "+currentUser.uid;
+            document.getElementById('nav-name').innerText=currentUser.name; document.getElementById('nav-avatar').src=currentUser.avatar;
             updateHistory();
         }
-        function updateHistory() {
-            const h = JSON.parse(localStorage.getItem('dc_history') || "[]");
-            const html = h.map(r => `<div class="${window.innerWidth>768?'pc-room-card':'mob-room-card'}" onclick="handleJoinFlow('${r}')"><span>ห้อง ${r}</span> <i class="fas fa-chevron-right"></i></div>`).join('');
-            document.getElementById('mobile-room-list').innerHTML = html;
-            document.getElementById('pc-room-list').innerHTML = html;
-        }
 
-        // --- Screens ---
-        function openFriendScreen() { document.getElementById('friend-screen').classList.remove('hidden'); switchFriendTab('list'); checkOnline(); }
-        function closeFriendScreen() { document.getElementById('friend-screen').classList.add('hidden'); }
-        function switchFriendTab(t) {
-            document.getElementById('tab-friend-list').classList.toggle('hidden', t!=='list');
-            document.getElementById('tab-add-friend').classList.toggle('hidden', t!=='add');
-            document.querySelectorAll('.tab-btn')[0].classList.toggle('active', t==='list');
-            document.querySelectorAll('.tab-btn')[1].classList.toggle('active', t==='add');
-            if(t==='list') renderFriendList();
-        }
-        function renderFriendList() {
-            const l = document.getElementById('tab-friend-list');
-            if(!currentUser.friends.length) { l.innerHTML = `<p style="text-align:center;color:#64748b;margin-top:50px;">ไม่มีเพื่อน</p>`; return; }
-            l.innerHTML = currentUser.friends.map(f => `
-                <div class="user-card">
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <div style="position:relative;"><img src="${f.avatar}" class="uc-img"><div id="status-${f.uid}" class="online-dot"></div></div>
-                        <div><div style="font-weight:600;">${f.name}</div><div style="font-size:12px;color:#94a3b8;">ID: ${f.uid}</div></div>
-                    </div>
-                    <button class="btn" style="background:var(--success);padding:5px 10px;" onclick='startChat(${JSON.stringify(f)})'><i class="fas fa-comment"></i></button>
-                </div>`).join('');
-            checkOnline();
-        }
-        function startChat(f) {
-            currentChatFriend = f;
-            document.getElementById('friend-screen').classList.add('hidden');
-            document.getElementById('chat-screen').classList.remove('hidden');
-            document.getElementById('chat-head-name').innerText = f.name;
-            document.getElementById('chat-head-img').src = f.avatar;
-            document.getElementById('chat-body').innerHTML = '';
-        }
-        function closeChat() { document.getElementById('chat-screen').classList.add('hidden'); document.getElementById('friend-screen').classList.remove('hidden'); currentChatFriend = null; }
-
-        function openRoomSearch() { 
-            const r = prompt("กรอกเลขห้อง:"); 
-            if(r) handleJoinFlow(r); 
-        }
-
-        // --- Room & Video ---
+        // --- JOIN ---
         function createRoom() { handleJoinFlow(Math.floor(100000+Math.random()*900000)); }
-        function joinRoomCheck(id) { const r = document.getElementById(id).value; if(r) handleJoinFlow(r); }
-        function handleJoinFlow(id) { isAndroidApp() ? showApkGate(id) : joinRoom(id); }
-        function showApkGate(id) { document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('dashboard-screen').classList.add('hidden'); document.getElementById('app-permission-gate').classList.remove('hidden'); document.getElementById('gate-room-id').innerText = id; }
-        async function apkRequestPermission() {
-            const r = document.getElementById('gate-room-id').innerText;
-            try { const s = await navigator.mediaDevices.getUserMedia({audio:true,video:true}); s.getTracks().forEach(t=>t.stop()); setTimeout(()=>{document.getElementById('app-permission-gate').classList.add('hidden'); joinRoom(r);},500); } catch(e){ alert("เปิดสิทธิ์ก่อน"); }
-        }
+        function joinRoomCheck(id) { const r=document.getElementById(id).value; if(r)handleJoinFlow(r); }
+        function showSearch() { document.getElementById('search-screen').classList.remove('hidden'); }
+        function hideSearch() { document.getElementById('search-screen').classList.add('hidden'); }
+        function handleJoinFlow(rid) { isAndroidApp() ? showApkGate(rid) : joinRoom(rid); }
+        function showApkGate(rid) { document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('dashboard-screen').classList.add('hidden'); document.getElementById('search-screen').classList.add('hidden'); document.getElementById('app-permission-gate').classList.remove('hidden'); document.getElementById('gate-room-id').innerText=rid; }
+        async function apkRequestPermission() { const r=document.getElementById('gate-room-id').innerText; try{ const s=await navigator.mediaDevices.getUserMedia({audio:true,video:true}); s.getTracks().forEach(t=>t.stop()); setTimeout(()=>{document.getElementById('app-permission-gate').classList.add('hidden'); joinRoom(r);},500); } catch(e){ alert("เปิดสิทธิ์ก่อน"); } }
 
-        async function joinRoom(id) {
+        // --- VIDEO ---
+        async function joinRoom(rid) {
             if(!APP_ID || APP_ID.includes("ใส่")) return alert("ใส่ App ID");
-            let h = JSON.parse(localStorage.getItem('dc_history')||"[]"); if(!h.includes(id)){ h.unshift(id); localStorage.setItem('dc_history', JSON.stringify(h)); }
-            
-            document.getElementById('dashboard-screen').classList.add('hidden');
-            document.getElementById('room-screen').classList.remove('hidden');
-            document.getElementById('room-id-txt').innerText = "ID: " + id;
+            currentRoomId = rid.toString(); addToHistory(currentRoomId);
+            document.getElementById('dashboard-screen').classList.add('hidden'); document.getElementById('search-screen').classList.add('hidden'); document.getElementById('room-screen').classList.remove('hidden'); document.getElementById('room-id-txt').innerText="ID: "+rid;
+            checkIsSaved(currentRoomId);
+            if(currentRoomId !== currentUser.uid.toString()) sendCallSignal(currentRoomId);
 
             try {
-                await client.join(APP_ID, id.toString(), null, currentUser.uid);
+                await client.join(APP_ID, rid.toString(), null, currentUser.uid);
                 localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
                 localTracks.video = await AgoraRTC.createCameraVideoTrack();
                 createVideoBox(currentUser.uid, localTracks.video, currentUser.name, currentUser.avatar, true);
@@ -512,25 +373,46 @@
             let box = document.getElementById(`box-${uid}`);
             if(!box) {
                 box = document.createElement('div'); box.id = `box-${uid}`; box.className = 'video-box';
-                box.innerHTML = `<div id="play-${uid}" class="video-player"></div><div class="no-cam-view hidden"><div class="room-avatar-circle"><img src="${avatar}"></div></div><div style="position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.5);color:white;padding:2px 10px;border-radius:10px;font-size:12px;">${name}</div>`;
+                if(!isLocal) box.setAttribute('data-remote', 'true');
+                box.innerHTML = `<div id="play-${uid}" class="video-player"></div><div class="no-cam-view hidden"><div class="avatar-room-circle"><img src="${avatar}"></div><span>${name}</span></div><div style="position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.5);color:white;padding:2px 10px;border-radius:10px;font-size:12px;">${name}</div>`;
                 document.getElementById('video-grid').appendChild(box);
             }
             box.querySelector('.no-cam-view').classList.add('hidden');
             if(track) track.play(`play-${uid}`);
-            const count = document.getElementById('video-grid').children.length;
-            document.getElementById('video-grid').className = `users-${count}`;
+            updateGrid();
         }
-
+        function updateGrid() { const c = document.getElementById('video-grid').children.length; document.getElementById('video-grid').className = `users-${c}`; }
+        
         function toggleControls() { 
-            const b = document.getElementById('control-bar'); const t = document.getElementById('top-bar');
+            const b=document.getElementById('control-bar'); const t=document.getElementById('top-bar');
             clearTimeout(controlsTimeout);
-            if(b.classList.contains('hide-down')) { b.classList.remove('hide-down'); t.classList.remove('hide-up'); controlsTimeout = setTimeout(()=>{b.classList.add('hide-down'); t.classList.add('hide-up');},5000); }
+            if(b.classList.contains('hide-down')) { b.classList.remove('hide-down'); t.classList.remove('hide-up'); controlsTimeout=setTimeout(()=>{b.classList.add('hide-down'); t.classList.add('hide-up');},5000); }
             else { b.classList.add('hide-down'); t.classList.add('hide-up'); }
         }
         async function toggleCam() { if(localTracks.video) { await localTracks.video.setMuted(!localTracks.video.muted); document.getElementById('btn-cam').classList.toggle('danger'); document.getElementById(`box-${currentUser.uid}`).querySelector('.no-cam-view').classList.toggle('hidden'); } }
         async function toggleMic() { if(localTracks.audio) { await localTracks.audio.setMuted(!localTracks.audio.muted); document.getElementById('btn-mic').classList.toggle('danger'); } }
-        function copyLink() { navigator.clipboard.writeText(window.location.href); alert("Copied"); }
-        async function leaveRoom() { localTracks.video?.close(); localTracks.audio?.close(); await client.leave(); window.location.reload(); }
+        
+        // --- SCREEN SHARE (กลับมาแล้ว) ---
+        async function shareScreen() {
+            if(isSharing) {
+                // Stop Sharing
+                if(localTracks.screen) { await client.unpublish(localTracks.screen); localTracks.screen.close(); }
+                await client.publish(localTracks.video); localTracks.video.play(`play-${currentUser.uid}`);
+                isSharing = false; document.getElementById('btn-screen').classList.remove('active');
+            } else {
+                // Start Sharing
+                try {
+                    localTracks.screen = await AgoraRTC.createScreenVideoTrack();
+                    await client.unpublish(localTracks.video); await client.publish(localTracks.screen);
+                    localTracks.screen.play(`play-${currentUser.uid}`);
+                    isSharing = true; document.getElementById('btn-screen').classList.add('active');
+                    localTracks.screen.on("track-ended", () => shareScreen()); // Stop if system stop
+                } catch(e) { console.log("Share failed"); }
+            }
+        }
+
+        function shareLink() { navigator.clipboard.writeText(window.location.href); alert("คัดลอกลิ้งค์แล้ว"); }
+        async function leaveRoom() { localTracks.video?.close(); localTracks.audio?.close(); localTracks.screen?.close(); await client.leave(); window.location.reload(); }
     </script>
 </body>
 </html>
