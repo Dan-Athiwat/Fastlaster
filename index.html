@@ -3,94 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DanCall 3.5 - Fix iOS Permission</title>
+    <title>DanCall 3.9.1 - Circle Fix</title>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* --- CORE THEME (เหมือน V3.4) --- */
-        :root { --bg: #0f172a; --panel: #1e293b; --card-bg: #283040; --primary: #3b82f6; --danger: #ef4444; --text: #f8fafc; }
+        /* --- THEME --- */
+        :root { --bg: #0f172a; --panel: #1e293b; --card-bg: #283040; --primary: #3b82f6; --danger: #ef4444; --success: #22c55e; --text: #f8fafc; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; width: 100vw; }
-
         .hidden { display: none !important; }
-        .btn { padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; background: var(--primary); color: white; width: 100%; font-size: 16px; transition: 0.2s; }
+
+        .btn { padding: 14px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; background: var(--primary); color: white; width: 100%; font-size: 16px; margin-top: 10px; transition: 0.2s; }
         .btn:active { transform: scale(0.98); opacity: 0.9; }
         input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; background: #161e2e; color: white; margin-bottom: 15px; outline: none; font-size: 16px; }
         
-        /* Screens */
-        #auth-screen, #dashboard-screen, #room-screen, #search-screen, #invite-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        #auth-screen, #dashboard-screen, #room-screen, #search-screen, #app-permission-gate { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; }
 
-        /* AUTH SCREEN */
+        /* --- APK GATE --- */
+        #app-permission-gate { justify-content: center; align-items: center; background: rgba(0,0,0,0.95); z-index: 999; padding: 20px; text-align: center; }
+        .perm-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 100%; max-width: 350px; border: 1px solid #334155; }
+        .perm-icon { font-size: 60px; color: var(--primary); margin-bottom: 20px; animation: bounce 2s infinite; }
+        .setting-hint { background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 8px; margin-top: 15px; font-size: 13px; color: #cbd5e1; text-align: left; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* --- AUTH SCREEN FIX --- */
         #auth-screen { justify-content: center; align-items: center; background: linear-gradient(135deg, #0f172a, #1e1b4b); z-index: 100; }
-        .auth-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .avatar-up { width: 100px; height: 100px; border-radius: 50%; background: #334155; margin: 0 auto 20px; position: relative; border: 2px dashed #64748b; cursor: pointer; overflow: hidden; }
-        .avatar-up img { width: 100%; height: 100%; object-fit: cover; }
+        .auth-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; }
+        
+        /* แก้รูปหน้า Login ให้กลมดิ๊ก */
+        .avatar-up { 
+            width: 100px; height: 100px; border-radius: 50%; background: #334155; 
+            margin: 0 auto 20px; position: relative; border: 2px dashed #64748b; cursor: pointer; 
+            overflow: hidden; /* ตัดส่วนเกิน */
+            display: flex; justify-content: center; align-items: center;
+        }
+        .avatar-up img { width: 100%; height: 100%; object-fit: cover; /* ขยายเต็มไม่เสียทรง */ }
         .link-text { color: var(--primary); cursor: pointer; font-size: 14px; margin-top: 15px; display: block; }
 
-        /* INVITE SCREEN (New for iOS Fix) */
-        #invite-screen { justify-content: center; align-items: center; background: rgba(0,0,0,0.9); z-index: 400; padding: 20px; text-align: center; }
-        .invite-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 100%; max-width: 350px; }
-        .pulse-btn { animation: pulse 2s infinite; font-size: 18px; padding: 15px; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
-
-        /* DASHBOARD (Mobile V3.3 + PC V3.2) */
+        /* --- DASHBOARD FIX --- */
         #dashboard-screen { background: var(--bg); overflow-y: auto; }
-        
-        /* Mobile Parts */
         .mobile-dash-layout { padding: 20px; }
         .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-top: 10px; }
         .profile-sec { display: flex; align-items: center; gap: 12px; }
-        .profile-circle { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #334155; overflow: hidden; }
+        
+        /* แก้รูปโปรไฟล์หน้าหลัก Mobile */
+        .profile-circle { 
+            width: 50px; height: 50px; border-radius: 50%; border: 2px solid #334155; 
+            overflow: hidden; /* ตัดส่วนเกิน */
+            display: flex; justify-content: center; align-items: center;
+        }
         .profile-circle img { width: 100%; height: 100%; object-fit: cover; }
-        .profile-sec div h3 { font-size: 18px; line-height: 1.2; font-weight: 600; margin: 0; }
-        .profile-sec div span { font-size: 13px; color: #94a3b8; }
-        .search-icon-btn { font-size: 24px; color: white; background: transparent; border: none; cursor: pointer; padding: 10px; }
-        .sec-title { font-size: 20px; font-weight: 600; margin-bottom: 15px; }
-        .btn-create-big { background: var(--primary); color: white; width: 100%; padding: 18px; border-radius: 15px; border: none; font-size: 18px; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); cursor: pointer; margin-bottom: 20px; }
-        .room-card { background: var(--card-bg); padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
-        .room-card:active { background: #334155; }
-
-        /* PC Parts */
+        
+        .search-icon-btn { font-size: 24px; color: white; background: transparent; border: none; padding: 10px; }
+        .btn-create-big { background: var(--primary); color: white; width: 100%; padding: 18px; border-radius: 15px; border: none; font-size: 18px; display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .room-card { background: var(--card-bg); padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        
+        /* PC Styles */
         .pc-dash-layout { display: none; height: 100%; flex-direction: column; }
         .navbar { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: var(--panel); border-bottom: 1px solid #334155; }
         .user-info { display: flex; align-items: center; gap: 10px; }
-        .pc-avatar-circle { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; background: #334155; }
+        
+        /* แก้รูปโปรไฟล์หน้าหลัก PC */
+        .pc-avatar-circle { 
+            width: 45px; height: 45px; border-radius: 50%; 
+            overflow: hidden; background: #334155;
+            display: flex; justify-content: center; align-items: center;
+        }
         .pc-avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
-        .dash-content { display: flex; height: calc(100% - 70px); width: 100%; }
+
         .pc-sidebar { width: 280px; background: var(--panel); padding: 20px; border-right: 1px solid #334155; display: flex; flex-direction: column; }
         .pc-main { flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column; color: #64748b; }
+        .dash-content { display: flex; height: calc(100% - 70px); width: 100%; }
 
-        /* SEARCH SCREEN */
+        /* SEARCH & ROOM */
         #search-screen { background: var(--bg); padding: 20px; z-index: 300; padding-top: 40px; }
-        .search-nav { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }
-        .search-nav i { font-size: 24px; cursor: pointer; }
-
-        /* ROOM SCREEN */
         #room-screen { background: #000; z-index: 200; position: relative; }
-        .room-info-bar { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 6px 16px; border-radius: 30px; display: flex; gap: 10px; align-items: center; z-index: 500; backdrop-filter: blur(5px); transition: top 0.3s ease; font-size: 14px; }
+        .room-info-bar { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 6px 16px; border-radius: 30px; display: flex; gap: 10px; align-items: center; z-index: 500; backdrop-filter: blur(5px); font-size: 14px; transition: top 0.3s ease; }
         .room-info-bar.hide-up { top: -80px; }
 
-        /* Grid (V3.2 style for self view) */
+        /* VIDEO GRID */
         #video-grid { flex: 1; display: grid; gap: 10px; padding: 10px; align-content: center; justify-content: center; width: 100%; height: 100%; }
         .video-box { position: relative; background: #222; overflow: hidden; border-radius: 15px; width: 100%; height: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .video-player { width: 100%; height: 100%; object-fit: cover; }
-        
+        .video-player { width: 100%; height: 100%; object-fit: cover; background: black; }
+
         #video-grid.users-1 { display: flex; align-items: center; justify-content: center; }
         #video-grid.users-1 .video-box { width: 100%; max-width: 400px; aspect-ratio: 3/4; height: auto; max-height: 70vh; }
         #video-grid.users-2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
         #video-grid.users-3, #video-grid.users-4 { grid-template-columns: 1fr 1fr; }
 
-        .no-cam-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #1e293b; z-index: 2; }
-        .no-cam-view-circle { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; margin-bottom: 10px; border: 2px solid var(--primary); }
-        .no-cam-view-circle img { width: 100%; height: 100%; object-fit: cover; }
+        /* --- NO CAM VIEW FIX (แก้รูปตอนปิดกล้อง) --- */
+        .no-cam-view { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            background: #1e293b; z-index: 5;
+        }
+        .no-cam-view.hidden { display: none !important; }
+
+        /* รูปวงกลมตอนปิดกล้อง */
+        .avatar-room-circle {
+            width: 80px; height: 80px; 
+            border-radius: 50%; border: 2px solid var(--primary);
+            overflow: hidden; /* ตัดส่วนเกิน */
+            margin-bottom: 10px;
+            display: flex; justify-content: center; align-items: center;
+            background: #000;
+        }
+        .avatar-room-circle img { width: 100%; height: 100%; object-fit: cover; }
 
         .disconnect-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--danger); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Controls (Mobile V3.3 style) */
+        /* Controls */
         .controls { background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; gap: 20px; position: absolute; bottom: 0; width: 100%; z-index: 500; transition: transform 0.4s ease; }
         .controls.hide-down { transform: translateY(100%); }
         .ctrl-btn { width: 55px; height: 55px; border-radius: 50%; border: none; cursor: pointer; background: #334155; color: white; font-size: 24px; display: flex; justify-content: center; align-items: center; }
@@ -102,7 +128,7 @@
             .pc-dash-layout { display: flex; }
             #video-grid.users-1 .video-box { max-width: 500px; aspect-ratio: 16/9; }
             #video-grid.users-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
-            #video-grid.users-3, #video-grid.users-4, #video-grid.users-5, #video-grid.users-6 { grid-template-columns: repeat(3, 1fr); }
+            #video-grid.users-3, #video-grid.users-4 { grid-template-columns: repeat(3, 1fr); }
             .controls { height: 90px; padding-bottom: 0; }
         }
         @media (max-width: 768px) {
@@ -112,20 +138,28 @@
 </head>
 <body>
 
-    <div id="invite-screen" class="hidden">
-        <div class="invite-card">
-            <i class="fas fa-video" style="font-size: 60px; color: var(--primary); margin-bottom: 20px;"></i>
-            <h2>ได้รับเชิญเข้าร่วมห้อง</h2>
-            <h1 id="invite-room-id" style="color: var(--primary); margin: 10px 0;">...</h1>
-            <p style="color: #94a3b8; margin-bottom: 20px;">แตะปุ่มด้านล่างเพื่อเริ่มใช้งานกล้องและไมโครโฟน</p>
-            <button class="btn pulse-btn" onclick="acceptInvite()">เข้าร่วมห้องทันที</button>
+    <div id="app-permission-gate" class="hidden">
+        <div class="perm-card">
+            <i class="fas fa-cog perm-icon"></i>
+            <h3>อนุญาตสิทธิ์การโทร</h3>
+            <p style="color:#94a3b8; font-size:14px; margin-bottom:15px;">
+                แอปต้องการเข้าถึง <b>กล้องและไมโครโฟน</b><br>กรุณากดปุ่มด้านล่างเพื่ออนุญาต
+            </p>
+            <button class="btn" style="background:var(--success);" onclick="apkRequestPermission()">
+                <i class="fas fa-check"></i> อนุญาต (Allow)
+            </button>
+            <div class="setting-hint">
+                <i class="fas fa-info-circle" style="color:var(--primary)"></i> <b>ถ้ากดแล้วไม่ทำงาน:</b><br>
+                1. ไปที่ <b>การตั้งค่า</b> ของมือถือ > <b>แอป</b><br>
+                2. เลือกแอปนี้ > <b>สิทธิ์</b> > เปิด <b>กล้อง/ไมค์</b>
+            </div>
+            <h2 id="gate-room-id" style="display:none;"></h2>
         </div>
     </div>
 
     <div id="auth-screen">
         <div id="login-form" class="auth-card">
             <h2>เข้าสู่ระบบ</h2>
-            <p style="color:#94a3b8; margin-bottom:20px;">DanCall 3.5 Fix</p>
             <input type="text" id="login-name" placeholder="ชื่อผู้ใช้">
             <input type="tel" id="login-phone" placeholder="เบอร์โทรศัพท์">
             <button class="btn" onclick="handleLogin()">เข้าสู่ระบบ</button>
@@ -137,9 +171,9 @@
                 <img id="preview-img" src="https://via.placeholder.com/100" alt="Profile">
                 <input type="file" id="file-input" hidden accept="image/*" onchange="loadFile(event)">
             </div>
-            <input type="text" id="signup-name" placeholder="ตั้งชื่อผู้ใช้ (ห้ามซ้ำ)">
+            <input type="text" id="signup-name" placeholder="ตั้งชื่อผู้ใช้">
             <input type="tel" id="signup-phone" placeholder="เบอร์โทรศัพท์">
-            <button class="btn" onclick="handleSignup()">ยืนยันการสมัคร</button>
+            <button class="btn" onclick="handleSignup()">ยืนยัน</button>
             <span class="link-text" onclick="toggleAuth('login')">มีบัญชีแล้ว? เข้าสู่ระบบ</span>
         </div>
     </div>
@@ -149,25 +183,22 @@
             <div class="dash-header">
                 <div class="profile-sec">
                     <div class="profile-circle"><img id="mob-avatar" src="" onclick="logout()"></div>
-                    <div><h3 id="mob-name">Name</h3><span id="mob-id">ID: 100</span></div>
+                    <div><h3 id="mob-name">User</h3><span id="mob-id">ID</span></div>
                 </div>
                 <button class="search-icon-btn" onclick="showSearch()"><i class="fas fa-search"></i></button>
             </div>
             <h3 class="sec-title">จัดการห้องโทร</h3>
             <button class="btn-create-big" onclick="createRoom()"><i class="fas fa-plus"></i> สร้างห้องโทร</button>
-            <div id="mobile-room-list">
-                <div class="room-card" style="opacity:0.5; pointer-events:none;"><span>ไม่มีประวัติห้อง</span></div>
-            </div>
+            <div id="mobile-room-list"></div>
         </div>
-
         <div class="pc-dash-layout">
             <div class="navbar">
                 <div class="user-info">
                     <div class="pc-avatar-circle"><img id="nav-avatar" src=""></div>
-                    <div><h3 id="nav-name">User</h3><span id="nav-phone" style="font-size:12px; color:#94a3b8;">User</span></div>
+                    <div><h3 id="nav-name">User</h3><span id="nav-phone">User</span></div>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <input type="number" id="pc-room" placeholder="ID ห้อง" style="width:150px; margin:0;">
+                    <input type="number" id="pc-room" placeholder="ID" style="width:150px; margin:0;">
                     <button onclick="joinRoomCheck('pc-room')" style="width:auto; margin:0; padding:8px 15px;" class="btn">เข้า</button>
                 </div>
             </div>
@@ -179,31 +210,25 @@
                 </div>
                 <div class="pc-main">
                     <i class="fas fa-video" style="font-size:80px; margin-bottom:20px;"></i>
-                    <h2>ยินดีต้อนรับสู่ DanCall</h2>
-                    <p>เวอร์ชั่น PC (Classic V3.2)</p>
-                    <button onclick="logout()" style="background:transparent; border:1px solid #334155; color:#94a3b8; padding:5px 15px; margin-top:20px; cursor:pointer;">ออกจากระบบ</button>
+                    <p>DanCall PC</p>
+                    <button onclick="logout()" style="background:transparent; border:1px solid #334155; color:#94a3b8; padding:5px 15px; margin-top:20px;">ออกจากระบบ</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="search-screen" class="hidden">
-        <div class="search-nav">
-            <i class="fas fa-arrow-left" onclick="hideSearch()"></i>
-            <h2>ค้นหาห้อง</h2>
-        </div>
-        <input type="number" id="search-input" placeholder="กรอกเลขห้อง (เช่น 4686)">
+        <div class="search-nav"><i class="fas fa-arrow-left" onclick="hideSearch()"></i><h2>ค้นหาห้อง</h2></div>
+        <input type="number" id="search-input" placeholder="กรอกเลขห้อง">
         <button class="btn" style="padding:15px; font-size:18px;" onclick="joinRoomCheck('search-input')">ค้นหาและเข้าร่วม</button>
     </div>
 
     <div id="room-screen" class="hidden" onclick="toggleControls()">
         <div class="room-info-bar" id="top-bar">
             <span style="color:white; font-weight:bold;" id="room-id-txt">ID: ...</span>
-            <button onclick="shareLink()" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:50%; width:30px; height:30px; cursor:pointer; margin-left:10px;"><i class="fas fa-link"></i></button>
+            <button onclick="shareLink()" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:50%; width:30px; height:30px; margin-left:10px;"><i class="fas fa-link"></i></button>
         </div>
-
         <div id="video-grid"></div>
-
         <div class="controls" id="control-bar" onclick="event.stopPropagation()">
             <button class="ctrl-btn" id="btn-mic" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
             <button class="ctrl-btn" id="btn-cam" onclick="toggleCam()"><i class="fas fa-video"></i></button>
@@ -213,178 +238,134 @@
     </div>
 
     <script>
-        // --- CONFIG ---
         const APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; 
 
         let client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
         let localTracks = { video: null, audio: null, screen: null };
         let currentUser = null;
         let isCamOn = true, isMicOn = true, isSharing = false;
-        let controlsTimeout;
-        let disconnectTimers = {}; 
+        let controlsTimeout, disconnectTimers = {}; 
 
-        // --- 1. Fix iOS Permission Logic ---
-        // ไม่เรียก joinRoom ทันที แต่จะแสดงปุ่มให้กดก่อน
+        // --- CHECK SYSTEM ---
+        function isAndroidApp() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            return (ua.indexOf("android") > -1 && ua.indexOf("wv") > -1);
+        }
+
         window.onload = () => {
             const saved = localStorage.getItem('dc3_active_user');
             const urlParams = new URLSearchParams(window.location.search);
             const inviteRoom = urlParams.get('room');
-
             if(saved) {
                 currentUser = JSON.parse(saved);
-                if(inviteRoom) {
-                    // แทนที่จะ join เลย ให้แสดงหน้า Invite เพื่อขอ User Gesture
-                    showInviteScreen(inviteRoom);
-                } else {
-                    loadDashboard();
-                }
+                if(inviteRoom) handleJoinFlow(inviteRoom); else loadDashboard();
             } else if(inviteRoom) {
                 localStorage.setItem('pending_invite', inviteRoom);
             }
         };
 
-        function showInviteScreen(roomId) {
+        function handleJoinFlow(roomId) {
+            if (isAndroidApp()) showApkGate(roomId); else joinRoom(roomId);
+        }
+
+        function showApkGate(roomId) {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.add('hidden');
-            document.getElementById('invite-screen').classList.remove('hidden');
-            document.getElementById('invite-room-id').innerText = roomId;
+            document.getElementById('search-screen').classList.add('hidden');
+            document.getElementById('app-permission-gate').classList.remove('hidden');
+            document.getElementById('gate-room-id').innerText = roomId;
         }
 
-        function acceptInvite() {
-            const roomId = document.getElementById('invite-room-id').innerText;
-            document.getElementById('invite-screen').classList.add('hidden');
-            joinRoom(roomId); // เรียกผ่านการกดปุ่ม -> iOS ยอมรับ
+        async function apkRequestPermission() {
+            const roomId = document.getElementById('gate-room-id').innerText;
+            try {
+                // ขอแล้วปิดทันที (เพื่อกระตุ้น)
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                stream.getTracks().forEach(track => track.stop());
+                setTimeout(() => {
+                    document.getElementById('app-permission-gate').classList.add('hidden');
+                    joinRoom(roomId);
+                }, 500); 
+            } catch (err) {
+                alert("❌ กรุณาอนุญาตสิทธิ์ใน Setting ก่อน");
+            }
         }
 
-        // --- AUTH ---
-        function toggleAuth(mode) {
-            document.getElementById('login-form').classList.toggle('hidden', mode === 'signup');
-            document.getElementById('signup-form').classList.toggle('hidden', mode === 'login');
-        }
-
-        function loadFile(e) {
-            const reader = new FileReader();
-            reader.onload = (ev) => document.getElementById('preview-img').src = ev.target.result;
-            reader.readAsDataURL(e.target.files[0]);
-        }
-
+        // --- CORE FUNCTIONS ---
+        function toggleAuth(mode) { document.getElementById('login-form').classList.toggle('hidden', mode === 'signup'); document.getElementById('signup-form').classList.toggle('hidden', mode === 'login'); }
+        function loadFile(e) { const r = new FileReader(); r.onload = (ev) => document.getElementById('preview-img').src = ev.target.result; r.readAsDataURL(e.target.files[0]); }
         function handleSignup() {
             const name = document.getElementById('signup-name').value;
             const phone = document.getElementById('signup-phone').value;
             const img = document.getElementById('preview-img').src;
-            if(!name || !phone) return alert("กรุณากรอกข้อมูล");
-            
+            if(!name || !phone) return alert("กรอกข้อมูลให้ครบ");
             const db = JSON.parse(localStorage.getItem('dc3_users_db') || "[]");
-            if(db.find(u => u.name === name)) return alert("ชื่อนี้มีแล้ว");
-
-            const newUser = { uid: Math.floor(Math.random()*100000), name, phone, avatar: img };
-            db.push(newUser);
+            if(db.find(u => u.name === name)) return alert("ชื่อซ้ำ");
+            db.push({ uid: Math.floor(Math.random()*100000), name, phone, avatar: img });
             localStorage.setItem('dc3_users_db', JSON.stringify(db));
-            alert("สมัครสำเร็จ!");
-            toggleAuth('login');
+            alert("สำเร็จ"); toggleAuth('login');
         }
-
         function handleLogin() {
             const name = document.getElementById('login-name').value;
             const phone = document.getElementById('login-phone').value;
             const db = JSON.parse(localStorage.getItem('dc3_users_db') || "[]");
             const user = db.find(u => u.name === name && u.phone === phone);
-            
             if(user) {
                 currentUser = user;
                 localStorage.setItem('dc3_active_user', JSON.stringify(user));
                 const pending = localStorage.getItem('pending_invite');
-                if(pending) {
-                    localStorage.removeItem('pending_invite');
-                    // ถ้า login เสร็จแล้วมี pending invite ให้แสดงปุ่มกดเข้าห้อง
-                    showInviteScreen(pending);
-                } else {
-                    loadDashboard();
-                }
-            } else {
-                alert("ข้อมูลไม่ถูกต้อง");
-            }
+                if(pending) { localStorage.removeItem('pending_invite'); handleJoinFlow(pending); } else loadDashboard();
+            } else alert("ไม่พบข้อมูล");
         }
-
-        function logout() {
-            localStorage.removeItem('dc3_active_user');
-            window.location.href = window.location.pathname.split('?')[0];
-        }
+        function logout() { localStorage.removeItem('dc3_active_user'); window.location.href = window.location.pathname.split('?')[0]; }
 
         function loadDashboard() {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
-            
             document.getElementById('mob-name').innerText = currentUser.name;
-            document.getElementById('mob-id').innerText = "ID: " + currentUser.uid;
             document.getElementById('mob-avatar').src = currentUser.avatar;
-
+            document.getElementById('mob-id').innerText = "ID: " + currentUser.uid;
             document.getElementById('nav-name').innerText = currentUser.name;
-            document.getElementById('nav-phone').innerText = currentUser.phone;
             document.getElementById('nav-avatar').src = currentUser.avatar;
-
             updateHistory();
         }
-
         function updateHistory() {
             const history = JSON.parse(localStorage.getItem('dc_history') || "[]");
-            const mobList = document.getElementById('mobile-room-list');
-            const pcList = document.getElementById('pc-room-list');
-            let html = "";
-            if(history.length === 0) {
-                html = `<div class="room-card" style="opacity:0.5;"><span>ไม่มีประวัติห้อง</span></div>`;
-            } else {
-                history.forEach(room => {
-                    html += `<div class="room-card" onclick="joinRoom('${room}')"><span>ห้อง ${room}</span> <i class="fas fa-chevron-right"></i></div>`;
-                });
-            }
-            mobList.innerHTML = html;
-            pcList.innerHTML = html;
+            const html = history.length ? "" : `<div class="room-card" style="opacity:0.5;"><span>ไม่มีประวัติ</span></div>`;
+            const list = history.map(r => `<div class="room-card" onclick="handleJoinFlow('${r}')"><span>ห้อง ${r}</span> <i class="fas fa-chevron-right"></i></div>`).join('');
+            document.getElementById('mobile-room-list').innerHTML = list || html;
+            document.getElementById('pc-room-list').innerHTML = list || html;
         }
-
-        function addToHistory(roomId) {
-            let history = JSON.parse(localStorage.getItem('dc_history') || "[]");
-            if(!history.includes(roomId)) {
-                history.unshift(roomId);
-                localStorage.setItem('dc_history', JSON.stringify(history));
-            }
-        }
-
-        // --- NAVIGATION ---
+        function createRoom() { handleJoinFlow(Math.floor(100000 + Math.random() * 900000)); }
+        function joinRoomCheck(id) { const r = document.getElementById(id).value; if(r) handleJoinFlow(r); }
         function showSearch() { document.getElementById('search-screen').classList.remove('hidden'); }
         function hideSearch() { document.getElementById('search-screen').classList.add('hidden'); }
-        function createRoom() { const room = Math.floor(100000 + Math.random() * 900000); joinRoom(room); }
-        function joinRoomCheck(id) { const r = document.getElementById(id).value; if(r) joinRoom(r); }
         function shareLink() {
             const url = window.location.origin + window.location.pathname + "?room=" + document.getElementById('room-id-txt').innerText.split(': ')[1];
-            navigator.clipboard.writeText(url).then(() => alert("คัดลอกลิ้งค์แล้ว!"));
+            navigator.clipboard.writeText(url).then(() => alert("คัดลอกแล้ว"));
         }
 
-        // --- VIDEO CORE ---
+        // --- AGORA VIDEO ---
         async function joinRoom(roomId) {
-            if(!APP_ID || APP_ID.includes("ใส่")) return alert("กรุณาใส่ App ID");
+            if(!APP_ID || APP_ID.includes("ใส่")) return alert("ใส่ App ID ก่อน");
+            let history = JSON.parse(localStorage.getItem('dc_history') || "[]");
+            if(!history.includes(roomId)) { history.unshift(roomId); localStorage.setItem('dc_history', JSON.stringify(history)); }
 
-            addToHistory(roomId);
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('search-screen').classList.add('hidden');
             document.getElementById('room-screen').classList.remove('hidden');
             document.getElementById('room-id-txt').innerText = "ID: " + roomId;
-            resetControlTimer();
-
+            
             try {
                 await client.join(APP_ID, roomId.toString(), null, currentUser.uid);
+                
                 localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
                 localTracks.video = await AgoraRTC.createCameraVideoTrack();
                 createVideoBox(currentUser.uid, localTracks.video, currentUser.name, currentUser.avatar, true);
+                
                 await client.publish([localTracks.audio, localTracks.video]);
             } catch (e) {
-                // Catch Permission Error specifically
-                if(e.name === "NotAllowedError" || e.code === "PERMISSION_DENIED") {
-                    alert("กรุณาอนุญาตการใช้กล้องและไมโครโฟนใน Browser/Settings");
-                } else {
-                    alert("Error: " + e.message);
-                }
-                leaveRoom();
+                alert("Error: " + e.message); leaveRoom();
             }
         }
 
@@ -394,18 +375,17 @@
             if (mediaType === "video") createVideoBox(user.uid, user.videoTrack, "User "+user.uid, "https://via.placeholder.com/100?text=U", false);
             if (mediaType === "audio") user.audioTrack.play();
         });
-
-        client.on("user-unpublished", (user, mediaType) => {
-            if(mediaType === "video") document.getElementById(`box-${user.uid}`)?.querySelector('.no-cam-view').classList.remove('hidden');
+        client.on("user-unpublished", (user, mediaType) => { 
+            if(mediaType === "video") {
+                const box = document.getElementById(`box-${user.uid}`);
+                if(box) box.querySelector('.no-cam-view').classList.remove('hidden');
+            }
         });
-
         client.on("user-left", (user) => {
             const box = document.getElementById(`box-${user.uid}`);
             if(box) {
                 const overlay = document.createElement('div');
-                overlay.className = 'disconnect-overlay';
-                overlay.innerHTML = `<div class="spinner"></div><span style="color:white; font-size:12px;">สัญญาณหาย...</span>`;
-                box.appendChild(overlay);
+                overlay.className = 'disconnect-overlay'; overlay.innerHTML = `<div class="spinner"></div><span>สัญญาณหาย...</span>`; box.appendChild(overlay);
                 disconnectTimers[user.uid] = setTimeout(() => { box.remove(); updateGrid(); delete disconnectTimers[user.uid]; }, 10000); 
             }
         });
@@ -413,62 +393,47 @@
         function createVideoBox(uid, track, name, avatar, isLocal) {
             let box = document.getElementById(`box-${uid}`);
             if(!box) {
-                box = document.createElement('div');
-                box.id = `box-${uid}`;
-                box.className = 'video-box';
+                box = document.createElement('div'); box.id = `box-${uid}`; box.className = 'video-box';
                 if(!isLocal) box.setAttribute('data-remote', 'true');
                 box.innerHTML = `
                     <div id="play-${uid}" class="video-player"></div>
-                    <div class="no-cam-view hidden"><div class="no-cam-view-circle"><img src="${avatar}"></div><span>${name}</span></div>
+                    <div class="no-cam-view hidden">
+                        <div class="avatar-room-circle"><img src="${avatar}"></div>
+                        <span>${name}</span>
+                    </div>
                     <div style="position:absolute; bottom:10px; left:10px; background:rgba(0,0,0,0.6); color:white; font-size:12px; padding:2px 10px; border-radius:15px;">${name}</div>
                 `;
                 document.getElementById('video-grid').appendChild(box);
             }
+            
             box.querySelector('.no-cam-view').classList.add('hidden');
-            if(track) setTimeout(() => { track.play(`play-${uid}`); }, 100);
+            if(track) track.play(`play-${uid}`);
             updateGrid();
         }
 
         function updateGrid() {
             const count = document.getElementById('video-grid').children.length;
-            const grid = document.getElementById('video-grid');
-            grid.className = `users-${count}`;
+            document.getElementById('video-grid').className = `users-${count}`;
         }
 
         function toggleControls() {
-            const bar = document.getElementById('control-bar');
-            const top = document.getElementById('top-bar');
-            if(bar.classList.contains('hide-down')) { bar.classList.remove('hide-down'); top.classList.remove('hide-up'); resetControlTimer(); } 
+            const bar = document.getElementById('control-bar'); const top = document.getElementById('top-bar');
+            if(bar.classList.contains('hide-down')) { bar.classList.remove('hide-down'); top.classList.remove('hide-up'); clearTimeout(controlsTimeout); controlsTimeout = setTimeout(() => { bar.classList.add('hide-down'); top.classList.add('hide-up'); }, 5000); } 
             else { bar.classList.add('hide-down'); top.classList.add('hide-up'); clearTimeout(controlsTimeout); }
-        }
-        function resetControlTimer() {
-            clearTimeout(controlsTimeout);
-            controlsTimeout = setTimeout(() => { document.getElementById('control-bar').classList.add('hide-down'); document.getElementById('top-bar').classList.add('hide-up'); }, 5000);
         }
 
         async function toggleCam() {
-            if(localTracks.video) {
-                isCamOn = !isCamOn; await localTracks.video.setMuted(!isCamOn); document.getElementById('btn-cam').classList.toggle('danger', !isCamOn);
+            if(localTracks.video) { 
+                isCamOn = !isCamOn; await localTracks.video.setMuted(!isCamOn); 
+                document.getElementById('btn-cam').classList.toggle('danger', !isCamOn); 
                 document.getElementById(`box-${currentUser.uid}`).querySelector('.no-cam-view').classList.toggle('hidden', isCamOn);
             }
         }
-        async function toggleMic() {
-            if(localTracks.audio) { isMicOn = !isMicOn; await localTracks.audio.setMuted(!isMicOn); document.getElementById('btn-mic').classList.toggle('danger', !isMicOn); }
-        }
+        async function toggleMic() { if(localTracks.audio) { isMicOn = !isMicOn; await localTracks.audio.setMuted(!isMicOn); document.getElementById('btn-mic').classList.toggle('danger', !isMicOn); } }
         async function shareScreen() {
-            if(isSharing) {
-                if(localTracks.screen) { await client.unpublish(localTracks.screen); localTracks.screen.close(); }
-                await client.publish(localTracks.video); localTracks.video.play(`play-${currentUser.uid}`);
-                isSharing = false; document.querySelector('.fa-desktop').parentElement.classList.remove('active');
-            } else {
-                try {
-                    localTracks.screen = await AgoraRTC.createScreenVideoTrack(); await client.unpublish(localTracks.video); await client.publish(localTracks.screen);
-                    localTracks.screen.play(`play-${currentUser.uid}`); isSharing = true; document.querySelector('.fa-desktop').parentElement.classList.add('active');
-                    localTracks.screen.on("track-ended", () => shareScreen());
-                } catch(e) { alert("แชร์หน้าจอไม่ได้"); }
-            }
+            if(isSharing) { if(localTracks.screen) { await client.unpublish(localTracks.screen); localTracks.screen.close(); } await client.publish(localTracks.video); localTracks.video.play(`play-${currentUser.uid}`); isSharing = false; }
+            else { try { localTracks.screen = await AgoraRTC.createScreenVideoTrack(); await client.unpublish(localTracks.video); await client.publish(localTracks.screen); localTracks.screen.play(`play-${currentUser.uid}`); isSharing = true; localTracks.screen.on("track-ended", () => shareScreen()); } catch(e) { alert("แชร์ไม่ได้"); } }
         }
-
         async function leaveRoom() {
             for(let key in localTracks) { if(localTracks[key]) { localTracks[key].stop(); localTracks[key].close(); } }
             await client.leave(); window.location.href = window.location.pathname.split('?')[0];
