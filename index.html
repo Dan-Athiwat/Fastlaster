@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DanCall 4.9 - Stable</title>
+    <title>DanCall 4.6 - Restore</title>
     
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/agora-rtm-sdk@1.5.1/index.js"></script>
@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* --- 1. THEME --- */
+        /* --- THEME --- */
         :root { --bg: #0f172a; --panel: #1e293b; --card-bg: #283040; --primary: #3b82f6; --danger: #ef4444; --success: #22c55e; --warning: #facc15; --text: #f8fafc; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; width: 100vw; }
@@ -22,27 +22,13 @@
         .btn:active { transform: scale(0.98); opacity: 0.9; }
         input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; background: #161e2e; color: white; margin-bottom: 15px; outline: none; font-size: 16px; }
         
-        #auth-screen, #dashboard-screen, #room-screen, #search-screen, #app-permission-gate, #incoming-call-screen, #room-chat-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        #auth-screen, #dashboard-screen, #room-screen, #search-screen, #app-permission-gate, #incoming-call-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; }
 
-        /* --- 2. ROOM CHAT --- */
-        #room-chat-screen { background: #0b1120; z-index: 2100; }
-        .chat-header { height: 60px; background: var(--panel); border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
-        .chat-title { font-weight: bold; font-size: 18px; color: var(--primary); }
-        .chat-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #0b1120; }
-        .chat-msg { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; position: relative; word-wrap: break-word; }
-        .chat-msg.me { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
-        .chat-msg.other { align-self: flex-start; background: #334155; color: #e2e8f0; border-bottom-left-radius: 2px; }
-        .sender-name { font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 3px; display: block; }
-        .chat-footer { height: 70px; background: var(--panel); padding: 10px; display: flex; gap: 10px; align-items: center; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
-        
-        .chat-btn-wrapper { position: relative; }
-        .chat-badge { position: absolute; top: -5px; right: -5px; background: var(--danger); color: white; font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 2px solid #334155; display: none; }
-        .chat-badge.show { display: flex; }
-
-        /* --- 3. INCOMING CALL --- */
+        /* --- INCOMING CALL SCREEN --- */
         #incoming-call-screen { 
             background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; text-align: center;
-            background-image: url('https://media.giphy.com/media/3o7bu3XilJ5BOiSGic/giphy.gif'); background-size: cover; background-blend-mode: overlay;
+            background-image: url('https://media.giphy.com/media/3o7bu3XilJ5BOiSGic/giphy.gif'); 
+            background-size: cover; background-blend-mode: overlay;
         }
         .caller-avatar-circle { width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--success); overflow: hidden; margin: 0 auto 20px; animation: pulse-ring 2s infinite; }
         .caller-avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
@@ -53,11 +39,12 @@
         @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
+        /* --- ROOM SAVE UI --- */
         .room-card.saved-room { border: 2px solid var(--warning); box-shadow: 0 0 10px rgba(250, 204, 21, 0.3); }
         .save-btn { background: rgba(0,0,0,0.5); border: none; color: #94a3b8; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; }
         .save-btn.active { color: var(--warning); }
 
-        /* --- 4. STANDARD UI --- */
+        /* --- STANDARD UI --- */
         #app-permission-gate { justify-content: center; align-items: center; background: rgba(0,0,0,0.95); z-index: 999; padding: 20px; text-align: center; }
         .perm-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 100%; max-width: 350px; border: 1px solid #334155; }
         
@@ -113,9 +100,6 @@
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--danger); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #22c55e; color: white; padding: 10px 20px; border-radius: 20px; z-index: 2200; opacity: 0; pointer-events: none; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        #toast.show { top: 40px; opacity: 1; }
-
         @media (min-width: 769px) {
             .mobile-dash-layout { display: none; }
             .pc-dash-layout { display: flex; }
@@ -129,8 +113,6 @@
 </head>
 <body>
 
-    <div id="toast"><i class="fas fa-comment"></i> <span id="toast-msg">ข้อความใหม่</span></div>
-
     <div id="incoming-call-screen" class="hidden">
         <div class="caller-avatar-circle"><img id="caller-img" src=""></div>
         <h2 id="caller-name">สายเรียกเข้า...</h2>
@@ -138,18 +120,6 @@
         <div class="call-actions">
             <button class="call-btn btn-decline" onclick="rejectCall()"><i class="fas fa-phone-slash"></i></button>
             <button class="call-btn btn-answer" onclick="acceptCall()"><i class="fas fa-phone"></i></button>
-        </div>
-    </div>
-
-    <div id="room-chat-screen" class="hidden">
-        <div class="chat-header">
-            <div class="chat-title" id="room-chat-id">ID: ...</div>
-            <button class="btn" style="background:#334155; width:auto; padding:8px 15px;" onclick="closeRoomChat()"><i class="fas fa-times"></i> ออก</button>
-        </div>
-        <div id="room-chat-body" class="chat-body"></div>
-        <div class="chat-footer">
-            <input type="text" id="room-chat-input" placeholder="พิมพ์ข้อความ..." style="flex:1; margin:0;">
-            <button class="btn" style="width:auto; border-radius:50%; width:45px; height:45px; padding:0; display:flex; justify-content:center; align-items:center;" onclick="sendRoomMessage()"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
@@ -235,12 +205,6 @@
             <button class="ctrl-btn" id="btn-mic" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
             <button class="ctrl-btn" id="btn-cam" onclick="toggleCam()"><i class="fas fa-video"></i></button>
             <button class="ctrl-btn" id="btn-screen" onclick="shareScreen()"><i class="fas fa-desktop"></i></button>
-            <button class="ctrl-btn" onclick="openRoomChat()">
-                <div class="chat-btn-wrapper">
-                    <i class="fas fa-comment-alt"></i>
-                    <div id="chat-badge" class="chat-badge">!</div>
-                </div>
-            </button>
             <button class="ctrl-btn danger" onclick="leaveRoom()"><i class="fas fa-phone-slash"></i></button>
         </div>
     </div>
@@ -251,10 +215,9 @@
         const APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; 
         
         let client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-        let rtmClient, rtmChannel;
+        let rtmClient; 
         let localTracks = { video: null, audio: null, screen: null };
         let currentUser = null, currentRoomId = null, incomingCallRoom = null;
-        let controlsTimeout, disconnectTimers = {};
         let isSharing = false;
 
         function isAndroidApp() {
@@ -273,7 +236,7 @@
             }
         };
 
-        // --- RTM: SIGNAL & CHAT ---
+        // --- SIGNALING ---
         async function initSignal() {
             if(!APP_ID || APP_ID.includes("ใส่")) return;
             try {
@@ -281,19 +244,12 @@
                 await rtmClient.login({ uid: currentUser.uid.toString() });
                 
                 rtmClient.on('MessageFromPeer', ({ text }, peerId) => {
-                    const msg = JSON.parse(text);
-                    if(msg.type === 'call') showIncomingCall(msg.room, msg.name, msg.avatar);
+                    try {
+                        const msg = JSON.parse(text);
+                        if(msg.type === 'call') showIncomingCall(msg.room, msg.name, msg.avatar);
+                    } catch(e){}
                 });
             } catch (err) { console.log(err); }
-        }
-
-        async function joinRTMChannel(roomId) {
-            try {
-                if(rtmChannel) { await rtmChannel.leave(); }
-                rtmChannel = rtmClient.createChannel(roomId.toString());
-                await rtmChannel.join();
-                rtmChannel.on('ChannelMessage', ({ text }, senderId) => handleChannelMessage(senderId, text));
-            } catch(e) { console.log("RTM Join Fail"); }
         }
 
         async function sendCallSignal(targetId) {
@@ -303,27 +259,6 @@
                 await rtmClient.sendMessageToPeer({ text: payload }, targetId.toString());
             } catch(e) {}
         }
-
-        // --- CHAT ---
-        function openRoomChat() { document.getElementById('room-chat-screen').classList.remove('hidden'); document.getElementById('chat-badge').classList.remove('show'); document.getElementById('room-chat-id').innerText = "ID: " + currentRoomId; }
-        function closeRoomChat() { document.getElementById('room-chat-screen').classList.add('hidden'); }
-        async function sendRoomMessage() {
-            const input = document.getElementById('room-chat-input');
-            const text = input.value.trim();
-            if(!text || !rtmChannel) return;
-            const msgData = JSON.stringify({ name: currentUser.name, text: text });
-            try { await rtmChannel.sendMessage({ text: msgData }); renderRoomMessage(currentUser.name, text, 'me'); input.value = ''; } catch(e) { alert("ส่งไม่สำเร็จ (ลองใหม่)"); }
-        }
-        function handleChannelMessage(senderId, text) {
-            try { const data = JSON.parse(text); renderRoomMessage(data.name, data.text, 'other'); } 
-            catch(e) { renderRoomMessage(senderId, text, 'other'); }
-            if(document.getElementById('room-chat-screen').classList.contains('hidden')) { document.getElementById('chat-badge').classList.add('show'); showToast("ข้อความใหม่"); }
-        }
-        function renderRoomMessage(name, text, type) {
-            const div = document.createElement('div'); div.className = `chat-msg ${type}`; div.innerHTML = `<span class="sender-name">${name}</span>${text}`;
-            const body = document.getElementById('room-chat-body'); body.appendChild(div); body.scrollTop = body.scrollHeight;
-        }
-        function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toast-msg').innerText = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000); }
 
         // --- CALL UI ---
         function showIncomingCall(roomId, name, avatar) {
@@ -337,7 +272,7 @@
         function acceptCall() { document.getElementById('ringtone').pause(); document.getElementById('incoming-call-screen').classList.add('hidden'); if(incomingCallRoom) handleJoinFlow(incomingCallRoom); }
         function rejectCall() { document.getElementById('ringtone').pause(); document.getElementById('incoming-call-screen').classList.add('hidden'); incomingCallRoom = null; }
 
-        // --- SAVE ROOM ---
+        // --- ROOM SAVE ---
         function toggleSaveRoom() {
             if(!currentRoomId) return;
             let h = JSON.parse(localStorage.getItem('dc_history_v2') || "[]");
@@ -354,9 +289,7 @@
 
         // --- DASHBOARD ---
         function updateHistory() {
-            let old = JSON.parse(localStorage.getItem('dc_history') || "[]");
             let h = JSON.parse(localStorage.getItem('dc_history_v2') || "[]");
-            if(old.length > 0) { old.forEach(id => { if(!h.find(r => r.id === id)) h.push({id:id, saved:false}); }); localStorage.setItem('dc_history_v2', JSON.stringify(h)); localStorage.removeItem('dc_history'); }
             const html = h.length ? h.map(i => `<div class="room-card ${i.saved?'saved-room':''}" onclick="handleJoinFlow('${i.id}')"><span>ห้อง ${i.id} ${i.saved?'<i class="fas fa-star" style="color:var(--warning)"></i>':''}</span> <i class="fas fa-chevron-right"></i></div>`).join('') : `<div style="text-align:center;opacity:0.5;">ไม่มีประวัติ</div>`;
             document.getElementById('mobile-room-list').innerHTML = html; document.getElementById('pc-room-list').innerHTML = html;
         }
@@ -400,10 +333,6 @@
             currentRoomId = rid.toString(); addToHistory(currentRoomId);
             document.getElementById('dashboard-screen').classList.add('hidden'); document.getElementById('search-screen').classList.add('hidden'); document.getElementById('room-screen').classList.remove('hidden'); document.getElementById('room-id-txt').innerText="ID: "+rid;
             checkIsSaved(currentRoomId);
-            
-            // Join Chat
-            joinRTMChannel(currentRoomId);
-            // Call Signal
             if(currentRoomId !== currentUser.uid.toString()) sendCallSignal(currentRoomId);
 
             try {
@@ -439,22 +368,30 @@
         
         function toggleControls() { 
             const b=document.getElementById('control-bar'); const t=document.getElementById('top-bar');
-            clearTimeout(controlsTimeout);
-            if(b.classList.contains('hide-down')) { b.classList.remove('hide-down'); t.classList.remove('hide-up'); controlsTimeout=setTimeout(()=>{b.classList.add('hide-down'); t.classList.add('hide-up');},5000); }
+            if(b.classList.contains('hide-down')) { b.classList.remove('hide-down'); t.classList.remove('hide-up'); }
             else { b.classList.add('hide-down'); t.classList.add('hide-up'); }
         }
         async function toggleCam() { if(localTracks.video) { await localTracks.video.setMuted(!localTracks.video.muted); document.getElementById('btn-cam').classList.toggle('danger'); document.getElementById(`box-${currentUser.uid}`).querySelector('.no-cam-view').classList.toggle('hidden'); } }
         async function toggleMic() { if(localTracks.audio) { await localTracks.audio.setMuted(!localTracks.audio.muted); document.getElementById('btn-mic').classList.toggle('danger'); } }
-        async function shareScreen() { if(isSharing){ if(localTracks.screen){await client.unpublish(localTracks.screen); localTracks.screen.close();} await client.publish(localTracks.video); isSharing=false; document.getElementById('btn-screen').classList.remove('active'); } else { try{ localTracks.screen=await AgoraRTC.createScreenVideoTrack(); await client.unpublish(localTracks.video); await client.publish(localTracks.screen); isSharing=true; document.getElementById('btn-screen').classList.add('active'); }catch(e){} } }
-        function shareLink() { navigator.clipboard.writeText(window.location.href); alert("คัดลอกลิ้งค์แล้ว"); }
         
-        // --- FIX: RELOAD TO CLEANUP ---
-        async function leaveRoom() { 
-            localTracks.video?.close(); localTracks.audio?.close(); localTracks.screen?.close(); 
-            if(rtmChannel) await rtmChannel.leave();
-            await client.leave(); 
-            window.location.href = window.location.pathname.split('?')[0]; // Reload to Dashboard
+        async function shareScreen() {
+            if(isSharing) {
+                if(localTracks.screen) { await client.unpublish(localTracks.screen); localTracks.screen.close(); }
+                await client.publish(localTracks.video); localTracks.video.play(`play-${currentUser.uid}`);
+                isSharing = false; document.getElementById('btn-screen').classList.remove('active');
+            } else {
+                try {
+                    localTracks.screen = await AgoraRTC.createScreenVideoTrack();
+                    await client.unpublish(localTracks.video); await client.publish(localTracks.screen);
+                    localTracks.screen.play(`play-${currentUser.uid}`);
+                    isSharing = true; document.getElementById('btn-screen').classList.add('active');
+                    localTracks.screen.on("track-ended", () => shareScreen());
+                } catch(e) { console.log("Share failed"); }
+            }
         }
+
+        function shareLink() { navigator.clipboard.writeText(window.location.href); alert("คัดลอกลิ้งค์แล้ว"); }
+        async function leaveRoom() { localTracks.video?.close(); localTracks.audio?.close(); localTracks.screen?.close(); await client.leave(); window.location.href=window.location.pathname.split('?')[0]; }
     </script>
 </body>
 </html>
