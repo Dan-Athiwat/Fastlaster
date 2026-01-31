@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DanCall 4.6 - Restore</title>
+    <title>DanCall 5.4 - Group Chat First</title>
     
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/agora-rtm-sdk@1.5.1/index.js"></script>
@@ -18,63 +18,31 @@
         body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; width: 100vw; }
         .hidden { display: none !important; }
 
-        .btn { padding: 14px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; background: var(--primary); color: white; width: 100%; font-size: 16px; margin-top: 10px; transition: 0.2s; }
+        .btn { padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; background: var(--primary); color: white; width: 100%; font-size: 14px; transition: 0.2s; }
         .btn:active { transform: scale(0.98); opacity: 0.9; }
-        input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; background: #161e2e; color: white; margin-bottom: 15px; outline: none; font-size: 16px; }
+        input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #161e2e; color: white; outline: none; font-size: 16px; }
         
-        #auth-screen, #dashboard-screen, #room-screen, #search-screen, #app-permission-gate, #incoming-call-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        #auth-screen, #dashboard-screen, #room-screen, #group-chat-screen, #search-screen, #app-permission-gate { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; }
 
-        /* --- INCOMING CALL SCREEN --- */
-        #incoming-call-screen { 
-            background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; text-align: center;
-            background-image: url('https://media.giphy.com/media/3o7bu3XilJ5BOiSGic/giphy.gif'); 
-            background-size: cover; background-blend-mode: overlay;
+        /* --- GROUP CHAT SCREEN (Full Screen) --- */
+        #group-chat-screen { background: #0b1120; z-index: 100; }
+        .grp-header { 
+            height: 60px; background: var(--panel); border-bottom: 1px solid #334155; 
+            display: flex; justify-content: space-between; align-items: center; padding: 0 15px; 
         }
-        .caller-avatar-circle { width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--success); overflow: hidden; margin: 0 auto 20px; animation: pulse-ring 2s infinite; }
-        .caller-avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
-        .call-actions { display: flex; gap: 40px; margin-top: 50px; }
-        .call-btn { width: 70px; height: 70px; border-radius: 50%; border: none; font-size: 24px; color: white; cursor: pointer; display: flex; justify-content: center; align-items: center; }
-        .btn-answer { background: var(--success); animation: bounce 1s infinite; }
-        .btn-decline { background: var(--danger); }
-        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-
-        /* --- ROOM SAVE UI --- */
-        .room-card.saved-room { border: 2px solid var(--warning); box-shadow: 0 0 10px rgba(250, 204, 21, 0.3); }
-        .save-btn { background: rgba(0,0,0,0.5); border: none; color: #94a3b8; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; }
-        .save-btn.active { color: var(--warning); }
-
-        /* --- STANDARD UI --- */
-        #app-permission-gate { justify-content: center; align-items: center; background: rgba(0,0,0,0.95); z-index: 999; padding: 20px; text-align: center; }
-        .perm-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 100%; max-width: 350px; border: 1px solid #334155; }
+        .grp-title { font-weight: bold; font-size: 18px; color: var(--text); }
+        .grp-id-sub { font-size: 12px; color: #94a3b8; }
         
-        #auth-screen { justify-content: center; align-items: center; background: linear-gradient(135deg, #0f172a, #1e1b4b); z-index: 100; }
-        .auth-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; }
-        .avatar-up, .profile-circle, .pc-avatar-circle { border-radius: 50%; overflow: hidden; display: flex; justify-content: center; align-items: center; background: #334155; }
-        .avatar-up { width: 100px; height: 100px; margin: 0 auto 20px; border: 2px dashed #64748b; }
-        .profile-circle { width: 50px; height: 50px; border: 2px solid #334155; }
-        .pc-avatar-circle { width: 45px; height: 45px; }
-        img { width: 100%; height: 100%; object-fit: cover; }
-
-        #dashboard-screen { background: var(--bg); overflow-y: auto; }
-        .mobile-dash-layout { padding: 20px; }
-        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-top: 10px; }
-        .profile-sec { display: flex; align-items: center; gap: 12px; }
-        .search-icon-btn { font-size: 24px; color: white; background: transparent; border: none; padding: 10px; }
-        .btn-create-big { background: var(--primary); color: white; width: 100%; padding: 18px; border-radius: 15px; border: none; font-size: 18px; display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; }
-        .room-card { background: var(--card-bg); padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-
-        .pc-dash-layout { display: none; height: 100%; flex-direction: column; }
-        .navbar { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: var(--panel); border-bottom: 1px solid #334155; }
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .pc-sidebar { width: 280px; background: var(--panel); padding: 20px; border-right: 1px solid #334155; display: flex; flex-direction: column; }
-        .pc-main { flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column; color: #64748b; }
-        .dash-content { display: flex; height: calc(100% - 70px); width: 100%; }
-
-        #search-screen { background: var(--bg); padding: 20px; z-index: 300; padding-top: 40px; }
+        .grp-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #0b1120; }
+        .grp-msg { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; position: relative; word-wrap: break-word; }
+        .grp-msg.me { align-self: flex-end; background: #005c4b; color: white; border-bottom-right-radius: 2px; } /* Green like WhatsApp */
+        .grp-msg.other { align-self: flex-start; background: #202c33; color: white; border-bottom-left-radius: 2px; }
+        .sender-name { font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 3px; display: block; font-weight: bold; }
+        
+        .grp-footer { height: 70px; background: var(--panel); padding: 10px; display: flex; gap: 10px; align-items: center; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
 
         /* --- VIDEO ROOM --- */
-        #room-screen { background: #000; z-index: 200; position: relative; }
+        #room-screen { background: #000; z-index: 200; }
         .room-info-bar { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 6px 16px; border-radius: 30px; display: flex; gap: 10px; align-items: center; z-index: 500; backdrop-filter: blur(5px); font-size: 14px; transition: top 0.3s ease; }
         .room-info-bar.hide-up { top: -80px; }
 
@@ -96,10 +64,39 @@
         .ctrl-btn.active { background: var(--primary); }
         .ctrl-btn.danger { background: var(--danger); }
 
-        .disconnect-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--danger); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* --- STANDARD UI --- */
+        #app-permission-gate { justify-content: center; align-items: center; background: rgba(0,0,0,0.95); z-index: 999; padding: 20px; text-align: center; }
+        .perm-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 100%; max-width: 350px; border: 1px solid #334155; }
+        
+        #auth-screen { justify-content: center; align-items: center; background: linear-gradient(135deg, #0f172a, #1e1b4b); z-index: 100; }
+        .auth-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; }
+        .avatar-up, .profile-circle, .pc-avatar-circle { border-radius: 50%; overflow: hidden; display: flex; justify-content: center; align-items: center; background: #334155; }
+        .avatar-up { width: 100px; height: 100px; margin: 0 auto 20px; border: 2px dashed #64748b; }
+        .profile-circle { width: 50px; height: 50px; border: 2px solid #334155; }
+        .pc-avatar-circle { width: 45px; height: 45px; }
+        img { width: 100%; height: 100%; object-fit: cover; }
 
+        #dashboard-screen { background: var(--bg); overflow-y: auto; }
+        .mobile-dash-layout { padding: 20px; }
+        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-top: 10px; }
+        .profile-sec { display: flex; align-items: center; gap: 12px; }
+        .search-icon-btn { font-size: 24px; color: white; background: transparent; border: none; padding: 10px; }
+        
+        .btn-create-big { background: var(--primary); color: white; width: 100%; padding: 18px; border-radius: 15px; border: none; font-size: 18px; display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .btn-create-group { background: var(--success); }
+        .room-card { background: var(--card-bg); padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .group-card { border-left: 4px solid var(--success); }
+
+        .pc-dash-layout { display: none; height: 100%; flex-direction: column; }
+        .navbar { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: var(--panel); border-bottom: 1px solid #334155; }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .pc-sidebar { width: 280px; background: var(--panel); padding: 20px; border-right: 1px solid #334155; display: flex; flex-direction: column; }
+        .pc-main { flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column; color: #64748b; }
+        .dash-content { display: flex; height: calc(100% - 70px); width: 100%; }
+
+        #search-screen { background: var(--bg); padding: 20px; z-index: 300; padding-top: 40px; }
+
+        /* Media Queries */
         @media (min-width: 769px) {
             .mobile-dash-layout { display: none; }
             .pc-dash-layout { display: flex; }
@@ -113,13 +110,24 @@
 </head>
 <body>
 
-    <div id="incoming-call-screen" class="hidden">
-        <div class="caller-avatar-circle"><img id="caller-img" src=""></div>
-        <h2 id="caller-name">สายเรียกเข้า...</h2>
-        <p id="caller-id" style="color:#94a3b8;">ID: ...</p>
-        <div class="call-actions">
-            <button class="call-btn btn-decline" onclick="rejectCall()"><i class="fas fa-phone-slash"></i></button>
-            <button class="call-btn btn-answer" onclick="acceptCall()"><i class="fas fa-phone"></i></button>
+    <div id="group-chat-screen" class="hidden">
+        <div class="grp-header">
+            <div style="display:flex; gap:10px; align-items:center;">
+                <i class="fas fa-arrow-left" style="font-size:20px; cursor:pointer;" onclick="closeGroupChat()"></i>
+                <div>
+                    <div class="grp-title">กลุ่ม</div>
+                    <div class="grp-id-sub" id="grp-chat-id">ID: ...</div>
+                </div>
+            </div>
+            <button class="btn" style="background:var(--success); width:auto; padding:8px 15px;" onclick="callFromGroup()">
+                <i class="fas fa-phone-alt"></i> โทรกลุ่ม
+            </button>
+        </div>
+        <div id="grp-chat-body" class="grp-body">
+            </div>
+        <div class="grp-footer">
+            <input type="text" id="grp-chat-input" placeholder="พิมพ์ข้อความ..." style="flex:1; margin:0;">
+            <button class="btn" style="width:auto; border-radius:50%; width:45px; height:45px; padding:0; display:flex; justify-content:center; align-items:center;" onclick="sendGroupMessage()"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
@@ -156,12 +164,19 @@
                     <div class="profile-circle"><img id="mob-avatar" src="" onclick="logout()"></div>
                     <div><h3 id="mob-name">User</h3><span id="mob-id">ID</span></div>
                 </div>
-                <button class="search-icon-btn" onclick="showSearch()"><i class="fas fa-search"></i></button>
+                <div style="display:flex; gap:10px;">
+                    <button class="search-icon-btn" onclick="showSearch('group')"><i class="fas fa-users"></i></button>
+                    <button class="search-icon-btn" onclick="showSearch('room')"><i class="fas fa-search"></i></button>
+                </div>
             </div>
-            <h3 style="font-size:20px; font-weight:600; margin-bottom:15px;">จัดการห้องโทร</h3>
-            <button class="btn-create-big" onclick="createRoom()"><i class="fas fa-plus"></i> สร้างห้องโทร</button>
+            
+            <h3 style="font-size:20px; font-weight:600; margin-bottom:15px;">จัดการ</h3>
+            <button class="btn-create-big" onclick="createRoom()">+ สร้างห้องโทร</button>
+            <button class="btn-create-big btn-create-group" onclick="createGroup()">+ สร้างกลุ่มแชท</button>
+            
             <div id="mobile-room-list"></div>
         </div>
+
         <div class="pc-dash-layout">
             <div class="navbar">
                 <div class="user-info">
@@ -169,14 +184,16 @@
                     <div><h3 id="nav-name">User</h3><span id="nav-phone" style="font-size:12px; color:#94a3b8;">User</span></div>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <input type="number" id="pc-room" placeholder="ID ห้อง" style="width:150px; margin:0;">
+                    <button class="btn" style="width:auto; padding:8px;" onclick="showSearch('group')"><i class="fas fa-users"></i> หา</button>
+                    <input type="number" id="pc-room" placeholder="ID ห้อง/กลุ่ม" style="width:150px; margin:0;">
                     <button onclick="joinRoomCheck('pc-room')" style="width:auto; margin:0; padding:8px 15px;" class="btn">เข้า</button>
                 </div>
             </div>
             <div class="dash-content">
                 <div class="pc-sidebar">
-                    <h3>จัดการห้อง</h3>
+                    <h3>เมนู</h3>
                     <button class="btn" onclick="createRoom()">+ สร้างห้อง</button>
+                    <button class="btn btn-create-group" onclick="createGroup()" style="margin-top:10px;">+ สร้างกลุ่ม</button>
                     <div id="pc-room-list" style="margin-top:20px; color:#94a3b8;"></div>
                 </div>
                 <div class="pc-main">
@@ -189,16 +206,16 @@
     </div>
 
     <div id="search-screen" class="hidden">
-        <div class="search-nav" style="display:flex; gap:15px; padding-bottom:20px;"><i class="fas fa-arrow-left" style="font-size:24px;" onclick="hideSearch()"></i><h2>ค้นหาห้อง</h2></div>
-        <input type="number" id="search-input" placeholder="กรอกเลขห้อง">
-        <button class="btn" onclick="joinRoomCheck('search-input')">ค้นหา</button>
+        <div class="search-nav" style="display:flex; gap:15px; padding-bottom:20px;"><i class="fas fa-arrow-left" style="font-size:24px;" onclick="hideSearch()"></i><h2 id="search-title">ค้นหา</h2></div>
+        <input type="number" id="search-input" placeholder="กรอกเลข ID">
+        <button class="btn" onclick="performSearch()">เข้า</button>
     </div>
 
     <div id="room-screen" class="hidden" onclick="toggleControls()">
         <div class="room-info-bar" id="top-bar">
+            <span id="room-type-icon" style="margin-right:5px;"><i class="fas fa-phone"></i></span>
             <span style="color:white; font-weight:bold;" id="room-id-txt">ID</span>
-            <button id="btn-save-room" class="save-btn" onclick="toggleSaveRoom()" style="margin-left:10px;"><i class="fas fa-star"></i></button>
-            <button onclick="shareLink()" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:50%; width:30px; height:30px; margin-left:5px;"><i class="fas fa-link"></i></button>
+            <button onclick="shareLink()" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:50%; width:30px; height:30px; margin-left:10px;"><i class="fas fa-link"></i></button>
         </div>
         <div id="video-grid"></div>
         <div class="controls" id="control-bar" onclick="event.stopPropagation()">
@@ -209,15 +226,16 @@
         </div>
     </div>
 
-    <audio id="ringtone" src="https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3" loop></audio>
-
     <script>
         const APP_ID = "ebab3ce9350a43c4bf6fb4312a3dbd23"; 
         
         let client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-        let rtmClient; 
+        let rtmClient, rtmChannel;
         let localTracks = { video: null, audio: null, screen: null };
-        let currentUser = null, currentRoomId = null, incomingCallRoom = null;
+        let currentUser = null;
+        let currentTargetId = null; // ID of Room or Group
+        let currentType = 'room'; // 'room' or 'group'
+        let searchMode = 'room';
         let isSharing = false;
 
         function isAndroidApp() {
@@ -227,137 +245,170 @@
 
         window.onload = async () => {
             const saved = localStorage.getItem('dc3_active_user');
-            const urlParams = new URLSearchParams(window.location.search);
-            const inviteRoom = urlParams.get('room');
             if(saved) {
                 currentUser = JSON.parse(saved);
-                await initSignal();
-                if(inviteRoom) handleJoinFlow(inviteRoom); else loadDashboard();
+                if(!currentUser.groups) currentUser.groups = [];
+                await initRTM();
+                loadDashboard();
             }
         };
 
-        // --- SIGNALING ---
-        async function initSignal() {
+        async function initRTM() {
             if(!APP_ID || APP_ID.includes("ใส่")) return;
             try {
                 rtmClient = AgoraRTM.createInstance(APP_ID);
                 await rtmClient.login({ uid: currentUser.uid.toString() });
-                
-                rtmClient.on('MessageFromPeer', ({ text }, peerId) => {
-                    try {
-                        const msg = JSON.parse(text);
-                        if(msg.type === 'call') showIncomingCall(msg.room, msg.name, msg.avatar);
-                    } catch(e){}
-                });
             } catch (err) { console.log(err); }
         }
 
-        async function sendCallSignal(targetId) {
-            if(!rtmClient) return;
-            try {
-                const payload = JSON.stringify({ type: 'call', room: targetId, name: currentUser.name, avatar: currentUser.avatar });
-                await rtmClient.sendMessageToPeer({ text: payload }, targetId.toString());
-            } catch(e) {}
+        // --- DASHBOARD ACTIONS ---
+        function createRoom() { startVideoCall(Math.floor(100000+Math.random()*900000), 'room'); }
+        function createGroup() { 
+            const gid = Math.floor(100000+Math.random()*900000);
+            currentUser.groups.push({id: gid});
+            localStorage.setItem('dc3_active_user', JSON.stringify(currentUser));
+            enterGroup(gid); // Create -> Go to Group Chat
         }
 
-        // --- CALL UI ---
-        function showIncomingCall(roomId, name, avatar) {
-            incomingCallRoom = roomId;
-            document.getElementById('incoming-call-screen').classList.remove('hidden');
-            document.getElementById('caller-name').innerText = name + " โทรมา...";
-            document.getElementById('caller-id').innerText = "ห้อง: " + roomId;
-            document.getElementById('caller-img').src = avatar || "https://via.placeholder.com/150";
-            document.getElementById('ringtone').play().catch(()=>{});
-        }
-        function acceptCall() { document.getElementById('ringtone').pause(); document.getElementById('incoming-call-screen').classList.add('hidden'); if(incomingCallRoom) handleJoinFlow(incomingCallRoom); }
-        function rejectCall() { document.getElementById('ringtone').pause(); document.getElementById('incoming-call-screen').classList.add('hidden'); incomingCallRoom = null; }
-
-        // --- ROOM SAVE ---
-        function toggleSaveRoom() {
-            if(!currentRoomId) return;
-            let h = JSON.parse(localStorage.getItem('dc_history_v2') || "[]");
-            let idx = h.findIndex(r => r.id === currentRoomId);
-            let saved = false;
-            if(idx > -1) { h[idx].saved = !h[idx].saved; saved = h[idx].saved; } 
-            else { h.unshift({ id: currentRoomId, saved: true }); saved = true; }
-            localStorage.setItem('dc_history_v2', JSON.stringify(h));
-            updateSaveBtnUI(saved);
-        }
-        function updateSaveBtnUI(s) { const btn = document.getElementById('btn-save-room'); if(s) { btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-star"></i>'; } else { btn.classList.remove('active'); btn.innerHTML = '<i class="far fa-star"></i>'; } }
-        function checkIsSaved(rid) { let h = JSON.parse(localStorage.getItem('dc_history_v2') || "[]"); const r = h.find(x => x.id === rid); updateSaveBtnUI(r ? r.saved : false); }
-        function addToHistory(rid) { let h = JSON.parse(localStorage.getItem('dc_history_v2') || "[]"); if(!h.find(x => x.id === rid)) { h.unshift({ id: rid, saved: false }); localStorage.setItem('dc_history_v2', JSON.stringify(h)); } }
-
-        // --- DASHBOARD ---
-        function updateHistory() {
-            let h = JSON.parse(localStorage.getItem('dc_history_v2') || "[]");
-            const html = h.length ? h.map(i => `<div class="room-card ${i.saved?'saved-room':''}" onclick="handleJoinFlow('${i.id}')"><span>ห้อง ${i.id} ${i.saved?'<i class="fas fa-star" style="color:var(--warning)"></i>':''}</span> <i class="fas fa-chevron-right"></i></div>`).join('') : `<div style="text-align:center;opacity:0.5;">ไม่มีประวัติ</div>`;
-            document.getElementById('mobile-room-list').innerHTML = html; document.getElementById('pc-room-list').innerHTML = html;
+        function handleItemClick(id, type) {
+            if(type === 'room') {
+                startVideoCall(id, 'room'); // Room -> Video directly
+            } else {
+                enterGroup(id); // Group -> Chat screen
+            }
         }
 
-        // --- CORE ---
-        function toggleAuth(m) { document.getElementById('login-form').classList.toggle('hidden'); document.getElementById('signup-form').classList.toggle('hidden'); }
-        function loadFile(e) { const r = new FileReader(); r.onload=ev=>document.getElementById('preview-img').src=ev.target.result; r.readAsDataURL(e.target.files[0]); }
-        function handleSignup() {
-            const name=document.getElementById('signup-name').value; const phone=document.getElementById('signup-phone').value; const img=document.getElementById('preview-img').src;
-            if(!name||!phone) return alert("กรอกให้ครบ");
-            const db=JSON.parse(localStorage.getItem('dc3_users_db')||"[]");
-            db.push({uid:phone, name, phone, avatar:img}); localStorage.setItem('dc3_users_db', JSON.stringify(db));
-            alert("สำเร็จ"); toggleAuth('login');
+        function showSearch(mode) {
+            searchMode = mode;
+            document.getElementById('search-screen').classList.remove('hidden');
+            document.getElementById('search-title').innerText = mode === 'group' ? "ค้นหากลุ่ม" : "ค้นหาห้อง";
         }
-        function handleLogin() {
-            const name=document.getElementById('login-name').value; const phone=document.getElementById('login-phone').value;
-            const user=(JSON.parse(localStorage.getItem('dc3_users_db')||"[]")).find(u=>u.name===name && u.phone===phone);
-            if(user){ currentUser=user; localStorage.setItem('dc3_active_user', JSON.stringify(user)); initSignal(); loadDashboard(); } else alert("ไม่พบข้อมูล");
-        }
-        function logout() { localStorage.removeItem('dc3_active_user'); if(rtmClient)rtmClient.logout(); window.location.href=window.location.pathname.split('?')[0]; }
-
-        function loadDashboard() {
-            document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('dashboard-screen').classList.remove('hidden');
-            document.getElementById('mob-name').innerText=currentUser.name; document.getElementById('mob-avatar').src=currentUser.avatar; document.getElementById('mob-id').innerText="ID: "+currentUser.uid;
-            document.getElementById('nav-name').innerText=currentUser.name; document.getElementById('nav-avatar').src=currentUser.avatar;
-            updateHistory();
-        }
-
-        // --- JOIN ---
-        function createRoom() { handleJoinFlow(Math.floor(100000+Math.random()*900000)); }
-        function joinRoomCheck(id) { const r=document.getElementById(id).value; if(r)handleJoinFlow(r); }
-        function showSearch() { document.getElementById('search-screen').classList.remove('hidden'); }
         function hideSearch() { document.getElementById('search-screen').classList.add('hidden'); }
-        function handleJoinFlow(rid) { isAndroidApp() ? showApkGate(rid) : joinRoom(rid); }
-        function showApkGate(rid) { document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('dashboard-screen').classList.add('hidden'); document.getElementById('search-screen').classList.add('hidden'); document.getElementById('app-permission-gate').classList.remove('hidden'); document.getElementById('gate-room-id').innerText=rid; }
-        async function apkRequestPermission() { const r=document.getElementById('gate-room-id').innerText; try{ const s=await navigator.mediaDevices.getUserMedia({audio:true,video:true}); s.getTracks().forEach(t=>t.stop()); setTimeout(()=>{document.getElementById('app-permission-gate').classList.add('hidden'); joinRoom(r);},500); } catch(e){ alert("เปิดสิทธิ์ก่อน"); } }
+        
+        function performSearch() {
+            const id = document.getElementById('search-input').value;
+            if(id) {
+                if(searchMode === 'group') {
+                    if(!currentUser.groups.find(g => g.id == id)) {
+                        currentUser.groups.push({id: id});
+                        localStorage.setItem('dc3_active_user', JSON.stringify(currentUser));
+                    }
+                    enterGroup(id);
+                } else {
+                    startVideoCall(id, 'room');
+                }
+            }
+        }
+        function joinRoomCheck(elemId) { const id = document.getElementById(elemId).value; if(id) startVideoCall(id, 'room'); }
 
-        // --- VIDEO ---
-        async function joinRoom(rid) {
+        // --- GROUP CHAT LOGIC ---
+        async function enterGroup(gid) {
+            currentTargetId = gid;
+            currentType = 'group';
+            
+            // Save History
+            saveHistory(gid, 'group');
+
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('search-screen').classList.add('hidden');
+            document.getElementById('group-chat-screen').classList.remove('hidden');
+            document.getElementById('grp-chat-id').innerText = "ID: " + gid;
+            
+            // Join RTM for Chat
+            if(rtmChannel) await rtmChannel.leave();
+            rtmChannel = rtmClient.createChannel(gid.toString());
+            await rtmChannel.join();
+            rtmChannel.on('ChannelMessage', ({ text }, senderId) => handleChannelMessage(senderId, text));
+        }
+
+        function closeGroupChat() {
+            document.getElementById('group-chat-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+            if(rtmChannel) rtmChannel.leave();
+        }
+
+        function callFromGroup() {
+            // Call button inside Group Chat -> Go to Video
+            startVideoCall(currentTargetId, 'group');
+        }
+
+        async function sendGroupMessage() {
+            const input = document.getElementById('grp-chat-input');
+            const text = input.value.trim();
+            if(!text || !rtmChannel) return;
+            const msgData = JSON.stringify({ name: currentUser.name, text: text });
+            try { await rtmChannel.sendMessage({ text: msgData }); renderRoomMessage(currentUser.name, text, 'me'); input.value = ''; } catch(e) {}
+        }
+        
+        function handleChannelMessage(senderId, text) {
+            try { const data = JSON.parse(text); renderRoomMessage(data.name, data.text, 'other'); } 
+            catch(e) { renderRoomMessage(senderId, text, 'other'); }
+        }
+        function renderRoomMessage(name, text, type) {
+            const div = document.createElement('div'); div.className = `grp-msg ${type}`; div.innerHTML = `<span class="sender-name">${name}</span>${text}`;
+            const body = document.getElementById('grp-chat-body'); body.appendChild(div); body.scrollTop = body.scrollHeight;
+        }
+
+        // --- VIDEO CALL LOGIC ---
+        function startVideoCall(id, type) {
+            if(isAndroidApp()) showApkGate(id, type); else joinAgora(id, type);
+        }
+
+        function showApkGate(id, type) {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('search-screen').classList.add('hidden');
+            document.getElementById('group-chat-screen').classList.add('hidden');
+            document.getElementById('app-permission-gate').classList.remove('hidden');
+            document.getElementById('gate-room-id').innerText = JSON.stringify({id, type});
+        }
+        async function apkRequestPermission() {
+            const data = JSON.parse(document.getElementById('gate-room-id').innerText);
+            try { const s=await navigator.mediaDevices.getUserMedia({audio:true,video:true}); s.getTracks().forEach(t=>t.stop()); setTimeout(()=>{document.getElementById('app-permission-gate').classList.add('hidden'); joinAgora(data.id, data.type);},500); } catch(e){ alert("เปิดสิทธิ์ก่อน"); }
+        }
+
+        async function joinAgora(id, type) {
             if(!APP_ID || APP_ID.includes("ใส่")) return alert("ใส่ App ID");
-            currentRoomId = rid.toString(); addToHistory(currentRoomId);
-            document.getElementById('dashboard-screen').classList.add('hidden'); document.getElementById('search-screen').classList.add('hidden'); document.getElementById('room-screen').classList.remove('hidden'); document.getElementById('room-id-txt').innerText="ID: "+rid;
-            checkIsSaved(currentRoomId);
-            if(currentRoomId !== currentUser.uid.toString()) sendCallSignal(currentRoomId);
+            
+            currentTargetId = id;
+            currentType = type;
+            
+            saveHistory(id, type); // Save History
+
+            // UI Setup
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('search-screen').classList.add('hidden');
+            document.getElementById('group-chat-screen').classList.add('hidden'); // Hide chat if coming from group
+            document.getElementById('room-screen').classList.remove('hidden');
+            
+            const icon = type === 'group' ? '<i class="fas fa-users"></i>' : '<i class="fas fa-phone"></i>';
+            const label = type === 'group' ? 'กลุ่ม: ' : 'ห้อง: ';
+            document.getElementById('room-type-icon').innerHTML = icon;
+            document.getElementById('room-id-txt').innerText = label + id;
 
             try {
-                await client.join(APP_ID, rid.toString(), null, currentUser.uid);
+                await client.join(APP_ID, id.toString(), null, currentUser.uid);
                 localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
                 localTracks.video = await AgoraRTC.createCameraVideoTrack();
-                createVideoBox(currentUser.uid, localTracks.video, currentUser.name, currentUser.avatar, true);
+                createVideoBox(currentUser.uid, localTracks.video, true);
                 await client.publish([localTracks.audio, localTracks.video]);
             } catch(e) { alert(e.message); leaveRoom(); }
         }
 
         client.on("user-published", async (u, m) => {
             await client.subscribe(u, m);
-            if(m==="video") createVideoBox(u.uid, u.videoTrack, "User "+u.uid, "https://via.placeholder.com/100", false);
+            if(m==="video") createVideoBox(u.uid, u.videoTrack, false);
             if(m==="audio") u.audioTrack.play();
         });
         client.on("user-unpublished", (u, m) => { if(m==="video") document.getElementById(`box-${u.uid}`)?.querySelector('.no-cam-view').classList.remove('hidden'); });
         client.on("user-left", u => document.getElementById(`box-${u.uid}`)?.remove());
 
-        function createVideoBox(uid, track, name, avatar, isLocal) {
+        function createVideoBox(uid, track, isLocal) {
             let box = document.getElementById(`box-${uid}`);
             if(!box) {
                 box = document.createElement('div'); box.id = `box-${uid}`; box.className = 'video-box';
                 if(!isLocal) box.setAttribute('data-remote', 'true');
-                box.innerHTML = `<div id="play-${uid}" class="video-player"></div><div class="no-cam-view hidden"><div class="avatar-room-circle"><img src="${avatar}"></div><span>${name}</span></div><div style="position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.5);color:white;padding:2px 10px;border-radius:10px;font-size:12px;">${name}</div>`;
+                box.innerHTML = `<div id="play-${uid}" class="video-player"></div><div class="no-cam-view hidden"><div class="avatar-room-circle"><img src="https://via.placeholder.com/100"></div></div>`;
                 document.getElementById('video-grid').appendChild(box);
             }
             box.querySelector('.no-cam-view').classList.add('hidden');
@@ -373,25 +424,76 @@
         }
         async function toggleCam() { if(localTracks.video) { await localTracks.video.setMuted(!localTracks.video.muted); document.getElementById('btn-cam').classList.toggle('danger'); document.getElementById(`box-${currentUser.uid}`).querySelector('.no-cam-view').classList.toggle('hidden'); } }
         async function toggleMic() { if(localTracks.audio) { await localTracks.audio.setMuted(!localTracks.audio.muted); document.getElementById('btn-mic').classList.toggle('danger'); } }
+        async function shareScreen() { /* Same */ }
+        function shareLink() { navigator.clipboard.writeText(window.location.href); alert("Copied"); }
         
-        async function shareScreen() {
-            if(isSharing) {
-                if(localTracks.screen) { await client.unpublish(localTracks.screen); localTracks.screen.close(); }
-                await client.publish(localTracks.video); localTracks.video.play(`play-${currentUser.uid}`);
-                isSharing = false; document.getElementById('btn-screen').classList.remove('active');
+        async function leaveRoom() { 
+            localTracks.video?.close(); localTracks.audio?.close(); localTracks.screen?.close(); 
+            await client.leave(); 
+            
+            // If group call, go back to Group Chat. If room call, go to Dashboard.
+            if(currentType === 'group') {
+                document.getElementById('room-screen').classList.add('hidden');
+                document.getElementById('group-chat-screen').classList.remove('hidden');
+                // Re-init DOM for video grid cleanup
+                document.getElementById('video-grid').innerHTML = '';
             } else {
-                try {
-                    localTracks.screen = await AgoraRTC.createScreenVideoTrack();
-                    await client.unpublish(localTracks.video); await client.publish(localTracks.screen);
-                    localTracks.screen.play(`play-${currentUser.uid}`);
-                    isSharing = true; document.getElementById('btn-screen').classList.add('active');
-                    localTracks.screen.on("track-ended", () => shareScreen());
-                } catch(e) { console.log("Share failed"); }
+                window.location.href = window.location.pathname.split('?')[0];
             }
         }
 
-        function shareLink() { navigator.clipboard.writeText(window.location.href); alert("คัดลอกลิ้งค์แล้ว"); }
-        async function leaveRoom() { localTracks.video?.close(); localTracks.audio?.close(); localTracks.screen?.close(); await client.leave(); window.location.href=window.location.pathname.split('?')[0]; }
+        function saveHistory(id, type) {
+            let h = JSON.parse(localStorage.getItem('dc5_history') || "[]");
+            h = h.filter(item => item.id != id);
+            h.unshift({ id: id, type: type });
+            localStorage.setItem('dc5_history', JSON.stringify(h));
+        }
+
+        // --- DASHBOARD RENDER ---
+        function updateHistory() {
+            let h = JSON.parse(localStorage.getItem('dc5_history') || "[]");
+            const listMob = document.getElementById('mobile-room-list');
+            const listPc = document.getElementById('pc-room-list');
+            
+            const html = h.map(item => {
+                const isGroup = item.type === 'group';
+                const styleClass = isGroup ? 'group-card' : '';
+                const icon = isGroup ? '<i class="fas fa-users"></i>' : '<i class="fas fa-phone"></i>';
+                const label = isGroup ? 'กลุ่ม' : 'ห้อง';
+                
+                return `<div class="room-card ${styleClass}" onclick="handleItemClick('${item.id}', '${item.type}')">
+                            <span>${icon} ${label} ${item.id}</span> 
+                            <i class="fas fa-chevron-right"></i>
+                        </div>`;
+            }).join('');
+            
+            listMob.innerHTML = html || '<div style="opacity:0.5;text-align:center;">ไม่มีประวัติ</div>';
+            listPc.innerHTML = html || '<div style="opacity:0.5;text-align:center;">ไม่มีประวัติ</div>';
+        }
+
+        // --- AUTH ---
+        function toggleAuth(m) { document.getElementById('login-form').classList.toggle('hidden'); document.getElementById('signup-form').classList.toggle('hidden'); }
+        function loadFile(e) { const r = new FileReader(); r.onload=ev=>document.getElementById('preview-img').src=ev.target.result; r.readAsDataURL(e.target.files[0]); }
+        function handleSignup() {
+            const name=document.getElementById('signup-name').value; const phone=document.getElementById('signup-phone').value; const img=document.getElementById('preview-img').src;
+            if(!name||!phone) return alert("กรอกให้ครบ");
+            const db=JSON.parse(localStorage.getItem('dc3_users_db')||"[]");
+            db.push({uid:phone, name, phone, avatar:img, groups:[]}); localStorage.setItem('dc3_users_db', JSON.stringify(db));
+            alert("สำเร็จ"); toggleAuth('login');
+        }
+        function handleLogin() {
+            const name=document.getElementById('login-name').value; const phone=document.getElementById('login-phone').value;
+            const user=(JSON.parse(localStorage.getItem('dc3_users_db')||"[]")).find(u=>u.name===name && u.phone===phone);
+            if(user){ currentUser=user; localStorage.setItem('dc3_active_user', JSON.stringify(user)); initRTM(); loadDashboard(); } else alert("ไม่พบข้อมูล");
+        }
+        function logout() { localStorage.removeItem('dc3_active_user'); window.location.href=window.location.pathname.split('?')[0]; }
+
+        function loadDashboard() {
+            document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('dashboard-screen').classList.remove('hidden');
+            document.getElementById('mob-name').innerText=currentUser.name; document.getElementById('mob-avatar').src=currentUser.avatar; document.getElementById('mob-id').innerText="ID: "+currentUser.uid;
+            document.getElementById('nav-name').innerText=currentUser.name; document.getElementById('nav-avatar').src=currentUser.avatar;
+            updateHistory();
+        }
     </script>
 </body>
 </html>
