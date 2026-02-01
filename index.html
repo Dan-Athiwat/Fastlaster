@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DanCall 5.4 - Group Chat First</title>
+    <title>DanCall 5.4 - Restore</title>
     
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/agora-rtm-sdk@1.5.1/index.js"></script>
@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* --- THEME --- */
+        /* --- THEME (v5.4) --- */
         :root { --bg: #0f172a; --panel: #1e293b; --card-bg: #283040; --primary: #3b82f6; --danger: #ef4444; --success: #22c55e; --warning: #facc15; --text: #f8fafc; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; width: 100vw; }
@@ -35,7 +35,7 @@
         
         .grp-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #0b1120; }
         .grp-msg { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; position: relative; word-wrap: break-word; }
-        .grp-msg.me { align-self: flex-end; background: #005c4b; color: white; border-bottom-right-radius: 2px; } /* Green like WhatsApp */
+        .grp-msg.me { align-self: flex-end; background: #005c4b; color: white; border-bottom-right-radius: 2px; }
         .grp-msg.other { align-self: flex-start; background: #202c33; color: white; border-bottom-left-radius: 2px; }
         .sender-name { font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 3px; display: block; font-weight: bold; }
         
@@ -96,7 +96,6 @@
 
         #search-screen { background: var(--bg); padding: 20px; z-index: 300; padding-top: 40px; }
 
-        /* Media Queries */
         @media (min-width: 769px) {
             .mobile-dash-layout { display: none; }
             .pc-dash-layout { display: flex; }
@@ -120,11 +119,10 @@
                 </div>
             </div>
             <button class="btn" style="background:var(--success); width:auto; padding:8px 15px;" onclick="callFromGroup()">
-                <i class="fas fa-phone-alt"></i> โทรกลุ่ม
+                <i class="fas fa-phone-alt"></i> โทร
             </button>
         </div>
-        <div id="grp-chat-body" class="grp-body">
-            </div>
+        <div id="grp-chat-body" class="grp-body"></div>
         <div class="grp-footer">
             <input type="text" id="grp-chat-input" placeholder="พิมพ์ข้อความ..." style="flex:1; margin:0;">
             <button class="btn" style="width:auto; border-radius:50%; width:45px; height:45px; padding:0; display:flex; justify-content:center; align-items:center;" onclick="sendGroupMessage()"><i class="fas fa-paper-plane"></i></button>
@@ -215,7 +213,6 @@
         <div class="room-info-bar" id="top-bar">
             <span id="room-type-icon" style="margin-right:5px;"><i class="fas fa-phone"></i></span>
             <span style="color:white; font-weight:bold;" id="room-id-txt">ID</span>
-            <button onclick="shareLink()" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:50%; width:30px; height:30px; margin-left:10px;"><i class="fas fa-link"></i></button>
         </div>
         <div id="video-grid"></div>
         <div class="controls" id="control-bar" onclick="event.stopPropagation()">
@@ -233,8 +230,8 @@
         let rtmClient, rtmChannel;
         let localTracks = { video: null, audio: null, screen: null };
         let currentUser = null;
-        let currentTargetId = null; // ID of Room or Group
-        let currentType = 'room'; // 'room' or 'group'
+        let currentTargetId = null; 
+        let currentType = 'room'; 
         let searchMode = 'room';
         let isSharing = false;
 
@@ -244,7 +241,7 @@
         }
 
         window.onload = async () => {
-            const saved = localStorage.getItem('dc3_active_user');
+            const saved = localStorage.getItem('dc54_user');
             if(saved) {
                 currentUser = JSON.parse(saved);
                 if(!currentUser.groups) currentUser.groups = [];
@@ -266,16 +263,13 @@
         function createGroup() { 
             const gid = Math.floor(100000+Math.random()*900000);
             currentUser.groups.push({id: gid});
-            localStorage.setItem('dc3_active_user', JSON.stringify(currentUser));
-            enterGroup(gid); // Create -> Go to Group Chat
+            saveData();
+            enterGroup(gid); 
         }
 
         function handleItemClick(id, type) {
-            if(type === 'room') {
-                startVideoCall(id, 'room'); // Room -> Video directly
-            } else {
-                enterGroup(id); // Group -> Chat screen
-            }
+            if(type === 'room') startVideoCall(id, 'room');
+            else enterGroup(id);
         }
 
         function showSearch(mode) {
@@ -291,7 +285,7 @@
                 if(searchMode === 'group') {
                     if(!currentUser.groups.find(g => g.id == id)) {
                         currentUser.groups.push({id: id});
-                        localStorage.setItem('dc3_active_user', JSON.stringify(currentUser));
+                        saveData();
                     }
                     enterGroup(id);
                 } else {
@@ -305,8 +299,6 @@
         async function enterGroup(gid) {
             currentTargetId = gid;
             currentType = 'group';
-            
-            // Save History
             saveHistory(gid, 'group');
 
             document.getElementById('dashboard-screen').classList.add('hidden');
@@ -314,11 +306,13 @@
             document.getElementById('group-chat-screen').classList.remove('hidden');
             document.getElementById('grp-chat-id').innerText = "ID: " + gid;
             
-            // Join RTM for Chat
             if(rtmChannel) await rtmChannel.leave();
-            rtmChannel = rtmClient.createChannel(gid.toString());
-            await rtmChannel.join();
-            rtmChannel.on('ChannelMessage', ({ text }, senderId) => handleChannelMessage(senderId, text));
+            if(rtmClient) {
+                rtmChannel = rtmClient.createChannel(gid.toString());
+                await rtmChannel.join();
+                rtmChannel.on('ChannelMessage', ({ text }, senderId) => handleChannelMessage(senderId, text));
+            }
+            loadChatHistory(gid);
         }
 
         function closeGroupChat() {
@@ -327,26 +321,37 @@
             if(rtmChannel) rtmChannel.leave();
         }
 
-        function callFromGroup() {
-            // Call button inside Group Chat -> Go to Video
-            startVideoCall(currentTargetId, 'group');
-        }
+        function callFromGroup() { startVideoCall(currentTargetId, 'group'); }
 
         async function sendGroupMessage() {
             const input = document.getElementById('grp-chat-input');
             const text = input.value.trim();
-            if(!text || !rtmChannel) return;
+            if(!text) return;
+
+            renderMessage(currentUser.name, text, 'me');
+            
+            // Save Chat
+            let chats = JSON.parse(localStorage.getItem('dc54_chat_'+currentTargetId) || "[]");
+            chats.push({name: currentUser.name, text: text});
+            localStorage.setItem('dc54_chat_'+currentTargetId, JSON.stringify(chats));
+
             const msgData = JSON.stringify({ name: currentUser.name, text: text });
-            try { await rtmChannel.sendMessage({ text: msgData }); renderRoomMessage(currentUser.name, text, 'me'); input.value = ''; } catch(e) {}
+            if(rtmChannel) await rtmChannel.sendMessage({ text: msgData }).catch(e=>{});
+            input.value = '';
         }
         
         function handleChannelMessage(senderId, text) {
-            try { const data = JSON.parse(text); renderRoomMessage(data.name, data.text, 'other'); } 
-            catch(e) { renderRoomMessage(senderId, text, 'other'); }
+            try { const data = JSON.parse(text); renderMessage(data.name, data.text, 'other'); } 
+            catch(e) { renderMessage(senderId, text, 'other'); }
         }
-        function renderRoomMessage(name, text, type) {
+        function renderMessage(name, text, type) {
             const div = document.createElement('div'); div.className = `grp-msg ${type}`; div.innerHTML = `<span class="sender-name">${name}</span>${text}`;
             const body = document.getElementById('grp-chat-body'); body.appendChild(div); body.scrollTop = body.scrollHeight;
+        }
+        function loadChatHistory(gid) {
+            const body = document.getElementById('grp-chat-body'); body.innerHTML = '';
+            let chats = JSON.parse(localStorage.getItem('dc54_chat_'+gid) || "[]");
+            chats.forEach(c => renderMessage(c.name, c.text, c.name === currentUser.name ? 'me' : 'other'));
         }
 
         // --- VIDEO CALL LOGIC ---
@@ -360,25 +365,23 @@
             document.getElementById('search-screen').classList.add('hidden');
             document.getElementById('group-chat-screen').classList.add('hidden');
             document.getElementById('app-permission-gate').classList.remove('hidden');
-            document.getElementById('gate-room-id').innerText = JSON.stringify({id, type});
+            document.getElementById('app-permission-gate').onclick = () => {
+                document.getElementById('app-permission-gate').classList.add('hidden');
+                joinAgora(id, type);
+            };
         }
-        async function apkRequestPermission() {
-            const data = JSON.parse(document.getElementById('gate-room-id').innerText);
-            try { const s=await navigator.mediaDevices.getUserMedia({audio:true,video:true}); s.getTracks().forEach(t=>t.stop()); setTimeout(()=>{document.getElementById('app-permission-gate').classList.add('hidden'); joinAgora(data.id, data.type);},500); } catch(e){ alert("เปิดสิทธิ์ก่อน"); }
-        }
+        async function apkRequestPermission() { /* handled by gate onclick */ }
 
         async function joinAgora(id, type) {
             if(!APP_ID || APP_ID.includes("ใส่")) return alert("ใส่ App ID");
             
             currentTargetId = id;
             currentType = type;
-            
-            saveHistory(id, type); // Save History
+            saveHistory(id, type);
 
-            // UI Setup
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('search-screen').classList.add('hidden');
-            document.getElementById('group-chat-screen').classList.add('hidden'); // Hide chat if coming from group
+            document.getElementById('group-chat-screen').classList.add('hidden');
             document.getElementById('room-screen').classList.remove('hidden');
             
             const icon = type === 'group' ? '<i class="fas fa-users"></i>' : '<i class="fas fa-phone"></i>';
@@ -408,7 +411,7 @@
             if(!box) {
                 box = document.createElement('div'); box.id = `box-${uid}`; box.className = 'video-box';
                 if(!isLocal) box.setAttribute('data-remote', 'true');
-                box.innerHTML = `<div id="play-${uid}" class="video-player"></div><div class="no-cam-view hidden"><div class="avatar-room-circle"><img src="https://via.placeholder.com/100"></div></div>`;
+                box.innerHTML = `<div id="play-${uid}" class="video-player"></div><div class="no-cam-view hidden"><div class="avatar-room-circle"><img src="${isLocal ? currentUser.avatar : 'https://via.placeholder.com/100'}"></div></div>`;
                 document.getElementById('video-grid').appendChild(box);
             }
             box.querySelector('.no-cam-view').classList.add('hidden');
@@ -430,28 +433,27 @@
         async function leaveRoom() { 
             localTracks.video?.close(); localTracks.audio?.close(); localTracks.screen?.close(); 
             await client.leave(); 
+            document.getElementById('video-grid').innerHTML = ''; // Clean UI
             
-            // If group call, go back to Group Chat. If room call, go to Dashboard.
             if(currentType === 'group') {
                 document.getElementById('room-screen').classList.add('hidden');
                 document.getElementById('group-chat-screen').classList.remove('hidden');
-                // Re-init DOM for video grid cleanup
-                document.getElementById('video-grid').innerHTML = '';
             } else {
-                window.location.href = window.location.pathname.split('?')[0];
+                window.location.href = window.location.pathname.split('?')[0]; // Reload
             }
         }
 
+        // --- SAVE & DATA ---
         function saveHistory(id, type) {
-            let h = JSON.parse(localStorage.getItem('dc5_history') || "[]");
-            h = h.filter(item => item.id != id);
-            h.unshift({ id: id, type: type });
-            localStorage.setItem('dc5_history', JSON.stringify(h));
+            let h = JSON.parse(localStorage.getItem('dc54_history') || "[]");
+            h = h.filter(item => item.id != id); h.unshift({ id: id, type: type });
+            localStorage.setItem('dc54_history', JSON.stringify(h));
         }
+        function saveData() { localStorage.setItem('dc54_user', JSON.stringify(currentUser)); }
 
         // --- DASHBOARD RENDER ---
         function updateHistory() {
-            let h = JSON.parse(localStorage.getItem('dc5_history') || "[]");
+            let h = JSON.parse(localStorage.getItem('dc54_history') || "[]");
             const listMob = document.getElementById('mobile-room-list');
             const listPc = document.getElementById('pc-room-list');
             
@@ -460,11 +462,7 @@
                 const styleClass = isGroup ? 'group-card' : '';
                 const icon = isGroup ? '<i class="fas fa-users"></i>' : '<i class="fas fa-phone"></i>';
                 const label = isGroup ? 'กลุ่ม' : 'ห้อง';
-                
-                return `<div class="room-card ${styleClass}" onclick="handleItemClick('${item.id}', '${item.type}')">
-                            <span>${icon} ${label} ${item.id}</span> 
-                            <i class="fas fa-chevron-right"></i>
-                        </div>`;
+                return `<div class="room-card ${styleClass}" onclick="handleItemClick('${item.id}', '${item.type}')"><span>${icon} ${label} ${item.id}</span> <i class="fas fa-chevron-right"></i></div>`;
             }).join('');
             
             listMob.innerHTML = html || '<div style="opacity:0.5;text-align:center;">ไม่มีประวัติ</div>';
@@ -484,9 +482,9 @@
         function handleLogin() {
             const name=document.getElementById('login-name').value; const phone=document.getElementById('login-phone').value;
             const user=(JSON.parse(localStorage.getItem('dc3_users_db')||"[]")).find(u=>u.name===name && u.phone===phone);
-            if(user){ currentUser=user; localStorage.setItem('dc3_active_user', JSON.stringify(user)); initRTM(); loadDashboard(); } else alert("ไม่พบข้อมูล");
+            if(user){ currentUser=user; localStorage.setItem('dc54_user', JSON.stringify(user)); initRTM(); loadDashboard(); } else alert("ไม่พบข้อมูล");
         }
-        function logout() { localStorage.removeItem('dc3_active_user'); window.location.href=window.location.pathname.split('?')[0]; }
+        function logout() { localStorage.removeItem('dc54_user'); window.location.href=window.location.pathname.split('?')[0]; }
 
         function loadDashboard() {
             document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('dashboard-screen').classList.remove('hidden');
